@@ -73,17 +73,15 @@ class Spline2D:
         
         uBSplines = []
         vBSplines = []
-        
-        for i in range(uMu-p, uMu+1):
-            b = bSpline(p, self.uKnots, x, i)
-            uBSplines.append(b)
-            
-        for j in range(vMu-p, vMu+1):
-            b = bSpline(p, self.vKnots, y, j)
-            vBSplines.append(b)
+
+        for j in range(p+1):
+            uB = bSpline(p, self.uKnots, x, uMu-p+j)
+            vB = bSpline(p, self.vKnots, y, vMu-p+j)
+            uBSplines.append(uB)
+            vBSplines.append(vB)
         
         c = self.coeffs[uMu-p-1 : uMu, vMu-p-1 : vMu]
-        n = 2
+        n = len(c[0][0])
         result = [0] * n
         
         for u in range(len(uBSplines)):
