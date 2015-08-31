@@ -1,4 +1,1 @@
-/main.pyc
-/newton.pyc
-/plotter.pyc
-/splinecurve.py
+*.pyc
