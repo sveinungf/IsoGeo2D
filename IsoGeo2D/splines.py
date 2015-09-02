@@ -15,11 +15,11 @@ def bSpline(p, t, x, j):
         else:
             return 0
     else:
-        denum1 = t[j+p-1] - t[j-1]
-        denum2 = t[j+p] - t[j]
+        denom1 = t[j+p-1] - t[j-1]
+        denom2 = t[j+p] - t[j]
         
-        frac1 = 0 if denum1 == 0 else float(x - t[j-1])/denum1
-        frac2 = 0 if denum2 == 0 else float(t[j+p] - x)/denum2
+        frac1 = 0 if denom1 == 0 else float(x - t[j-1])/denom1
+        frac2 = 0 if denom2 == 0 else float(t[j+p] - x)/denom2
         
         b1 = bSpline(p-1, t, x, j)
         b2 = bSpline(p-1, t, x, j+1)
