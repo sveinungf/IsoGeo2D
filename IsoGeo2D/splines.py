@@ -27,6 +27,19 @@ def bSpline(p, t, x, j):
         return frac1 * b1 + frac2 * b2
 
 
+def bSplineDerivative(p, t, x, j):
+    if p == 0:
+        return 0
+    
+    denom1 = t[j+p-1] - t[j-1]
+    denom2 = t[j+p] - t[j]
+    
+    frac1 = 0 if denom1 == 0 else float(bSpline(p-1, t, x, j))/denom1
+    frac2 = 0 if denom2 == 0 else float(bSpline(p-1, t, x, j+1))/denom2
+    
+    return p * (frac1 - frac2)
+
+    
 class Spline1D:
     def __init__(self, degree, knots, coeffs):
         self.degree = degree
@@ -66,6 +79,12 @@ class Spline2D:
         self.coeffs = coeffs
         
     def evaluate(self, x, y):
+        return self.__evaluate(self, x, y, bSpline)
+    
+    def evaluateDerivative(self, x, y):
+        return self.__evaluate(self, x, y, bSplineDerivative)
+        
+    def __evaluate(self, x, y, bSpline):
         p = self.degree
         
         uMu = findMu(self.uKnots, x)
