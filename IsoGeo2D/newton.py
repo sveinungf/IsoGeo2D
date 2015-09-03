@@ -1,4 +1,4 @@
-from scipy.linalg import solve
+import scipy.linalg as linalg
 
 def newtonsMethod1D(f, df, x, tolerance):
 	'''
@@ -22,7 +22,12 @@ def newtonsMethod2D(f, fJacob, u, v, tolerance=0.00001, maxAttempts=100):
 	attempt = 1
 	
 	while attempt < maxAttempts:
-		x = solve(fJacob(u,v), -f(u,v))
+		jacob = fJacob(u, v)
+		
+		if linalg.det(jacob) == 0:
+			return None
+		
+		x = linalg.solve(jacob, -f(u,v))
 		[u1, v1] = x + [u, v]
 		
 		if abs(u1 - u) < tolerance and abs(v1 - v) < tolerance:

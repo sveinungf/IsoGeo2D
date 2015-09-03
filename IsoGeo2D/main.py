@@ -1,7 +1,6 @@
 import math
 import newton
 import numpy as np
-import pylab as plt
 from plotter import Plotter
 from splines import Spline2D
 
@@ -18,10 +17,58 @@ def makeSpline():
     return Spline2D(p, uKnots, vKnots, coeffs)
     
 def spline():
-    spline = makeSpline()
-    plotter = Plotter()
+    def s(v):
+        return np.array([v, v+0.2])
+    def ds(v):
+        return np.array([1, 1])
     
-    plotter.plot(spline.evaluate, 10, 10)
+    spline = makeSpline()
+    splineInterval = [0, 0.99999]
+    inOut = findInOut(spline, s, ds)
+    
+    plotter = Plotter()
+    plotter.plotSurfaces(spline.evaluate, splineInterval, splineInterval, 10, 10)
+    plotter.plotLine(s, [-10, 10])
+    plotter.plotPoints(inOut)
+    plotter.show()
+    
+def findInOut(spline, s, ds):
+    '''
+    spline - Spline2D object
+    s - line function
+    ds - first derivative of line function
+    '''
+    uGuess = 0.5
+    vGuess = 0
+    result = []
+    
+    def left(u):
+        return spline.evaluate(0, u)
+    def dleft(u):
+        return spline.evaluatePartialDerivativeY(0, u)
+    
+    def top(u):
+        return spline.evaluate(u, 0.99999)
+    def dtop(u):
+        return spline.evaluatePartialDerivativeX(u, 0.99999)
+    
+    def right(u):
+        return spline.evaluate(0.99999, u)
+    def dright(u):
+        return spline.evaluatePartialDerivativeY(0.99999, u)
+    
+    def bottom(u):
+        return spline.evaluate(u, 0)
+    def dbottom(u):
+        return spline.evaluatePartialDerivativeX(u, 0)
+    
+    uvIntersect = intersection2D(left, s, dleft, ds, uGuess, vGuess)
+    result.append(s(uvIntersect[1]))
+    
+    uvIntersect = intersection2D(top, s, dtop, ds, uGuess, vGuess)
+    result.append(s(uvIntersect[1]))
+
+    return result
     
 def test1():
     def f(u, v):
@@ -36,67 +83,6 @@ def test2():
     
     plotter = Plotter()
     plotter.plot(f, 10, 10)
-
-def testNewton(uGuess, vGuess):
-    spline = makeSpline()
-    
-    def f(u):
-        return spline.evaluate(0, u)
-    def df(u):
-        return spline.evaluatePartialDerivativeY(0, u)
-    
-    def g(u):
-        return spline.evaluate(u, 0.99999)
-    def dg(u):
-        return spline.evaluatePartialDerivativeX(u, 0.99999)
-    
-    def s(v):
-        return np.array([v, v+0.2])
-    def ds(v):
-        return np.array([1, 1])
-
-    u = np.linspace(0, 0.99999, 1000)
-    v = np.linspace(-10, 10, 100)
-    
-    fxValues = []
-    fyValues = []
-    gxValues = []
-    gyValues = []
-    sxValues = []
-    syValues = []
-    
-    for uValue in u:
-        [fx,fy] = f(uValue)
-        [gx, gy] = g(uValue)
-        fxValues.append(fx)
-        fyValues.append(fy)
-        gxValues.append(gx)
-        gyValues.append(gy)
-    
-    for vValue in v:
-        [sx, sy] = s(vValue)
-        sxValues.append(sx)
-        syValues.append(sy)
-        
-    plt.plot(fxValues, fyValues)
-    plt.plot(gxValues, gyValues)
-    plt.plot(sxValues, syValues)
-    
-    uvIntersect = intersection2D(f, s, df, ds, uGuess, vGuess)
-    [xIntersect, yIntersect] = f(uvIntersect[0])
-    plt.plot(xIntersect, yIntersect, marker='x')
-    [xIntersect, yIntersect] = s(uvIntersect[1])
-    plt.plot(xIntersect, yIntersect, marker='o')
-    
-    uvIntersect = intersection2D(g, s, dg, ds, uGuess, vGuess)
-    [xIntersect, yIntersect] = g(uvIntersect[0])
-    plt.plot(xIntersect, yIntersect, marker='x')
-    [xIntersect, yIntersect] = s(uvIntersect[1])
-    plt.plot(xIntersect, yIntersect, marker='o')
-    
-    plt.axis((-0.1, 1.1, -0.1, 1.1))
-    
-    plt.show()
 
 def intersection2D(f, g, df, dg, uGuess, vGuess):
     def h(u, v):
