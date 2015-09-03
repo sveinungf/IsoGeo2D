@@ -41,20 +41,17 @@ def testNewton(uGuess, vGuess):
     spline = makeSpline()
     
     def f(u):
-        return np.asarray(spline.evaluate(0, u))
-    
+        return spline.evaluate(0, u)
     def df(u):
-        return np.asarray(spline.evaluatePartialDerivativeY(0, u))
+        return spline.evaluatePartialDerivativeY(0, u)
     
     def g(u):
-        return np.asarray(spline.evaluate(u, 0.99999))
-    
+        return spline.evaluate(u, 0.99999)
     def dg(u):
-        return np.asarray(spline.evaluatePartialDerivativeX(u, 0.99999))
+        return spline.evaluatePartialDerivativeX(u, 0.99999)
     
     def s(v):
         return np.array([v, v+0.2])
-    
     def ds(v):
         return np.array([1, 1])
 

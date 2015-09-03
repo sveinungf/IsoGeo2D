@@ -1,3 +1,5 @@
+import numpy as np
+
 def findMu(t, x):
     for j in range(len(t)):
         if x >= t[j] and x < t[j+1]:
@@ -93,7 +95,7 @@ class Spline2D:
         
     def __evaluate(self, x, y, uBSplineFunc, vBSplineFunc):
         n = len(self.coeffs[0][0])
-        result = [0] * n
+        result = np.zeros(n)
         
         if not (self.uKnots[0] <= x < self.uKnots[-1] and 
                 self.vKnots[0] <= y < self.vKnots[-1]):
