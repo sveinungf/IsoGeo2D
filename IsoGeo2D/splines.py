@@ -47,18 +47,22 @@ class Spline1D:
         self.coeffs = coeffs
     
     def evaluate(self, x):
-        p = self.degree
+        n = len(self.coeffs[0])
+        result = [0] * n
+        t = self.knots
         
-        mu = findMu(self.knots, x)
+        if x < t[0] or x >= t[-1]:
+            return result
+        
+        p = self.degree
         bSplines = []
+        mu = findMu(self.knots, x)
         
         for j in range(mu-p, mu+1):
             b = bSpline(p, self.knots, x, j)
             bSplines.append(b)
             
         c = self.coeffs[mu-p-1 : mu]
-        n = len(c[0])
-        result = [0] * n
         
         for j in range(len(c)):
             b = bSplines[j]
@@ -79,14 +83,23 @@ class Spline2D:
         self.coeffs = coeffs
         
     def evaluate(self, x, y):
-        return self.__evaluate(self, x, y, bSpline)
+        return self.__evaluate(x, y, bSpline, bSpline)
     
-    def evaluateDerivative(self, x, y):
-        return self.__evaluate(self, x, y, bSplineDerivative)
+    def evaluatePartialDerivativeX(self, x, y):
+        return self.__evaluate(x, y, bSplineDerivative, bSpline)
         
-    def __evaluate(self, x, y, bSpline):
+    def evaluatePartialDerivativeY(self, x, y):
+        return self.__evaluate(x, y, bSpline, bSplineDerivative)
+        
+    def __evaluate(self, x, y, uBSplineFunc, vBSplineFunc):
+        n = len(self.coeffs[0][0])
+        result = [0] * n
+        
+        if not (self.uKnots[0] <= x < self.uKnots[-1] and 
+                self.vKnots[0] <= y < self.vKnots[-1]):
+            return result
+        
         p = self.degree
-        
         uMu = findMu(self.uKnots, x)
         vMu = findMu(self.vKnots, y)
         
@@ -94,21 +107,15 @@ class Spline2D:
         vBSplines = []
 
         for j in range(p+1):
-            uB = bSpline(p, self.uKnots, x, uMu-p+j)
-            vB = bSpline(p, self.vKnots, y, vMu-p+j)
+            uB = uBSplineFunc(p, self.uKnots, x, uMu-p+j)
+            vB = vBSplineFunc(p, self.vKnots, y, vMu-p+j)
             uBSplines.append(uB)
             vBSplines.append(vB)
         
         c = self.coeffs[uMu-p-1 : uMu, vMu-p-1 : vMu]
-        n = len(c[0][0])
-        result = [0] * n
         
-        for u in range(len(uBSplines)):
-            uB = uBSplines[u]
-            
-            for v in range(len(vBSplines)):
-                vB = vBSplines[v]
-                
+        for u, uB in enumerate(uBSplines):
+            for v, vB in enumerate(vBSplines):
                 for k in range(n):
                     result[k] += uB * vB * c[u][v][k]
         

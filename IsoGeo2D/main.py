@@ -7,12 +7,12 @@ from splines import Spline2D
 
 def makeSpline():
     p = 2
-    uKnots = [0, 0, 0, 0.2, 0.7, 1.01, 1.01, 1.01]
-    vKnots = [0, 0, 0, 0.3, 0.6, 1.01, 1.01, 1.01]
+    uKnots = [0, 0, 0, 0.2, 0.7, 1.0, 1.0, 1.0]
+    vKnots = [0, 0, 0, 0.3, 0.6, 1.0, 1.0, 1.0]
     coeffs = np.array([[[0.0,0.0], [0.1,0.2], [0.1,0.5], [0,0.9], [0.0,1.0]],
-                       [[0.25,0.0], [0.1 ,0.2], [0.4,0.2], [0.5,0.9], [0.25,1.0]],
+                       [[0.25,0.1], [0.1 ,0.2], [0.4,0.2], [0.5,0.9], [0.25,0.9]],
                        [[0.5,0.0], [0.5,0.2], [0.5,0.5], [0.6,0.9], [0.5,1.0]],
-                       [[0.75,0.0], [0.7,0.2], [0.8,0.5], [0.7,0.9], [0.75,1.0]],
+                       [[0.75,-0.05], [0.7,0.2], [0.8,0.5], [0.7,0.9], [0.75,0.9]],
                        [[1.0,0.0], [0.9,0.2], [0.8,0.5], [0.9,0.9], [1.0,1.0]]])
     
     return Spline2D(p, uKnots, vKnots, coeffs)
@@ -37,51 +37,75 @@ def test2():
     plotter = Plotter()
     plotter.plot(f, 10, 10)
 
-def f(u):
-    return np.array([u, u**3])
+def testNewton(uGuess, vGuess):
+    spline = makeSpline()
+    
+    def f(u):
+        return np.asarray(spline.evaluate(0, u))
+    
+    def df(u):
+        return np.asarray(spline.evaluatePartialDerivativeY(0, u))
+    
+    def g(u):
+        return np.asarray(spline.evaluate(u, 0.99999))
+    
+    def dg(u):
+        return np.asarray(spline.evaluatePartialDerivativeX(u, 0.99999))
+    
+    def s(v):
+        return np.array([v, v+0.2])
+    
+    def ds(v):
+        return np.array([1, 1])
 
-def df(u):
-    return np.array([1, 3*u**2])
-
-def g(v):
-    return np.array([v, -50*v+100])
-
-def dg(v):
-    return np.array([1, -50])
-
-def h(u, v):
-    return f(u) - g(v)
-
-def hJacob(u, v):
-    dfu = df(u)
-    dgv = dg(v)
-    return np.matrix([[dfu[0], -dgv[0]], [dfu[1], -dgv[1]]])
-
-def testNewton():
-    u = np.linspace(-10, 10, 100)
+    u = np.linspace(0, 0.99999, 1000)
     v = np.linspace(-10, 10, 100)
     
     fxValues = []
     fyValues = []
     gxValues = []
     gyValues = []
+    sxValues = []
+    syValues = []
     
-    for i in range(len(u)):
-        [fx,fy] = f(u[i])
-        [gx,gy] = g(v[i])
+    for uValue in u:
+        [fx,fy] = f(uValue)
+        [gx, gy] = g(uValue)
         fxValues.append(fx)
         fyValues.append(fy)
         gxValues.append(gx)
         gyValues.append(gy)
-        
+    
+    for vValue in v:
+        [sx, sy] = s(vValue)
+        sxValues.append(sx)
+        syValues.append(sy)
         
     plt.plot(fxValues, fyValues)
     plt.plot(gxValues, gyValues)
+    plt.plot(sxValues, syValues)
     
-    uGuess = 4
-    vGuess = 4
-    uvIntersect = newton.newtonsMethod2D(h, hJacob, uGuess, vGuess)
+    uvIntersect = intersection2D(f, s, df, ds, uGuess, vGuess)
     [xIntersect, yIntersect] = f(uvIntersect[0])
     plt.plot(xIntersect, yIntersect, marker='x')
+    [xIntersect, yIntersect] = s(uvIntersect[1])
+    plt.plot(xIntersect, yIntersect, marker='o')
+    
+    uvIntersect = intersection2D(g, s, dg, ds, uGuess, vGuess)
+    [xIntersect, yIntersect] = g(uvIntersect[0])
+    plt.plot(xIntersect, yIntersect, marker='x')
+    [xIntersect, yIntersect] = s(uvIntersect[1])
+    plt.plot(xIntersect, yIntersect, marker='o')
+    
+    plt.axis((-0.1, 1.1, -0.1, 1.1))
     
     plt.show()
+
+def intersection2D(f, g, df, dg, uGuess, vGuess):
+    def h(u, v):
+        return f(u) - g(v)
+    
+    def hJacob(u, v):
+        return np.matrix([df(u), -dg(v)]).transpose()
+    
+    return newton.newtonsMethod2D(h, hJacob, uGuess, vGuess)

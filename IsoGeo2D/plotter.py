@@ -17,12 +17,15 @@ class Plotter:
 		return [xOutput, yOutput]
 		
 	def plot(self, f, m, n):
-		vLines = np.linspace(0, 1, m)
-		hLines = np.linspace(0, 1, n)
+		fromValue = 0
+		toValue = 0.99999
+		
+		vLines = np.linspace(fromValue, toValue, m)
+		hLines = np.linspace(fromValue, toValue, n)
 		
 		for vLine in vLines:
 			paramsX = [vLine] * self.precision
-			paramsY = np.linspace(0, 1, self.precision)
+			paramsY = np.linspace(fromValue, toValue, self.precision)
 			
 			[geomX, geomY] = self.generatePoints(f, paramsX, paramsY)
 			
@@ -33,7 +36,7 @@ class Plotter:
 			plt.plot(paramsX, paramsY)
 			
 		for hLine in hLines:
-			paramsX = np.linspace(0, 1, self.precision)
+			paramsX = np.linspace(fromValue, toValue, self.precision)
 			paramsY = [hLine] * self.precision
 			
 			[geomX, geomY] = self.generatePoints(f, paramsX, paramsY)
