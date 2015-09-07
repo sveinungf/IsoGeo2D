@@ -1,4 +1,3 @@
-import math
 import newton
 import numpy as np
 from plotter import Plotter
@@ -9,80 +8,149 @@ def makeSpline():
     uKnots = [0, 0, 0, 0.2, 0.7, 1.0, 1.0, 1.0]
     vKnots = [0, 0, 0, 0.3, 0.6, 1.0, 1.0, 1.0]
     coeffs = np.array([[[0.0,0.0], [0.1,0.2], [0.1,0.5], [0,0.9], [0.0,1.0]],
-                       [[0.25,0.1], [0.1 ,0.2], [0.4,0.2], [0.5,0.9], [0.25,0.9]],
+                       [[0.25,0.3], [0.1 ,0.4], [0.4,0.4], [0.5,0.9], [0.25,0.9]],
                        [[0.5,0.0], [0.5,0.2], [0.5,0.5], [0.6,0.9], [0.5,1.0]],
-                       [[0.75,-0.05], [0.7,0.2], [0.8,0.5], [0.7,0.9], [0.75,0.9]],
+                       [[0.75,-0.09], [0.7,0.2], [0.8,0.5], [0.7,0.9], [0.75,0.9]],
                        [[1.0,0.0], [0.9,0.2], [0.8,0.5], [0.9,0.9], [1.0,1.0]]])
     
     return Spline2D(p, uKnots, vKnots, coeffs)
     
 def spline():
     def s(v):
-        return np.array([v, v+0.2])
+        return np.array([v, 0.5*v+0.6])
     def ds(v):
-        return np.array([1, 1])
+        return np.array([1, 0.5])
     
+    def hAtPoint(point):
+        def h(u, v):
+            return spline.evaluate(u, v) - point
+        return h
+    def hJacob(u, v):
+        return np.matrix([spline.evaluatePartialDerivativeU(u, 0), 
+                          spline.evaluatePartialDerivativeV(0, v)]).transpose()
+
     spline = makeSpline()
     splineInterval = [0, 0.99999]
-    inOut = findInOut(spline, s, ds)
+    sDelta = 0.005
+    inOutParams = findInOutParams(spline, s, ds)
+    
+    samplePointsG = generateSamplePoints(s, inOutParams[0][1], inOutParams[1][1], sDelta)
+    
+    samplePointsP = []
+    prevUV = inOutParams[0]
+    
+    for gPoint in samplePointsG:
+        pPoint = newton.newtonsMethod2DClamped(hAtPoint(gPoint), hJacob, prevUV, splineInterval)
+        samplePointsP.append(pPoint)
+        prevUV = pPoint
+        
+    inOutPoints = []
+    
+    for inOutParam in inOutParams:
+        inOutPoints.append(s(inOutParam[1]))
     
     plotter = Plotter()
     plotter.plotSurfaces(spline.evaluate, splineInterval, splineInterval, 10, 10)
     plotter.plotLine(s, [-10, 10])
-    plotter.plotPoints(inOut)
+    plotter.plotSamplePointsInG(samplePointsG)
+    plotter.plotIntersectionPoints(inOutPoints)
+    plotter.plotSamplePointsInP(samplePointsP)
+    plotter.show()
+
+def generateSamplePoints(f, begin, end, delta):
+    result = []
+    current = begin + delta
+    
+    while current < end:
+        result.append(f(current))
+        current += delta
+        
+    return result
+    
+def findInOutParams(spline, s, ds):
+    def left(u):
+        return spline.evaluate(0, u)
+    def dleft(u):
+        return spline.evaluatePartialDerivativeV(0.9999, u)
+    
+    def top(u):
+        return spline.evaluate(u, 0.99999)
+    def dtop(u):
+        return spline.evaluatePartialDerivativeU(u, 0.99999)
+    
+    def right(u):
+        return spline.evaluate(0.99999, u)
+    def dright(u):
+        return spline.evaluatePartialDerivativeV(0.99999, u)
+    
+    def bottom(u):
+        return spline.evaluate(u, 0)
+    def dbottom(u):
+        return spline.evaluatePartialDerivativeU(u, 0)
+    
+    result = []
+    
+    result.append(intersection2D(left, s, dleft, ds, 0.5, 0))
+    result.append(intersection2D(top, s, dtop, ds, 0.5, 0))
+
+    return result
+    
+    
+def spline2():
+    def s(v):
+        return np.array([v, 0.2*v+0.1])
+    def ds(v):
+        return np.array([1, 0.2])
+    
+    spline = makeSpline()
+    splineInterval = [0, 0.99999]
+    inOutParams = findInOutParams2(spline, s, ds)
+    inOutPoints = []
+    
+    for inOutParam in inOutParams:
+        inOutPoints.append(s(inOutParam[1]))
+    
+    plotter = Plotter()
+    plotter.plotSurfaces(spline.evaluate, splineInterval, splineInterval, 10, 10)
+    plotter.plotLine(s, [-10, 10])
+    plotter.plotIntersectionPoints(inOutPoints)
     plotter.show()
     
-def findInOut(spline, s, ds):
+    
+def findInOutParams2(spline, s, ds):
     '''
     spline - Spline2D object
     s - line function
     ds - first derivative of line function
     '''
-    uGuess = 0.5
-    vGuess = 0
     result = []
     
     def left(u):
         return spline.evaluate(0, u)
     def dleft(u):
-        return spline.evaluatePartialDerivativeY(0, u)
+        return spline.evaluatePartialDerivativeV(0, u)
     
     def top(u):
         return spline.evaluate(u, 0.99999)
     def dtop(u):
-        return spline.evaluatePartialDerivativeX(u, 0.99999)
+        return spline.evaluatePartialDerivativeU(u, 0.99999)
     
     def right(u):
         return spline.evaluate(0.99999, u)
     def dright(u):
-        return spline.evaluatePartialDerivativeY(0.99999, u)
+        return spline.evaluatePartialDerivativeV(0.99999, u)
     
     def bottom(u):
         return spline.evaluate(u, 0)
     def dbottom(u):
-        return spline.evaluatePartialDerivativeX(u, 0)
+        return spline.evaluatePartialDerivativeU(u, 0)
     
-    uvIntersect = intersection2D(left, s, dleft, ds, uGuess, vGuess)
-    result.append(s(uvIntersect[1]))
-    
-    uvIntersect = intersection2D(top, s, dtop, ds, uGuess, vGuess)
-    result.append(s(uvIntersect[1]))
+    result.append(intersection2D(left, s, dleft, ds, 0.5, 0))
+    result.append(intersection2D(bottom, s, dbottom, ds, 0, 0))
+    result.append(intersection2D(bottom, s, dbottom, ds, 0.5, 0))
+    result.append(intersection2D(right, s, dright, ds, 0.5, 0))
 
     return result
-    
-def test1():
-    def f(u, v):
-        return [u**2, v]
-    
-    plotter = Plotter()
-    plotter.plot(f, 10, 10)
-    
-def test2():
-    def f(u, v):
-        return [u*math.cos(v), math.sin(v)]
-    
-    plotter = Plotter()
-    plotter.plot(f, 10, 10)
 
 def intersection2D(f, g, df, dg, uGuess, vGuess):
     def h(u, v):
@@ -91,4 +159,4 @@ def intersection2D(f, g, df, dg, uGuess, vGuess):
     def hJacob(u, v):
         return np.matrix([df(u), -dg(v)]).transpose()
     
-    return newton.newtonsMethod2D(h, hJacob, uGuess, vGuess)
+    return newton.newtonsMethod2DClamped(h, hJacob, [uGuess, vGuess], [0, 0.99999])

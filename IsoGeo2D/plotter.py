@@ -65,11 +65,23 @@ class Plotter:
 		self.__selectGPlot()
 		plt.plot(points[:,0], points[:,1])
 	
-	def plotPoints(self, points):
+	def plotIntersectionPoints(self, points):
 		self.__selectGPlot()
 		
 		for point in points:
-			plt.plot(point[0], point[1], marker='o')
+			plt.plot(point[0], point[1], marker='o', color='b')
+
+	def plotSamplePointsInG(self, points):
+		self.__selectGPlot()
+		
+		for point in points:
+			plt.plot(point[0], point[1], marker='x', color='r')
+			
+	def plotSamplePointsInP(self, points):
+		self.__selectPPlot()
+		
+		for point in points:
+			plt.plot(point[0], point[1], marker='x', color='r')
 	
 	def show(self):
 		self.__selectGPlot()

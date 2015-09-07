@@ -87,10 +87,10 @@ class Spline2D:
     def evaluate(self, x, y):
         return self.__evaluate(x, y, bSpline, bSpline)
     
-    def evaluatePartialDerivativeX(self, x, y):
+    def evaluatePartialDerivativeU(self, x, y):
         return self.__evaluate(x, y, bSplineDerivative, bSpline)
         
-    def evaluatePartialDerivativeY(self, x, y):
+    def evaluatePartialDerivativeV(self, x, y):
         return self.__evaluate(x, y, bSpline, bSplineDerivative)
         
     def __evaluate(self, x, y, uBSplineFunc, vBSplineFunc):
