@@ -122,3 +122,31 @@ class Spline2D:
                     result[k] += uB * vB * c[u][v][k]
         
         return result
+
+class SplinePlane:
+    def __init__(self, spline2D, interval):
+        self.spline2D = spline2D
+        self.interval = interval
+        
+    def evaluate(self, u, v):
+        return self.spline2D.evaluate(u, v)
+        
+    def left(self, v):
+        return self.spline2D.evaluate(self.interval[0], v)
+    def dleft(self, v):
+        return self.spline2D.evaluatePartialDerivativeV(self.interval[0], v)
+    
+    def top(self, u):
+        return self.spline2D.evaluate(u, self.interval[1])
+    def dtop(self, u):
+        return self.spline2D.evaluatePartialDerivativeU(u, self.interval[1])
+    
+    def right(self, v):
+        return self.spline2D.evaluate(self.interval[1], v)
+    def dright(self, v):
+        return self.spline2D.evaluatePartialDerivativeV(self.interval[1], v)
+    
+    def bottom(self, u):
+        return self.spline2D.evaluate(u, self.interval[0])
+    def dbottom(self, u):
+        return self.spline2D.evaluatePartialDerivativeU(u, self.interval[0])

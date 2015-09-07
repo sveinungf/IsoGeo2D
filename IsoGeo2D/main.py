@@ -2,8 +2,9 @@ import newton
 import numpy as np
 from plotter import Plotter
 from splines import Spline2D
+from splines import SplinePlane
 
-def makeSpline():
+def makeSpline2D():
     p = 2
     uKnots = [0, 0, 0, 0.2, 0.7, 1.0, 1.0, 1.0]
     vKnots = [0, 0, 0, 0.3, 0.6, 1.0, 1.0, 1.0]
@@ -29,10 +30,11 @@ def spline():
         return np.matrix([spline.evaluatePartialDerivativeU(u, 0), 
                           spline.evaluatePartialDerivativeV(0, v)]).transpose()
 
-    spline = makeSpline()
+    spline = makeSpline2D()
     splineInterval = [0, 0.99999]
+    splinePlane = SplinePlane(spline, splineInterval)
     sDelta = 0.005
-    inOutParams = findInOutParams(spline, s, ds)
+    inOutParams = findInOutParams(splinePlane, s, ds)
     
     samplePointsG = generateSamplePoints(s, inOutParams[0][1], inOutParams[1][1], sDelta)
     
@@ -50,7 +52,7 @@ def spline():
         inOutPoints.append(s(inOutParam[1]))
     
     plotter = Plotter()
-    plotter.plotSurfaces(spline.evaluate, splineInterval, splineInterval, 10, 10)
+    plotter.plotSurfaces(splinePlane.evaluate, splineInterval, splineInterval, 10, 10)
     plotter.plotLine(s, [-10, 10])
     plotter.plotSamplePointsInG(samplePointsG)
     plotter.plotIntersectionPoints(inOutPoints)
@@ -67,31 +69,11 @@ def generateSamplePoints(f, begin, end, delta):
         
     return result
     
-def findInOutParams(spline, s, ds):
-    def left(u):
-        return spline.evaluate(0, u)
-    def dleft(u):
-        return spline.evaluatePartialDerivativeV(0.9999, u)
-    
-    def top(u):
-        return spline.evaluate(u, 0.99999)
-    def dtop(u):
-        return spline.evaluatePartialDerivativeU(u, 0.99999)
-    
-    def right(u):
-        return spline.evaluate(0.99999, u)
-    def dright(u):
-        return spline.evaluatePartialDerivativeV(0.99999, u)
-    
-    def bottom(u):
-        return spline.evaluate(u, 0)
-    def dbottom(u):
-        return spline.evaluatePartialDerivativeU(u, 0)
-    
+def findInOutParams(splinePlane, s, ds):
     result = []
     
-    result.append(intersection2D(left, s, dleft, ds, 0.5, 0))
-    result.append(intersection2D(top, s, dtop, ds, 0.5, 0))
+    result.append(intersection2D(splinePlane.left, s, splinePlane.dleft, ds, 0.5, 0))
+    result.append(intersection2D(splinePlane.top, s, splinePlane.dtop, ds, 0.5, 0))
 
     return result
     
@@ -102,53 +84,33 @@ def spline2():
     def ds(v):
         return np.array([1, 0.2])
     
-    spline = makeSpline()
     splineInterval = [0, 0.99999]
-    inOutParams = findInOutParams2(spline, s, ds)
+    splinePlane = SplinePlane(makeSpline2D(), splineInterval)
+    inOutParams = findInOutParams2(splinePlane, s, ds)
     inOutPoints = []
     
     for inOutParam in inOutParams:
         inOutPoints.append(s(inOutParam[1]))
     
     plotter = Plotter()
-    plotter.plotSurfaces(spline.evaluate, splineInterval, splineInterval, 10, 10)
+    plotter.plotSurfaces(splinePlane.evaluate, splineInterval, splineInterval, 10, 10)
     plotter.plotLine(s, [-10, 10])
     plotter.plotIntersectionPoints(inOutPoints)
     plotter.show()
     
     
-def findInOutParams2(spline, s, ds):
+def findInOutParams2(splinePlane, s, ds):
     '''
     spline - Spline2D object
     s - line function
     ds - first derivative of line function
     '''
     result = []
-    
-    def left(u):
-        return spline.evaluate(0, u)
-    def dleft(u):
-        return spline.evaluatePartialDerivativeV(0, u)
-    
-    def top(u):
-        return spline.evaluate(u, 0.99999)
-    def dtop(u):
-        return spline.evaluatePartialDerivativeU(u, 0.99999)
-    
-    def right(u):
-        return spline.evaluate(0.99999, u)
-    def dright(u):
-        return spline.evaluatePartialDerivativeV(0.99999, u)
-    
-    def bottom(u):
-        return spline.evaluate(u, 0)
-    def dbottom(u):
-        return spline.evaluatePartialDerivativeU(u, 0)
-    
-    result.append(intersection2D(left, s, dleft, ds, 0.5, 0))
-    result.append(intersection2D(bottom, s, dbottom, ds, 0, 0))
-    result.append(intersection2D(bottom, s, dbottom, ds, 0.5, 0))
-    result.append(intersection2D(right, s, dright, ds, 0.5, 0))
+
+    result.append(intersection2D(splinePlane.left, s, splinePlane.dleft, ds, 0.5, 0))
+    result.append(intersection2D(splinePlane.bottom, s, splinePlane.dbottom, ds, 0, 0))
+    result.append(intersection2D(splinePlane.bottom, s, splinePlane.dbottom, ds, 0.5, 0))
+    result.append(intersection2D(splinePlane.right, s, splinePlane.dright, ds, 0.5, 0))
 
     return result
 
