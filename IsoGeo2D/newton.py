@@ -1,3 +1,4 @@
+import math
 import scipy.linalg as linalg
 
 def newtonsMethod1D(f, df, x, tolerance):
@@ -17,7 +18,7 @@ def newtonsMethod1D(f, df, x, tolerance):
 
 	return x
 	
-def newtonsMethod2DClamped(f, fJacob, uv, clampInterval, tolerance=0.00001, maxAttempts=100):
+def newtonsMethod2DClamped(f, fJacob, uv, clampInterval, tolerance=0.000001, maxAttempts=20):
 	attempt = 1
 	u = uv[0]
 	v = uv[1]
@@ -36,14 +37,14 @@ def newtonsMethod2DClamped(f, fJacob, uv, clampInterval, tolerance=0.00001, maxA
 		
 		x = linalg.solve(jacob, -f(u, v))
 		[u1, v1] = x + [u, v]
-		
-		if abs(u1 - u) < tolerance and abs(v1 - v) < tolerance:
+
+		if math.sqrt((u1-u)**2 + (v1-v)**2) < tolerance:
 			break
 		
 		u = u1
 		v = v1
 
-		++attempt
+		attempt += 1
 		
 	if attempt == maxAttempts:
 		return None

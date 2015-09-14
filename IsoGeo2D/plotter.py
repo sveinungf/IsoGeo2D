@@ -4,11 +4,20 @@ import pylab as plt
 class Plotter:
 	def __init__(self):
 		self.precision = 100
+		
+		self.selectGPlot()
+		plt.axis((-0.1, 1.1, -0.1, 1.1))
+		
+		self.selectPPlot()
+		plt.axis((-0.1, 1.1, -0.1, 1.1))
+		
+		plt.ion()
+		plt.show()
 	
-	def __selectGPlot(self):
+	def selectGPlot(self):
 		plt.subplot(1, 2, 1)
 		
-	def __selectPPlot(self):
+	def selectPPlot(self):
 		plt.subplot(1, 2, 2)
 
 	def generatePoints(self, f, xInputs, yInputs):
@@ -40,10 +49,10 @@ class Plotter:
 			
 			[geomX, geomY] = self.generatePoints(f, paramsX, paramsY)
 			
-			self.__selectGPlot()
+			self.selectGPlot()
 			plt.plot(geomX, geomY)
 			
-			self.__selectPPlot()
+			self.selectPPlot()
 			plt.plot(paramsX, paramsY)
 			
 		for hLine in hLines:
@@ -52,42 +61,37 @@ class Plotter:
 			
 			[geomX, geomY] = self.generatePoints(f, paramsX, paramsY)
 			
-			self.__selectGPlot()
+			self.selectGPlot()
 			plt.plot(geomX, geomY)
 			
-			self.__selectPPlot()
+			self.selectPPlot()
 			plt.plot(paramsX, paramsY)
+		
 	
 	def plotLine(self, f, interval):
 		params = np.linspace(interval[0], interval[1], self.precision)
 		points = self.generatePoints1(f, params)
 		
-		self.__selectGPlot()
+		self.selectGPlot()
 		plt.plot(points[:,0], points[:,1])
 	
 	def plotIntersectionPoints(self, points):
-		self.__selectGPlot()
+		self.selectGPlot()
 		
 		for point in points:
 			plt.plot(point[0], point[1], marker='o', color='b')
 
-	def plotSamplePointsInG(self, points):
-		self.__selectGPlot()
+	def plotGeomPoints(self, points):
+		self.selectGPlot()
 		
 		for point in points:
 			plt.plot(point[0], point[1], marker='x', color='r')
 			
-	def plotSamplePointsInP(self, points):
-		self.__selectPPlot()
+	def plotParamPoints(self, points):
+		self.selectPPlot()
 		
 		for point in points:
 			plt.plot(point[0], point[1], marker='x', color='r')
-	
-	def show(self):
-		self.__selectGPlot()
-		plt.axis((-0.1, 1.1, -0.1, 1.1))
 		
-		self.__selectPPlot()
-		plt.axis((-0.1, 1.1, -0.1, 1.1))
-		
-		plt.show()
+	def draw(self):
+		plt.draw()
