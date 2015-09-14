@@ -22,10 +22,10 @@ def createRho():
     p = 2
     uKnots = [0, 0, 0, 0.2, 0.7, 1.0, 1.0, 1.0]
     vKnots = [0, 0, 0, 0.3, 0.6, 1.0, 1.0, 1.0]
-    coeffs = np.array([[[0.35], [0.1], [0.1], [0.0], [0.0]],
-                       [[0.25], [0.11], [0.4], [0.9], [1.0]],
+    coeffs = np.array([[[0.6], [0.1], [0.1], [0.0], [0.0]],
+                       [[0.25], [0.11], [1.0], [0.9], [1.0]],
                        [[0.5], [0.0], [0.3], [0.3], [0.5]],
-                       [[0.75], [0.3], [0.2], [0.7], [0.75]],
+                       [[0.75], [0.3], [0.0], [0.7], [0.75]],
                        [[0.5], [1.0], [1.0], [1.0], [0.8]]])
     
     return Spline2D(p, uKnots, vKnots, coeffs)
@@ -71,10 +71,9 @@ def run():
     
         sDelta = 0.01
         geomPoints = generateSamplePoints(s, inLineParam, outLineParam, sDelta)
-        plotter.plotGeomPoints(geomPoints)
-        plotter.draw()
-    
+        geomColors = []
         paramPoints = []
+        
         prevUV = intersections[0].paramPoint
     
         for geomPoint in geomPoints:
@@ -85,10 +84,14 @@ def run():
                                   phi.evaluatePartialDerivativeV(u, v)]).transpose()
             
             paramPoint = newton.newtonsMethod2DClamped(f, fJacob, prevUV, splineInterval)
+            scalar = rho.evaluate(paramPoint[0], paramPoint[1])
+            rgb = transfer(scalar)
 
+            geomColors.append(rgb)
             paramPoints.append(paramPoint)
             prevUV = paramPoint
 
+        plotter.plotGeomPoints(geomPoints, geomColors)
         plotter.plotParamPoints(paramPoints)
         plotter.draw()
 
@@ -121,3 +124,6 @@ def intersection2D(f, g, df, dg, uGuess, vGuess):
         return np.matrix([df(u), -dg(v)]).transpose()
     
     return newton.newtonsMethod2DClamped(h, hJacob, [uGuess, vGuess], [0, 0.99999])
+
+if __name__ == "__main__":
+    run()

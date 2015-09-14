@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 import pylab as plt
 
@@ -71,15 +72,16 @@ class Plotter:
 		
 	def plotScalarField(self, rho, transfer):
 		interval = self.splineInterval
-		uvRange = np.linspace(interval[0], interval[1], self.precision)
+		uRange = np.linspace(interval[0], interval[1], self.precision)
+		vRange = np.linspace(interval[1], interval[0], self.precision)
 		
 		img = []
 		
-		for u in uvRange:
+		for v in vRange:
 			row = []
 			
-			for v in uvRange:
-				x = rho.evaluate(u, v)
+			for u in uRange:
+				x = rho.evaluate(u,v)
 				row.append(transfer(x[0]))
 		
 			img.append(row)
@@ -91,7 +93,7 @@ class Plotter:
 		points = self.generatePoints1(f, params)
 		
 		self.selectGPlot()
-		plt.plot(points[:,0], points[:,1])
+		plt.plot(points[:,0], points[:,1], color='k')
 	
 	def plotIntersectionPoints(self, points):
 		self.selectGPlot()
@@ -99,17 +101,17 @@ class Plotter:
 		for point in points:
 			plt.plot(point[0], point[1], marker='o', color='b')
 
-	def plotGeomPoints(self, points):
+	def plotGeomPoints(self, points, colors):
 		self.selectGPlot()
 		
-		for point in points:
-			plt.plot(point[0], point[1], marker='x', color='r')
+		for point, c in itertools.izip(points, colors):
+			plt.plot(point[0], point[1], marker='.', color=tuple(c))
 			
 	def plotParamPoints(self, points):
 		self.selectPPlot()
 		
 		for point in points:
-			plt.plot(point[0], point[1], marker='x', color='r')
+			plt.plot(point[0], point[1], marker='x', color='k')
 		
 	def draw(self):
 		plt.draw()
