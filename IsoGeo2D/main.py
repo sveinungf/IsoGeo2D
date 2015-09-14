@@ -42,10 +42,10 @@ def run():
     transfer = trans.createTransferFunction(100)
     plotter.plotScalarField(rho, transfer)
     
-    eye = np.array([-0.5, 0.5])
+    eye = np.array([-0.5, 0.4])
     pixels = []
-    pixels.append(np.array([-0.2, 0.55]))
-    pixels.append(np.array([-0.2, 0.45]))
+    pixels.append(np.array([-0.2, 0.5]))
+    pixels.append(np.array([-0.2, 0.35]))
     
     for pixel in pixels:
         viewDir = pixel - eye
@@ -108,13 +108,27 @@ def generateSamplePoints(f, begin, end, delta):
 def findIntersections(splinePlane, s, ds):
     result = []
     
-    uv = intersection2D(splinePlane.left, s, splinePlane.dleft, ds, 0.5, 0)
-    result.append(Intersection(np.array([0, uv[0]]), uv[1]))
+    uvLeft = intersection2D(splinePlane.left, s, splinePlane.dleft, ds, 0.5, 0)
+    uvTop = intersection2D(splinePlane.top, s, splinePlane.dtop, ds, 0.5, 0)
+    uvRight = intersection2D(splinePlane.right, s, splinePlane.dright, ds, 0.5, 0)
+    uvBottom = intersection2D(splinePlane.bottom, s, splinePlane.dbottom, ds, 0.5, 0)
     
-    uv = intersection2D(splinePlane.right, s, splinePlane.dright, ds, 0.5, 0)
-    result.append(Intersection(np.array([0.99999, uv[0]]), uv[1]))
+    if uvLeft != None:
+        result.append(Intersection(np.array([0, uvLeft[0]]), uvLeft[1]))
+        
+    if uvTop != None:
+        result.append(Intersection(np.array([0.99999, uvTop[0]]), uvTop[1]))
+        
+    if uvRight != None:
+        result.append(Intersection(np.array([0.99999, uvRight[0]]), uvRight[1]))
+        
+    if uvBottom != None:
+        result.append(Intersection(np.array([0, uvBottom[0]]), uvBottom[1]))
 
-    return np.asarray(result)
+    if result[0].lineParam < result[1].lineParam:
+        return np.asarray(result)
+    else:
+        return np.asarray([result[1], result[0]])
 
 def intersection2D(f, g, df, dg, uGuess, vGuess):
     def h(u, v):
