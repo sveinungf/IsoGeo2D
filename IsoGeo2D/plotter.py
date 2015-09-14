@@ -84,7 +84,7 @@ class Plotter:
 		
 			img.append(row)
 		
-		plt.imshow(img, extent=(interval[0], interval[1], interval[0], interval[1]))
+		plt.imshow(img, aspect='auto', extent=(interval[0], interval[1], interval[0], interval[1]))
 	
 	def plotLine(self, f, interval):
 		params = np.linspace(interval[0], interval[1], self.precision)
