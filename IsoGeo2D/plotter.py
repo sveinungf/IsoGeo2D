@@ -2,7 +2,8 @@ import numpy as np
 import pylab as plt
 
 class Plotter:
-	def __init__(self):
+	def __init__(self, splineInterval):
+		self.splineInterval = splineInterval
 		self.precision = 100
 		
 		self.selectGPlot()
@@ -39,13 +40,14 @@ class Plotter:
 		
 		return output
 		
-	def plotSurfaces(self, f, xInterval, yInterval, m, n):
-		vLines = np.linspace(xInterval[0], xInterval[1], m)
-		hLines = np.linspace(yInterval[0], yInterval[1], n)
+	def plotSurfaces(self, f, m, n):
+		interval = self.splineInterval
+		vLines = np.linspace(interval[0], interval[1], m)
+		hLines = np.linspace(interval[0], interval[1], n)
 		
 		for vLine in vLines:
 			paramsX = [vLine] * self.precision
-			paramsY = np.linspace(yInterval[0], yInterval[1], self.precision)
+			paramsY = np.linspace(interval[0], interval[1], self.precision)
 			
 			[geomX, geomY] = self.generatePoints(f, paramsX, paramsY)
 			
@@ -56,7 +58,7 @@ class Plotter:
 			plt.plot(paramsX, paramsY)
 			
 		for hLine in hLines:
-			paramsX = np.linspace(xInterval[0], xInterval[1], self.precision)
+			paramsX = np.linspace(interval[0], interval[1], self.precision)
 			paramsY = [hLine] * self.precision
 			
 			[geomX, geomY] = self.generatePoints(f, paramsX, paramsY)
@@ -67,6 +69,22 @@ class Plotter:
 			self.selectPPlot()
 			plt.plot(paramsX, paramsY)
 		
+	def plotScalarField(self, rho, transfer):
+		interval = self.splineInterval
+		uvRange = np.linspace(interval[0], interval[1], self.precision)
+		
+		img = []
+		
+		for u in uvRange:
+			row = []
+			
+			for v in uvRange:
+				x = rho.evaluate(u, v)
+				row.append(transfer(x[0]))
+		
+			img.append(row)
+		
+		plt.imshow(img, extent=(interval[0], interval[1], interval[0], interval[1]))
 	
 	def plotLine(self, f, interval):
 		params = np.linspace(interval[0], interval[1], self.precision)

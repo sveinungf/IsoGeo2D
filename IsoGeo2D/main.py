@@ -1,11 +1,12 @@
 import newton
 import numpy as np
+import transfer as trans
 from intersection import Intersection
 from plotter import Plotter
 from splines import Spline2D
 from splines import SplinePlane
 
-def makeSpline2D():
+def createPhi():
     p = 2
     uKnots = [0, 0, 0, 0.2, 0.7, 1.0, 1.0, 1.0]
     vKnots = [0, 0, 0, 0.3, 0.6, 1.0, 1.0, 1.0]
@@ -17,13 +18,29 @@ def makeSpline2D():
     
     return Spline2D(p, uKnots, vKnots, coeffs)
 
-def run():
-    plotter = Plotter()
+def createRho():
+    p = 2
+    uKnots = [0, 0, 0, 0.2, 0.7, 1.0, 1.0, 1.0]
+    vKnots = [0, 0, 0, 0.3, 0.6, 1.0, 1.0, 1.0]
+    coeffs = np.array([[[0.35], [0.1], [0.1], [0.0], [0.0]],
+                       [[0.25], [0.11], [0.4], [0.9], [1.0]],
+                       [[0.5], [0.0], [0.3], [0.3], [0.5]],
+                       [[0.75], [0.3], [0.2], [0.7], [0.75]],
+                       [[0.5], [1.0], [1.0], [1.0], [0.8]]])
     
-    spline = makeSpline2D()
+    return Spline2D(p, uKnots, vKnots, coeffs)
+
+def run():
     splineInterval = [0, 0.99999]
-    splinePlane = SplinePlane(spline, splineInterval)
-    plotter.plotSurfaces(splinePlane.evaluate, splineInterval, splineInterval, 10, 10)
+    plotter = Plotter(splineInterval)
+    
+    phi = createPhi()
+    phiPlane = SplinePlane(phi, splineInterval)
+    plotter.plotSurfaces(phiPlane.evaluate, 10, 10)
+    
+    rho = createRho()
+    transfer = trans.createTransferFunction(100)
+    plotter.plotScalarField(rho, transfer)
     
     eye = np.array([-0.5, 0.5])
     pixels = []
@@ -41,7 +58,7 @@ def run():
         plotter.plotLine(s, [0, 10])
         plotter.draw()
 
-        intersections = findIntersections(splinePlane, s, ds)
+        intersections = findIntersections(phiPlane, s, ds)
     
         inLineParam = intersections[0].lineParam
         outLineParam = intersections[1].lineParam
@@ -62,10 +79,10 @@ def run():
     
         for geomPoint in geomPoints:
             def f(u,v):
-                return spline.evaluate(u,v) - geomPoint
+                return phi.evaluate(u,v) - geomPoint
             def fJacob(u, v):
-                return np.matrix([spline.evaluatePartialDerivativeU(u, v), 
-                                  spline.evaluatePartialDerivativeV(u, v)]).transpose()
+                return np.matrix([phi.evaluatePartialDerivativeU(u, v), 
+                                  phi.evaluatePartialDerivativeV(u, v)]).transpose()
             
             paramPoint = newton.newtonsMethod2DClamped(f, fJacob, prevUV, splineInterval)
 
