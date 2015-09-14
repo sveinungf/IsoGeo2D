@@ -36,7 +36,7 @@ def run():
     
     phi = createPhi()
     phiPlane = SplinePlane(phi, splineInterval)
-    plotter.plotSurfaces(phiPlane.evaluate, 10, 10)
+    plotter.plotGrids(phiPlane.evaluate, 10, 10)
     
     rho = createRho()
     transfer = trans.createTransferFunction(100)

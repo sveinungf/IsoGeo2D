@@ -41,10 +41,11 @@ class Plotter:
 		
 		return output
 		
-	def plotSurfaces(self, f, m, n):
+	def plotGrids(self, f, m, n):
 		interval = self.splineInterval
 		vLines = np.linspace(interval[0], interval[1], m)
 		hLines = np.linspace(interval[0], interval[1], n)
+		lineColor = '0.5'
 		
 		for vLine in vLines:
 			paramsX = [vLine] * self.precision
@@ -53,10 +54,10 @@ class Plotter:
 			[geomX, geomY] = self.generatePoints(f, paramsX, paramsY)
 			
 			self.selectGPlot()
-			plt.plot(geomX, geomY)
+			plt.plot(geomX, geomY, color=lineColor)
 			
 			self.selectPPlot()
-			plt.plot(paramsX, paramsY)
+			plt.plot(paramsX, paramsY, color=lineColor)
 			
 		for hLine in hLines:
 			paramsX = np.linspace(interval[0], interval[1], self.precision)
@@ -65,10 +66,10 @@ class Plotter:
 			[geomX, geomY] = self.generatePoints(f, paramsX, paramsY)
 			
 			self.selectGPlot()
-			plt.plot(geomX, geomY)
+			plt.plot(geomX, geomY, color=lineColor)
 			
 			self.selectPPlot()
-			plt.plot(paramsX, paramsY)
+			plt.plot(paramsX, paramsY, color=lineColor)
 		
 	def plotScalarField(self, rho, transfer):
 		interval = self.splineInterval
