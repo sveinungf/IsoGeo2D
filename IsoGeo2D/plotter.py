@@ -6,7 +6,7 @@ class Plotter:
 		self.precision = 100
 		
 		self.selectGPlot()
-		plt.axis((-0.1, 1.1, -0.1, 1.1))
+		plt.axis((-0.6, 1.1, -0.1, 1.1))
 		
 		self.selectPPlot()
 		plt.axis((-0.1, 1.1, -0.1, 1.1))

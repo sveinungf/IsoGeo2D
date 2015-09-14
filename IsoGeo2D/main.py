@@ -17,65 +17,63 @@ def makeSpline2D():
     
     return Spline2D(p, uKnots, vKnots, coeffs)
 
-def makeSplinePlane():
-    return SplinePlane(makeSpline2D(), [0, 0.99999])
-
-def spline():
-    def s(v):
-        return np.array([v, -0.25*v+0.75])
-    def ds(v):
-        return np.array([1, -0.25])
-    
-    def hAtPoint(point):
-        def h(u, v):
-            return spline.evaluate(u, v) - point
-        return h
-    def hJacob(u, v):
-        return np.matrix([spline.evaluatePartialDerivativeU(u, v), 
-                          spline.evaluatePartialDerivativeV(u, v)]).transpose()
-
+def run():
+    plotter = Plotter()
     
     spline = makeSpline2D()
     splineInterval = [0, 0.99999]
     splinePlane = SplinePlane(spline, splineInterval)
-    
-    plotter = Plotter()
     plotter.plotSurfaces(splinePlane.evaluate, splineInterval, splineInterval, 10, 10)
-    plotter.plotLine(s, [-10, 10])
-    plotter.draw()
     
-    intersections = findIntersections(splinePlane, s, ds)
+    eye = np.array([-0.5, 0.5])
+    pixels = []
+    pixels.append(np.array([-0.2, 0.55]))
+    pixels.append(np.array([-0.2, 0.45]))
     
-    inOutParamPoints = []
-    inOutGeomPoints = []
-    
-    for intersection in intersections:
-        inOutParamPoints.append(intersection.paramPoint)
-        inOutGeomPoints.append(s(intersection.lineParam))
+    for pixel in pixels:
+        viewDir = pixel - eye
         
-    plotter.plotIntersectionPoints(inOutGeomPoints)
-    plotter.draw()
-    
-    inLineParam = intersections[0].lineParam
-    outLineParam = intersections[1].lineParam
-    
-    sDelta = 0.005
-    geomPoints = generateSamplePoints(s, inLineParam, outLineParam, sDelta)
-    
-    plotter.plotGeomPoints(geomPoints)
-    plotter.draw()
-    
-    paramPoints = []
-    prevUV = intersections[0].paramPoint
-    
-    for geomPoint in geomPoints:
-        paramPoint = newton.newtonsMethod2DClamped(hAtPoint(geomPoint), hJacob, prevUV, splineInterval)
+        def s(t):
+            return np.array([t+eye[0], viewDir[1]/viewDir[0]*t+eye[1]])
+        def ds(t):
+            return np.array([1, viewDir[1]/viewDir[0]])
 
-        paramPoints.append(paramPoint)
-        prevUV = paramPoint
+        plotter.plotLine(s, [0, 10])
+        plotter.draw()
 
-    plotter.plotParamPoints(paramPoints)
-    plotter.draw()
+        intersections = findIntersections(splinePlane, s, ds)
+    
+        inLineParam = intersections[0].lineParam
+        outLineParam = intersections[1].lineParam
+        
+        inOutGeomPoints = []
+        inOutGeomPoints.append(s(inLineParam))
+        inOutGeomPoints.append(s(outLineParam))
+        plotter.plotIntersectionPoints(inOutGeomPoints)
+        plotter.draw()
+    
+        sDelta = 0.01
+        geomPoints = generateSamplePoints(s, inLineParam, outLineParam, sDelta)
+        plotter.plotGeomPoints(geomPoints)
+        plotter.draw()
+    
+        paramPoints = []
+        prevUV = intersections[0].paramPoint
+    
+        for geomPoint in geomPoints:
+            def f(u,v):
+                return spline.evaluate(u,v) - geomPoint
+            def fJacob(u, v):
+                return np.matrix([spline.evaluatePartialDerivativeU(u, v), 
+                                  spline.evaluatePartialDerivativeV(u, v)]).transpose()
+            
+            paramPoint = newton.newtonsMethod2DClamped(f, fJacob, prevUV, splineInterval)
+
+            paramPoints.append(paramPoint)
+            prevUV = paramPoint
+
+        plotter.plotParamPoints(paramPoints)
+        plotter.draw()
 
 def generateSamplePoints(f, begin, end, delta):
     result = []

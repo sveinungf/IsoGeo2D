@@ -18,7 +18,7 @@ def newtonsMethod1D(f, df, x, tolerance):
 
 	return x
 	
-def newtonsMethod2DClamped(f, fJacob, uv, clampInterval, tolerance=0.000001, maxAttempts=20):
+def newtonsMethod2DClamped(f, fJacob, uv, clampInterval, tolerance=0.00001, maxAttempts=20):
 	attempt = 1
 	u = uv[0]
 	v = uv[1]
@@ -26,9 +26,6 @@ def newtonsMethod2DClamped(f, fJacob, uv, clampInterval, tolerance=0.000001, max
 	while attempt < maxAttempts:
 		u = clampInterval[0] if u < clampInterval[0] else u
 		u = clampInterval[1] if u > clampInterval[1] else u
-		
-		v = clampInterval[0] if v < clampInterval[0] else v
-		v = clampInterval[1] if v > clampInterval[1] else v
 		
 		jacob = fJacob(u, v)
 		
