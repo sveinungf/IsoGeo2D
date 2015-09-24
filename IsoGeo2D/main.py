@@ -1,3 +1,4 @@
+import compositing
 import newton
 import numpy as np
 import transfer as trans
@@ -22,7 +23,7 @@ def createRho():
     p = 2
     uKnots = [0, 0, 0, 0.2, 0.7, 1.0, 1.0, 1.0]
     vKnots = [0, 0, 0, 0.3, 0.6, 1.0, 1.0, 1.0]
-    coeffs = np.array([[[0.6], [0.1], [0.1], [0.0], [0.0]],
+    coeffs = np.array([[[0.6], [0.1], [0.6], [1.0], [1.0]],
                        [[0.25], [0.11], [1.0], [0.9], [1.0]],
                        [[0.5], [0.0], [0.3], [0.3], [0.5]],
                        [[0.75], [0.3], [0.0], [0.7], [0.75]],
@@ -34,12 +35,15 @@ def run():
     splineInterval = [0, 0.99999]
     
     eye = np.array([-2, 0.4])
+    
     pixels = []
+    pixels.append(np.array([-0.4, 0.65]))
     pixels.append(np.array([-0.4, 0.5]))
     pixels.append(np.array([-0.4, 0.35]))
-    pixelColors = []
+    numPixels = len(pixels)
+    pixelColors = np.empty((numPixels, 4))
     
-    plotter = Plotter(splineInterval, len(pixels))
+    plotter = Plotter(splineInterval, numPixels)
     
     phi = createPhi()
     phiPlane = SplinePlane(phi, splineInterval)
@@ -49,7 +53,7 @@ def run():
     transfer = trans.createTransferFunction(100)
     plotter.plotScalarField(rho, transfer)
     
-    for pixel in pixels:
+    for i, pixel in enumerate(pixels):
         viewDir = pixel - eye
         
         def s(t):
@@ -87,9 +91,9 @@ def run():
             
             paramPoint = newton.newtonsMethod2DClamped(f, fJacob, prevUV, splineInterval)
             scalar = rho.evaluate(paramPoint[0], paramPoint[1])
-            rgb = transfer(scalar)[:3]
+            rgba = transfer(scalar)
 
-            geomColors.append(rgb)
+            geomColors.append(rgba)
             paramPoints.append(paramPoint)
             prevUV = paramPoint
 
@@ -97,9 +101,11 @@ def run():
         plotter.plotParamPoints(paramPoints)
         plotter.draw()
         
-        pixelColors.append(np.array([1.0, 0.0, 0.0, 1.0]))
+        pixelColor = compositing.frontToBack(geomColors)
+        pixelColors[i] = pixelColor
         
-    #plotter.plotPixels(pixels, pixelColors)
+    plotter.plotPixels(pixels, pixelColors)
+    plotter.draw()
 
 def generateSamplePoints(f, begin, end, delta):
     result = []

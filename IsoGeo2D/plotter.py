@@ -22,12 +22,12 @@ class Plotter:
 		self.pPlot = ax
 		
 		ax = plt.subplot(gridSpec[0, 2])
-		ax.axis((-0.1, numPixels-0.9, -0.1, 1.1))
+		ax.axis((-0.5, numPixels-0.5, -0.1, 1.1))
 		ax.set_xticks(np.arange(numPixels))
 		self.pixelComponentsPlot = ax
 		
 		ax = plt.subplot(gridSpec[1, 2])
-		ax.axis((-0.1, numPixels-0.9, -0.1, 1.1))
+		ax.axis((-0.5, numPixels-0.5, 0, 1))
 		ax.set_xticks(np.arange(numPixels))
 		self.pixelPlot = ax
 		
@@ -126,6 +126,20 @@ class Plotter:
 		
 		for point in points:
 			ax.plot(point[0], point[1], marker='x', color='k')
+			
+	def plotPixels(self, pixels, pixelColors):
+		ax = self.pixelComponentsPlot
+		indexes = np.arange(len(pixels))
+		
+		ax.plot(indexes, pixelColors[:,0], marker='o', color='#ff0000')
+		ax.plot(indexes, pixelColors[:,1], marker='o', color='#00ff00')
+		ax.plot(indexes, pixelColors[:,2], marker='o', color='#0000ff')		
+		
+		ax = self.pixelPlot
+		
+		for i, pixelColor in enumerate(pixelColors):
+			r = Rectangle((i-.5, 0), 1, 1, facecolor=tuple(pixelColor))
+			ax.add_patch(r)
 		
 	def draw(self):
 		plt.draw()

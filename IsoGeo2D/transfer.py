@@ -7,16 +7,16 @@ def createTransferArray(n):
     decr = np.linspace(1.0, 0.0, n/4)
     
     for val in incr:
-        result.append([0.0, val, 1.0, 1.0])
+        result.append(np.array([0.0, val, 1.0, 0.1]))
         
     for val in decr:
-        result.append([0.0, 1.0, val, 1.0])
+        result.append(np.array([0.0, 1.0, val, 0.5]))
         
     for val in incr:
-        result.append([val, 1.0, 0.0, 1.0])
+        result.append(np.array([val, 1.0, 0.0, 0.7]))
         
     for val in decr:
-        result.append([1.0, val, 0.0, 1.0])
+        result.append(np.array([1.0, val, 0.0, 0.9]))
         
     return result
 
