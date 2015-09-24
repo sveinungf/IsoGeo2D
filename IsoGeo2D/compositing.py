@@ -2,7 +2,7 @@ import numpy as np
 
 def frontToBack(rgbaValues):
     delta = 1.0
-    xi = 100
+    xi = 20
     
     dst = np.zeros(4)
     

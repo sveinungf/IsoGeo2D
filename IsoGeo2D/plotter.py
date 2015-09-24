@@ -29,6 +29,7 @@ class Plotter:
 		ax = plt.subplot(gridSpec[1, 2])
 		ax.axis((-0.5, numPixels-0.5, 0, 1))
 		ax.set_xticks(np.arange(numPixels))
+		ax.yaxis.set_major_locator(plt.NullLocator()) # Removes ticks
 		self.pixelPlot = ax
 		
 		plt.ion()
@@ -127,7 +128,13 @@ class Plotter:
 		for point in points:
 			ax.plot(point[0], point[1], marker='x', color='k')
 			
-	def plotPixels(self, pixels, pixelColors):
+	def plotPixelPoints(self, pixels):
+		ax = self.gPlot
+		
+		for i, pixel in enumerate(pixels):
+			ax.text(pixel[0], pixel[1], str(i))
+		
+	def plotPixelColors(self, pixels, pixelColors):
 		ax = self.pixelComponentsPlot
 		indexes = np.arange(len(pixels))
 		

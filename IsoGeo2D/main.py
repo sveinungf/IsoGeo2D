@@ -37,10 +37,13 @@ def run():
     eye = np.array([-2, 0.4])
     
     pixels = []
-    pixels.append(np.array([-0.4, 0.65]))
-    pixels.append(np.array([-0.4, 0.5]))
-    pixels.append(np.array([-0.4, 0.35]))
-    numPixels = len(pixels)
+    numPixels = 5
+    pixelX = -0.4
+    pixelYs = np.linspace(0.8, 0.15, numPixels)
+    
+    for pixelY in pixelYs:
+        pixels.append(np.array([pixelX, pixelY]))
+
     pixelColors = np.empty((numPixels, 4))
     
     plotter = Plotter(splineInterval, numPixels)
@@ -75,7 +78,7 @@ def run():
         plotter.plotIntersectionPoints(inOutGeomPoints)
         plotter.draw()
     
-        sDelta = 0.01
+        sDelta = 0.05
         geomPoints = generateSamplePoints(s, inLineParam, outLineParam, sDelta)
         geomColors = []
         paramPoints = []
@@ -104,7 +107,8 @@ def run():
         pixelColor = compositing.frontToBack(geomColors)
         pixelColors[i] = pixelColor
         
-    plotter.plotPixels(pixels, pixelColors)
+    plotter.plotPixelPoints(pixels)
+    plotter.plotPixelColors(pixels, pixelColors)
     plotter.draw()
 
 def generateSamplePoints(f, begin, end, delta):
