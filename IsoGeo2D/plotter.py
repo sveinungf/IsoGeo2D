@@ -1,26 +1,38 @@
 import itertools
 import numpy as np
 import pylab as plt
+from matplotlib.gridspec import GridSpec
+from matplotlib.patches import Rectangle
 
 class Plotter:
-	def __init__(self, splineInterval):
+	def __init__(self, splineInterval, numPixels):
 		self.splineInterval = splineInterval
 		self.precision = 100
 		
-		self.selectGPlot()
-		plt.axis((-0.6, 1.1, -0.1, 1.1))
+		plt.figure(figsize=(15,5))
+		gridSpec = GridSpec(2, 3, height_ratios=[4, 1])
+		self.gridSpec = gridSpec
 		
-		self.selectPPlot()
-		plt.axis((-0.1, 1.1, -0.1, 1.1))
+		ax = plt.subplot(gridSpec[:, 0])
+		ax.axis((-0.6, 1.1, -0.1, 1.1))
+		self.gPlot = ax
+		
+		ax = plt.subplot(gridSpec[:, 1])
+		ax.axis((-0.1, 1.1, -0.1, 1.1))
+		self.pPlot = ax
+		
+		ax = plt.subplot(gridSpec[0, 2])
+		ax.axis((-0.1, numPixels-0.9, -0.1, 1.1))
+		ax.set_xticks(np.arange(numPixels))
+		self.pixelComponentsPlot = ax
+		
+		ax = plt.subplot(gridSpec[1, 2])
+		ax.axis((-0.1, numPixels-0.9, -0.1, 1.1))
+		ax.set_xticks(np.arange(numPixels))
+		self.pixelPlot = ax
 		
 		plt.ion()
 		plt.show()
-	
-	def selectGPlot(self):
-		plt.subplot(1, 2, 1)
-		
-	def selectPPlot(self):
-		plt.subplot(1, 2, 2)
 
 	def generatePoints(self, f, xInputs, yInputs):
 		xOutput = []
@@ -53,11 +65,11 @@ class Plotter:
 			
 			[geomX, geomY] = self.generatePoints(f, paramsX, paramsY)
 			
-			self.selectGPlot()
-			plt.plot(geomX, geomY, color=lineColor)
+			ax = self.gPlot
+			ax.plot(geomX, geomY, color=lineColor)
 			
-			self.selectPPlot()
-			plt.plot(paramsX, paramsY, color=lineColor)
+			ax = self.pPlot
+			ax.plot(paramsX, paramsY, color=lineColor)
 			
 		for hLine in hLines:
 			paramsX = np.linspace(interval[0], interval[1], self.precision)
@@ -65,11 +77,11 @@ class Plotter:
 			
 			[geomX, geomY] = self.generatePoints(f, paramsX, paramsY)
 			
-			self.selectGPlot()
-			plt.plot(geomX, geomY, color=lineColor)
+			ax = self.gPlot
+			ax.plot(geomX, geomY, color=lineColor)
 			
-			self.selectPPlot()
-			plt.plot(paramsX, paramsY, color=lineColor)
+			ax = self.pPlot
+			ax.plot(paramsX, paramsY, color=lineColor)
 		
 	def plotScalarField(self, rho, transfer):
 		interval = self.splineInterval
@@ -87,32 +99,33 @@ class Plotter:
 		
 			img.append(row)
 		
-		plt.imshow(img, aspect='auto', extent=(interval[0], interval[1], interval[0], interval[1]))
+		ax = self.pPlot
+		ax.imshow(img, aspect='auto', extent=(interval[0], interval[1], interval[0], interval[1]))
 	
 	def plotLine(self, f, interval):
 		params = np.linspace(interval[0], interval[1], self.precision)
 		points = self.generatePoints1(f, params)
 		
-		self.selectGPlot()
-		plt.plot(points[:,0], points[:,1], color='k')
+		ax = self.gPlot
+		ax.plot(points[:,0], points[:,1], color='k')
 	
 	def plotIntersectionPoints(self, points):
-		self.selectGPlot()
+		ax = self.gPlot
 		
 		for point in points:
-			plt.plot(point[0], point[1], marker='o', color='b')
+			ax.plot(point[0], point[1], marker='o', color='b')
 
 	def plotGeomPoints(self, points, colors):
-		self.selectGPlot()
+		ax = self.gPlot
 		
 		for point, c in itertools.izip(points, colors):
-			plt.plot(point[0], point[1], marker='.', color=tuple(c))
+			ax.plot(point[0], point[1], marker='.', color=tuple(c))
 			
 	def plotParamPoints(self, points):
-		self.selectPPlot()
+		ax = self.pPlot
 		
 		for point in points:
-			plt.plot(point[0], point[1], marker='x', color='k')
+			ax.plot(point[0], point[1], marker='x', color='k')
 		
 	def draw(self):
 		plt.draw()

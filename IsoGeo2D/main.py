@@ -32,7 +32,14 @@ def createRho():
 
 def run():
     splineInterval = [0, 0.99999]
-    plotter = Plotter(splineInterval)
+    
+    eye = np.array([-2, 0.4])
+    pixels = []
+    pixels.append(np.array([-0.4, 0.5]))
+    pixels.append(np.array([-0.4, 0.35]))
+    pixelColors = []
+    
+    plotter = Plotter(splineInterval, len(pixels))
     
     phi = createPhi()
     phiPlane = SplinePlane(phi, splineInterval)
@@ -41,11 +48,6 @@ def run():
     rho = createRho()
     transfer = trans.createTransferFunction(100)
     plotter.plotScalarField(rho, transfer)
-    
-    eye = np.array([-0.5, 0.4])
-    pixels = []
-    pixels.append(np.array([-0.2, 0.5]))
-    pixels.append(np.array([-0.2, 0.35]))
     
     for pixel in pixels:
         viewDir = pixel - eye
@@ -85,7 +87,7 @@ def run():
             
             paramPoint = newton.newtonsMethod2DClamped(f, fJacob, prevUV, splineInterval)
             scalar = rho.evaluate(paramPoint[0], paramPoint[1])
-            rgb = transfer(scalar)
+            rgb = transfer(scalar)[:3]
 
             geomColors.append(rgb)
             paramPoints.append(paramPoint)
@@ -94,6 +96,10 @@ def run():
         plotter.plotGeomPoints(geomPoints, geomColors)
         plotter.plotParamPoints(paramPoints)
         plotter.draw()
+        
+        pixelColors.append(np.array([1.0, 0.0, 0.0, 1.0]))
+        
+    #plotter.plotPixels(pixels, pixelColors)
 
 def generateSamplePoints(f, begin, end, delta):
     result = []
