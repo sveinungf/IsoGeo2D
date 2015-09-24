@@ -9,24 +9,28 @@ class Plotter:
 		self.splineInterval = splineInterval
 		self.precision = 100
 		
-		plt.figure(figsize=(15,5))
-		gridSpec = GridSpec(2, 3, height_ratios=[4, 1])
+		plt.figure(figsize=(12, 12))
+		gridSpec = GridSpec(3, 2, height_ratios=[7, 5, 1])
 		self.gridSpec = gridSpec
 		
-		ax = plt.subplot(gridSpec[:, 0])
+		ax = plt.subplot(gridSpec[0, 0])
 		ax.axis((-0.6, 1.1, -0.1, 1.1))
 		self.gPlot = ax
 		
-		ax = plt.subplot(gridSpec[:, 1])
+		ax = plt.subplot(gridSpec[0, 1])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.pPlot = ax
 		
-		ax = plt.subplot(gridSpec[0, 2])
-		ax.axis((-0.5, numPixels-0.5, -0.1, 1.1))
+		ax = plt.subplot(gridSpec[1:3, 0])
+		ax.axis((-0.6, 1.1, -0.1, 1.1))
+		self.samplingPlot = ax
+		
+		ax = plt.subplot(gridSpec[1, 1])
+		ax.axis((-0.5, numPixels-0.5, 0, 1))
 		ax.set_xticks(np.arange(numPixels))
 		self.pixelComponentsPlot = ax
 		
-		ax = plt.subplot(gridSpec[1, 2])
+		ax = plt.subplot(gridSpec[2, 1])
 		ax.axis((-0.5, numPixels-0.5, 0, 1))
 		ax.set_xticks(np.arange(numPixels))
 		ax.yaxis.set_major_locator(plt.NullLocator()) # Removes ticks
