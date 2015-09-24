@@ -34,15 +34,17 @@ def createRho():
 def run():
     splineInterval = [0, 0.99999]
     
-    eye = np.array([-2, 0.4])
+    eyeX = -2
+    pixelX = -0.4
+    numPixels = 5
+    yValues = np.linspace(0.8, 0.15, numPixels)
     
     pixels = []
-    numPixels = 5
-    pixelX = -0.4
-    pixelYs = np.linspace(0.8, 0.15, numPixels)
+    eyes = []
     
-    for pixelY in pixelYs:
-        pixels.append(np.array([pixelX, pixelY]))
+    for y in yValues:
+        pixels.append(np.array([pixelX, y]))
+        eyes.append(np.array([eyeX, y]))
 
     pixelColors = np.empty((numPixels, 4))
     
@@ -57,6 +59,7 @@ def run():
     plotter.plotScalarField(rho, transfer)
     
     for i, pixel in enumerate(pixels):
+        eye = eyes[i]
         viewDir = pixel - eye
         
         def s(t):
