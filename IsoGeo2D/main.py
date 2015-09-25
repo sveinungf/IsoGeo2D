@@ -13,11 +13,11 @@ def createPhi():
     p = 2
     uKnots = [0, 0, 0, 0.2, 0.7, 1.0, 1.0, 1.0]
     vKnots = [0, 0, 0, 0.3, 0.6, 1.0, 1.0, 1.0]
-    coeffs = np.array([[[0.0,0.0], [-0.1,0.2], [-0.1,0.5], [0,0.9], [0.0,1.0]],
-                       [[0.25,-0.05], [0.11 ,0.4], [0.4,0.41], [0.5,0.9], [0.25,1.1]],
-                       [[0.5,-0.06], [0.5,0.2], [0.5,0.5], [0.6,0.9], [0.5,1.0]],
-                       [[0.75,-0.05], [0.7,0.2], [0.8,0.5], [0.7,0.9], [0.75,1.0]],
-                       [[1.0,0.0], [1.01,0.2], [1.02,0.5], [1.05,0.9], [1.0,1.0]]])
+    coeffs = np.array([[[0.0,0.0], [-0.1,0.2], [-0.2,0.5], [0,0.9], [0.0,1.0]],
+                       [[0.25,-0.05], [0.11 ,0.4], [0.4,0.41], [0.5,0.9], [0.25,1.05]],
+                       [[0.5,-0.06], [0.5,0.2], [0.5,0.5], [0.6,0.9], [0.5,1.03]],
+                       [[0.75,-0.05], [0.7,0.2], [0.8,0.5], [0.7,0.9], [0.75,0.95]],
+                       [[1.0,0.0], [1.01,0.2], [1.02,0.5], [1.05,0.7], [1.0,0.8]]])
     
     return Spline2D(p, uKnots, vKnots, coeffs)
 
@@ -39,10 +39,10 @@ def run():
     eyeX = -2
     pixelX = -0.4
 
-    rayCount = 5
-    samplingsPerRay = 5
+    rayCount = 10
+    samplingsPerRay = 10
     
-    boundingBox = BoundingBox(0.9, 0.1, 0.1, 0.8)
+    boundingBox = BoundingBox(1.0, 0.0, -0.2, 1.1)
     
     plotter = Plotter(splineInterval, rayCount)
     
@@ -77,6 +77,9 @@ def run():
         
         intersections = findIntersections(phiPlane, ray)
         
+        if intersections == None:
+            continue
+        
         inLineParam = intersections[0].lineParam
         outLineParam = intersections[1].lineParam
         
@@ -92,6 +95,9 @@ def run():
         prevUV = intersections[0].paramPoint
         
         for j, x in enumerate(xValues):
+            if x < inGeomPoint[0] or x > outGeomPoint[0]:
+                continue
+            
             geomPoint = np.array([x, y])
             geomPoints.append(geomPoint)
 
@@ -114,14 +120,13 @@ def run():
         plotter.draw()
     
     samplingColors = np.empty((rayCount, samplingsPerRay, 4))
-    defaultColor = np.array([1.0, 1.0, 1.0, 0.0])
     
     for (i, j), scalar in np.ndenumerate(samplingScalars):
         if scalar == samplingDefault:
-            samplingColors[i][j] = defaultColor
-            
-        samplingColors[i][j] = transfer(scalar)
-            
+            samplingColors[i][j] = [0] * 4
+        else:
+            samplingColors[i][j] = transfer(scalar)
+         
     plotSampleColors = True
     
     if plotSampleColors:
@@ -172,6 +177,9 @@ def findIntersections(splinePlane, ray):
     if uvBottom != None:
         result.append(Intersection(np.array([0, uvBottom[0]]), uvBottom[1]))
 
+    if len(result) < 2:
+        return None
+        
     if result[0].lineParam < result[1].lineParam:
         return np.asarray(result)
     else:

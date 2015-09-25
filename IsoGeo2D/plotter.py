@@ -167,9 +167,10 @@ class Plotter:
 		deltaY = boundingBox.getHeight() / float(len(scalars))
 		
 		for (i, j), scalar in np.ndenumerate(scalars):
-			lowerLeft = (boundingBox.left+j*deltaX, boundingBox.bottom+i*deltaY)
-			r = Rectangle(lowerLeft, deltaX, deltaY, facecolor=tuple([scalar]*3))
-			ax.add_patch(r)
+			if not scalar == -1:
+				lowerLeft = (boundingBox.left+j*deltaX, boundingBox.bottom+i*deltaY)
+				r = Rectangle(lowerLeft, deltaX, deltaY, facecolor=tuple([scalar]*3))
+				ax.add_patch(r)
 		
 	def plotSampleColors(self, colors, boundingBox):
 		ax = self.samplingPlot
@@ -179,9 +180,11 @@ class Plotter:
 		for i in range(len(colors)):
 			for j in range(len(colors[0])):
 				color = colors[i][j]
-				lowerLeft = (boundingBox.left+j*deltaX, boundingBox.bottom+i*deltaY)
-				r = Rectangle(lowerLeft, deltaX, deltaY, facecolor=tuple(color))
-				ax.add_patch(r)
+				
+				if not color[3] == 0:
+					lowerLeft = (boundingBox.left+j*deltaX, boundingBox.bottom+i*deltaY)
+					r = Rectangle(lowerLeft, deltaX, deltaY, facecolor=tuple(color))
+					ax.add_patch(r)
 		
 	def draw(self):
 		plt.draw()
