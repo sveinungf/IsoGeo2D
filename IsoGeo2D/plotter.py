@@ -107,9 +107,9 @@ class Plotter:
 		ax = self.pPlot
 		ax.imshow(img, aspect='auto', extent=(interval[0], interval[1], interval[0], interval[1]))
 	
-	def plotLine(self, f, interval):
+	def plotRay(self, ray, interval):
 		params = np.linspace(interval[0], interval[1], self.precision)
-		points = self.generatePoints1(f, params)
+		points = self.generatePoints1(ray.eval, params)
 		
 		ax = self.gPlot
 		ax.plot(points[:,0], points[:,1], color='k')
@@ -120,11 +120,11 @@ class Plotter:
 		for point in points:
 			ax.plot(point[0], point[1], marker='o', color='b')
 
-	def plotGeomPoints(self, points, colors):
+	def plotGeomPoints(self, points):
 		ax = self.gPlot
-		
-		for point, c in itertools.izip(points, colors):
-			ax.plot(point[0], point[1], marker='.', color=tuple(c))
+
+		for point in points:
+			ax.plot(point[0], point[1], marker='x', color='k')
 			
 	def plotParamPoints(self, points):
 		ax = self.pPlot
@@ -138,9 +138,9 @@ class Plotter:
 		for i, pixel in enumerate(pixels):
 			ax.text(pixel[0], pixel[1], str(i))
 		
-	def plotPixelColors(self, pixels, pixelColors):
+	def plotPixelColors(self, pixelColors):
 		ax = self.pixelComponentsPlot
-		indexes = np.arange(len(pixels))
+		indexes = np.arange(len(pixelColors))
 		
 		ax.plot(indexes, pixelColors[:,0], marker='o', color='#ff0000')
 		ax.plot(indexes, pixelColors[:,1], marker='o', color='#00ff00')
@@ -151,6 +151,37 @@ class Plotter:
 		for i, pixelColor in enumerate(pixelColors):
 			r = Rectangle((i-.5, 0), 1, 1, facecolor=tuple(pixelColor))
 			ax.add_patch(r)
+		
+	def plotBoundingBox(self, boundingBox):
+		ax = self.samplingPlot
+		
+		lowerLeft = (boundingBox.left, boundingBox.bottom)
+		width = boundingBox.getWidth()
+		height = boundingBox.getHeight()
+		r = Rectangle(lowerLeft, width, height, fill=False, linestyle='dashed')
+		ax.add_patch(r)
+			
+	def plotSampleScalars(self, scalars, boundingBox):
+		ax = self.samplingPlot
+		deltaX = boundingBox.getWidth() / float(len(scalars[0]))
+		deltaY = boundingBox.getHeight() / float(len(scalars))
+		
+		for (i, j), scalar in np.ndenumerate(scalars):
+			lowerLeft = (boundingBox.left+j*deltaX, boundingBox.bottom+i*deltaY)
+			r = Rectangle(lowerLeft, deltaX, deltaY, facecolor=tuple([scalar]*3))
+			ax.add_patch(r)
+		
+	def plotSampleColors(self, colors, boundingBox):
+		ax = self.samplingPlot
+		deltaX = boundingBox.getWidth() / float(len(colors[0]))
+		deltaY = boundingBox.getHeight() / float(len(colors))
+		
+		for i in range(len(colors)):
+			for j in range(len(colors[0])):
+				color = colors[i][j]
+				lowerLeft = (boundingBox.left+j*deltaX, boundingBox.bottom+i*deltaY)
+				r = Rectangle(lowerLeft, deltaX, deltaY, facecolor=tuple(color))
+				ax.add_patch(r)
 		
 	def draw(self):
 		plt.draw()

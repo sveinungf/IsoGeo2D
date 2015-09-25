@@ -2,8 +2,10 @@ import compositing
 import newton
 import numpy as np
 import transfer as trans
+from boundingbox import BoundingBox
 from intersection import Intersection
 from plotter import Plotter
+from ray import Ray2D
 from splines import Spline2D
 from splines import SplinePlane
 
@@ -36,19 +38,13 @@ def run():
     
     eyeX = -2
     pixelX = -0.4
-    numPixels = 5
-    yValues = np.linspace(0.8, 0.15, numPixels)
-    
-    pixels = []
-    eyes = []
-    
-    for y in yValues:
-        pixels.append(np.array([pixelX, y]))
-        eyes.append(np.array([eyeX, y]))
 
-    pixelColors = np.empty((numPixels, 4))
+    rayCount = 5
+    samplingsPerRay = 5
     
-    plotter = Plotter(splineInterval, numPixels)
+    boundingBox = BoundingBox(0.9, 0.1, 0.1, 0.8)
+    
+    plotter = Plotter(splineInterval, rayCount)
     
     phi = createPhi()
     phiPlane = SplinePlane(phi, splineInterval)
@@ -58,60 +54,90 @@ def run():
     transfer = trans.createTransferFunction(100)
     plotter.plotScalarField(rho, transfer)
     
-    for i, pixel in enumerate(pixels):
-        eye = eyes[i]
-        viewDir = pixel - eye
-        
-        def s(t):
-            return np.array([t+eye[0], viewDir[1]/viewDir[0]*t+eye[1]])
-        def ds(t):
-            return np.array([1, viewDir[1]/viewDir[0]])
-
-        plotter.plotLine(s, [0, 10])
-        plotter.draw()
-
-        intersections = findIntersections(phiPlane, s, ds)
+    plotter.plotBoundingBox(boundingBox)
     
+    plotter.draw()
+    
+    samplingDefault = -1
+    samplingScalars = np.ones((rayCount, samplingsPerRay)) * samplingDefault
+    
+    xDelta = float(boundingBox.getWidth())/samplingsPerRay
+    yDelta = float(boundingBox.getHeight())/rayCount
+    
+    xValues = np.linspace(boundingBox.left+xDelta/2, boundingBox.right-xDelta/2, samplingsPerRay)
+    yValues = np.linspace(boundingBox.bottom+yDelta/2, boundingBox.top-yDelta/2, rayCount)    
+    
+    for i, y in enumerate(yValues):
+        eye = np.array([eyeX, y])
+        pixel = np.array([pixelX, y])
+        ray = Ray2D(eye, pixel)
+
+        plotter.plotRay(ray, [0, 10])
+        plotter.draw()
+        
+        intersections = findIntersections(phiPlane, ray)
+        
         inLineParam = intersections[0].lineParam
         outLineParam = intersections[1].lineParam
         
-        inOutGeomPoints = []
-        inOutGeomPoints.append(s(inLineParam))
-        inOutGeomPoints.append(s(outLineParam))
-        plotter.plotIntersectionPoints(inOutGeomPoints)
+        inGeomPoint = ray.eval(inLineParam)
+        outGeomPoint = ray.eval(outLineParam)
+
+        plotter.plotIntersectionPoints([inGeomPoint, outGeomPoint])
         plotter.draw()
-    
-        sDelta = 0.05
-        geomPoints = generateSamplePoints(s, inLineParam, outLineParam, sDelta)
-        geomColors = []
+        
+        geomPoints = []
         paramPoints = []
         
         prevUV = intersections[0].paramPoint
-    
-        for geomPoint in geomPoints:
+        
+        for j, x in enumerate(xValues):
+            geomPoint = np.array([x, y])
+            geomPoints.append(geomPoint)
+
             def f(u,v):
                 return phi.evaluate(u,v) - geomPoint
             def fJacob(u, v):
                 return np.matrix([phi.evaluatePartialDerivativeU(u, v), 
                                   phi.evaluatePartialDerivativeV(u, v)]).transpose()
-            
+                                  
             paramPoint = newton.newtonsMethod2DClamped(f, fJacob, prevUV, splineInterval)
-            scalar = rho.evaluate(paramPoint[0], paramPoint[1])
-            rgba = transfer(scalar)
-
-            geomColors.append(rgba)
             paramPoints.append(paramPoint)
+            
+            scalar = rho.evaluate(paramPoint[0], paramPoint[1])
+            samplingScalars[i][j] = scalar
+            
             prevUV = paramPoint
-
-        plotter.plotGeomPoints(geomPoints, geomColors)
+            
+        plotter.plotGeomPoints(geomPoints)
         plotter.plotParamPoints(paramPoints)
         plotter.draw()
+    
+    samplingColors = np.empty((rayCount, samplingsPerRay, 4))
+    defaultColor = np.array([1.0, 1.0, 1.0, 0.0])
+    
+    for (i, j), scalar in np.ndenumerate(samplingScalars):
+        if scalar == samplingDefault:
+            samplingColors[i][j] = defaultColor
+            
+        samplingColors[i][j] = transfer(scalar)
+            
+    plotSampleColors = True
+    
+    if plotSampleColors:
+        plotter.plotSampleColors(samplingColors, boundingBox)
+    else:    
+        plotter.plotSampleScalars(samplingScalars, boundingBox)
         
-        pixelColor = compositing.frontToBack(geomColors)
-        pixelColors[i] = pixelColor
-        
-    plotter.plotPixelPoints(pixels)
-    plotter.plotPixelColors(pixels, pixelColors)
+    plotter.draw()
+    
+    pixelColors = np.empty((rayCount, 4))
+    
+    for i in range(len(samplingColors)):
+        rayColors = samplingColors[i]
+        pixelColors[i] = compositing.frontToBack(rayColors)
+    
+    plotter.plotPixelColors(pixelColors)
     plotter.draw()
 
 def generateSamplePoints(f, begin, end, delta):
@@ -124,8 +150,10 @@ def generateSamplePoints(f, begin, end, delta):
         
     return result
     
-def findIntersections(splinePlane, s, ds):
+def findIntersections(splinePlane, ray):
     result = []
+    s = ray.eval
+    ds = ray.deval
     
     uvLeft = intersection2D(splinePlane.left, s, splinePlane.dleft, ds, 0.5, 0)
     uvTop = intersection2D(splinePlane.top, s, splinePlane.dtop, ds, 0.5, 0)
