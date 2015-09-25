@@ -140,7 +140,7 @@ def run():
     
     for i in range(len(samplingColors)):
         rayColors = samplingColors[i]
-        pixelColors[i] = compositing.frontToBack(rayColors)
+        pixelColors[i] = compositing.frontToBack(rayColors, xDelta)
     
     plotter.plotPixelColors(pixelColors)
     plotter.draw()

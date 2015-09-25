@@ -1,8 +1,7 @@
 import numpy as np
 
-def frontToBack(rgbaValues):
-    delta = 1.0
-    xi = 20
+def frontToBack(rgbaValues, delta):
+    xi = 1.0
     
     dst = np.zeros(4)
     
