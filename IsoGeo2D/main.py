@@ -38,10 +38,10 @@ def run():
     eyeX = -2
     pixelX = -0.4
 
-    rayCount = 20
+    rayCount = 10
     samplingsPerRay = 10
     
-    boundingBox = BoundingBox(-0.1, 1.1, -0.2, 1.1)
+    boundingBox = BoundingBox(-0.2, 1.1, -0.1, 1.1)
     
     plotter = Plotter(splineInterval, rayCount)
     

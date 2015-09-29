@@ -12,8 +12,9 @@ class Plotter:
 		gridSpec = GridSpec(3, 2, height_ratios=[7, 5, 1])
 		self.gridSpec = gridSpec
 		
+		gPlotAxis = (-0.6, 1.3, -0.2, 1.3)
 		ax = plt.subplot(gridSpec[0, 0])
-		ax.axis((-0.6, 1.1, -0.1, 1.1))
+		ax.axis(gPlotAxis)
 		self.gPlot = ax
 		
 		ax = plt.subplot(gridSpec[0, 1])
@@ -21,7 +22,7 @@ class Plotter:
 		self.pPlot = ax
 		
 		ax = plt.subplot(gridSpec[1:3, 0])
-		ax.axis((-0.6, 1.1, -0.1, 1.1))
+		ax.axis(gPlotAxis)
 		self.samplingPlot = ax
 		
 		ax = plt.subplot(gridSpec[1, 1])
@@ -152,13 +153,15 @@ class Plotter:
 			ax.add_patch(r)
 		
 	def plotBoundingBox(self, boundingBox):
-		ax = self.samplingPlot
-		
 		lowerLeft = (boundingBox.left, boundingBox.bottom)
 		width = boundingBox.getWidth()
 		height = boundingBox.getHeight()
+		
 		r = Rectangle(lowerLeft, width, height, fill=False, linestyle='dashed')
-		ax.add_patch(r)
+		self.gPlot.add_patch(r)
+		
+		r = Rectangle(lowerLeft, width, height, fill=False, linestyle='dashed')
+		self.samplingPlot.add_patch(r)
 			
 	def plotSampleScalars(self, scalars, boundingBox):
 		ax = self.samplingPlot
