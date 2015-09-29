@@ -1,7 +1,7 @@
 class BoundingBox:
-    def __init__(self, top, bottom, left, right):
-        self.top = top
+    def __init__(self, bottom, top, left, right):
         self.bottom = bottom
+        self.top = top
         self.left = left
         self.right = right
 

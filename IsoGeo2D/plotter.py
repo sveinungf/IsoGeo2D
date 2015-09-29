@@ -1,4 +1,3 @@
-import itertools
 import numpy as np
 import pylab as plt
 from matplotlib.gridspec import GridSpec

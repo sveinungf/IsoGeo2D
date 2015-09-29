@@ -3,11 +3,10 @@ import newton
 import numpy as np
 import transfer as trans
 from boundingbox import BoundingBox
-from intersection import Intersection
 from plotter import Plotter
 from ray import Ray2D
+from splineplane import SplinePlane
 from splines import Spline2D
-from splines import SplinePlane
 
 def createPhi():
     p = 2
@@ -39,16 +38,16 @@ def run():
     eyeX = -2
     pixelX = -0.4
 
-    rayCount = 10
+    rayCount = 20
     samplingsPerRay = 10
     
-    boundingBox = BoundingBox(1.0, 0.0, -0.2, 1.1)
+    boundingBox = BoundingBox(-0.1, 1.1, -0.2, 1.1)
     
     plotter = Plotter(splineInterval, rayCount)
     
     phi = createPhi()
-    phiPlane = SplinePlane(phi, splineInterval)
-    plotter.plotGrids(phiPlane.evaluate, 10, 10)
+    phiPlane = SplinePlane(phi, splineInterval, 0.00001)
+    plotter.plotGrids(phi.evaluate, 10, 10)
     
     rho = createRho()
     transfer = trans.createTransferFunction(100)
@@ -75,7 +74,7 @@ def run():
         plotter.plotRay(ray, [0, 10])
         plotter.draw()
         
-        intersections = findIntersections(phiPlane, ray)
+        intersections = phiPlane.findTwoIntersections(ray)
         
         if intersections == None:
             continue
@@ -127,7 +126,7 @@ def run():
         else:
             samplingColors[i][j] = transfer(scalar)
          
-    plotSampleColors = True
+    plotSampleColors = False
     
     if plotSampleColors:
         plotter.plotSampleColors(samplingColors, boundingBox)
@@ -154,45 +153,6 @@ def generateSamplePoints(f, begin, end, delta):
         current += delta
         
     return result
-    
-def findIntersections(splinePlane, ray):
-    result = []
-    s = ray.eval
-    ds = ray.deval
-    
-    uvLeft = intersection2D(splinePlane.left, s, splinePlane.dleft, ds, 0.5, 0)
-    uvTop = intersection2D(splinePlane.top, s, splinePlane.dtop, ds, 0.5, 0)
-    uvRight = intersection2D(splinePlane.right, s, splinePlane.dright, ds, 0.5, 0)
-    uvBottom = intersection2D(splinePlane.bottom, s, splinePlane.dbottom, ds, 0.5, 0)
-    
-    if uvLeft != None:
-        result.append(Intersection(np.array([0, uvLeft[0]]), uvLeft[1]))
-        
-    if uvTop != None:
-        result.append(Intersection(np.array([0.99999, uvTop[0]]), uvTop[1]))
-        
-    if uvRight != None:
-        result.append(Intersection(np.array([0.99999, uvRight[0]]), uvRight[1]))
-        
-    if uvBottom != None:
-        result.append(Intersection(np.array([0, uvBottom[0]]), uvBottom[1]))
-
-    if len(result) < 2:
-        return None
-        
-    if result[0].lineParam < result[1].lineParam:
-        return np.asarray(result)
-    else:
-        return np.asarray([result[1], result[0]])
-
-def intersection2D(f, g, df, dg, uGuess, vGuess):
-    def h(u, v):
-        return f(u) - g(v)
-    
-    def hJacob(u, v):
-        return np.matrix([df(u), -dg(v)]).transpose()
-    
-    return newton.newtonsMethod2DClamped(h, hJacob, [uGuess, vGuess], [0, 0.99999])
 
 if __name__ == "__main__":
     run()
