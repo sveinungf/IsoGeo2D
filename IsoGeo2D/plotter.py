@@ -38,7 +38,7 @@ class Plotter:
 		plt.ion()
 		plt.show()
 
-	def generatePoints(self, f, xInputs, yInputs):
+	def generatePoints2var(self, f, xInputs, yInputs):
 		xOutput = []
 		yOutput = []
 		
@@ -49,7 +49,7 @@ class Plotter:
 		
 		return [xOutput, yOutput]
 	
-	def generatePoints1(self, f, params):
+	def generatePoints1var(self, f, params):
 		output = np.empty((len(params), 2))
 		
 		for i, param in enumerate(params):
@@ -67,7 +67,7 @@ class Plotter:
 			paramsX = [vLine] * self.precision
 			paramsY = np.linspace(interval[0], interval[1], self.precision)
 			
-			[geomX, geomY] = self.generatePoints(f, paramsX, paramsY)
+			[geomX, geomY] = self.generatePoints2var(f, paramsX, paramsY)
 			
 			ax = self.gPlot
 			ax.plot(geomX, geomY, color=lineColor)
@@ -79,7 +79,7 @@ class Plotter:
 			paramsX = np.linspace(interval[0], interval[1], self.precision)
 			paramsY = [hLine] * self.precision
 			
-			[geomX, geomY] = self.generatePoints(f, paramsX, paramsY)
+			[geomX, geomY] = self.generatePoints2var(f, paramsX, paramsY)
 			
 			ax = self.gPlot
 			ax.plot(geomX, geomY, color=lineColor)
@@ -108,7 +108,7 @@ class Plotter:
 	
 	def plotRay(self, ray, interval):
 		params = np.linspace(interval[0], interval[1], self.precision)
-		points = self.generatePoints1(ray.eval, params)
+		points = self.generatePoints1var(ray.eval, params)
 		
 		ax = self.gPlot
 		ax.plot(points[:,0], points[:,1], color='k')
