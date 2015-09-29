@@ -2,6 +2,7 @@ import newton
 import numpy as np
 from intersection import Intersection
 from side import Side
+from boundingbox import BoundingBox
 
 def intersection2D(f, g, df, dg, uGuess, uInterval, tolerance):
     vGuess = 0
@@ -40,7 +41,7 @@ class SplinePlane:
     def dright(self, v):
         return self.phi.evaluatePartialDerivativeV(self.interval[1], v)
 
-    def findIntersection(self, side, ray, uGuess):
+    def __findIntersection(self, side, ray, uGuess):
         if side == Side.BOTTOM:
             f = self.bottom
             df = self.dbottom
@@ -76,14 +77,14 @@ class SplinePlane:
         result = []
 
         for side in Side.sides:
-            intersection = self.findIntersection(side, ray, 0)
+            intersection = self.__findIntersection(side, ray, 0)
             
             if intersection != None:
                 result.append(intersection)
                 
         if len(result) < 2:
             for side in Side.sides:
-                intersection = self.findIntersection(side, ray, 1)
+                intersection = self.__findIntersection(side, ray, 1)
                 
                 if intersection != None:
                     if not intersection.alreadyIn(result, self.tolerance):
@@ -96,3 +97,29 @@ class SplinePlane:
             return np.asarray(result)
         else:
             return np.asarray([result[1], result[0]])
+
+    def createBoundingBox(self):
+        coeffs = self.phi.coeffs
+        
+        left = coeffs[0][0][0]
+        right = coeffs[-1][0][0]
+        bottom = coeffs[:, 0][0][1]
+        top = coeffs[:, -1][0][1]
+        
+        for coeff in coeffs[0]:
+            if coeff[0] < left:
+                left = coeff[0]
+                
+        for coeff in coeffs[-1]:
+            if coeff[0] > right:
+                right = coeff[0]
+                
+        for coeff in coeffs[:, 0]:
+            if coeff[1] < bottom:
+                bottom = coeff[1]
+                
+        for coeff in coeffs[:, -1]:
+            if coeff[1] > top:
+                top = coeff[1]
+                
+        return BoundingBox(left, right, bottom, top)

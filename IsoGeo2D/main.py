@@ -2,7 +2,6 @@ import compositing
 import newton
 import numpy as np
 import transfer as trans
-from boundingbox import BoundingBox
 from plotter import Plotter
 from ray import Ray2D
 from splineplane import SplinePlane
@@ -41,8 +40,6 @@ def run():
     rayCount = 10
     samplingsPerRay = 10
     
-    boundingBox = BoundingBox(-0.2, 1.1, -0.1, 1.1)
-    
     plotter = Plotter(splineInterval, rayCount)
     
     phi = createPhi()
@@ -53,6 +50,7 @@ def run():
     transfer = trans.createTransferFunction(100)
     plotter.plotScalarField(rho, transfer)
     
+    boundingBox = phiPlane.createBoundingBox()
     plotter.plotBoundingBox(boundingBox)
     
     plotter.draw()
