@@ -144,15 +144,5 @@ def run():
     plotter.plotPixelColors(pixelColors)
     plotter.draw()
 
-def generateSamplePoints(f, begin, end, delta):
-    result = []
-    current = begin + delta
-    
-    while current < end:
-        result.append(f(current))
-        current += delta
-        
-    return result
-
 if __name__ == "__main__":
     run()
