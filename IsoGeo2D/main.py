@@ -1,4 +1,5 @@
 import compositing
+import itertools
 import newton
 import numpy as np
 import transfer as trans
@@ -34,8 +35,14 @@ def createRho():
 def run():
     splineInterval = [0, 0.99999]
     
-    eyeX = -2
-    pixelX = -0.4
+    eye = np.array([-1, 0.55])
+    pixels = []
+    numPixels = 3
+    pixelXs = [-0.4] * numPixels
+    pixelYs = np.linspace(0.65, 0.45, numPixels)
+    
+    for pixelX,pixelY in itertools.izip(pixelXs,pixelYs):
+        pixels.append(np.array([pixelX,pixelY]))
 
     rayCount = 10
     samplingsPerRay = 10
@@ -65,14 +72,12 @@ def run():
     yValues = np.linspace(boundingBox.bottom+yDelta/2, boundingBox.top-yDelta/2, rayCount)    
     
     for i, y in enumerate(yValues):
-        eye = np.array([eyeX, y])
-        pixel = np.array([pixelX, y])
-        ray = Ray2D(eye, pixel)
+        samplingRay = Ray2D(np.array([eye[0], y]), np.array([0, y]))
 
-        plotter.plotRay(ray, [0, 10])
+        plotter.plotSamplingRay(samplingRay, [0, 10])
         plotter.draw()
         
-        intersections = phiPlane.findTwoIntersections(ray)
+        intersections = phiPlane.findTwoIntersections(samplingRay)
         
         if intersections == None:
             continue
@@ -80,8 +85,8 @@ def run():
         inLineParam = intersections[0].lineParam
         outLineParam = intersections[1].lineParam
         
-        inGeomPoint = ray.eval(inLineParam)
-        outGeomPoint = ray.eval(outLineParam)
+        inGeomPoint = samplingRay.eval(inLineParam)
+        outGeomPoint = samplingRay.eval(outLineParam)
 
         plotter.plotIntersectionPoints([inGeomPoint, outGeomPoint])
         plotter.draw()
@@ -132,6 +137,14 @@ def run():
         plotter.plotSampleScalars(samplingScalars, boundingBox)
         
     plotter.draw()
+    
+    for pixel in pixels:
+        viewRay = Ray2D(eye, pixel)
+        plotter.plotViewRay(viewRay, [0, 10])
+        
+        samplePoints = viewRay.generateSamplePoints(0, 10, 0.1)
+        plotter.plotSamplePoints(samplePoints)
+        plotter.draw()
     
     pixelColors = np.empty((rayCount, 4))
     

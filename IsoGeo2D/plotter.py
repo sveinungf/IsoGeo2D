@@ -107,12 +107,19 @@ class Plotter:
 		ax = self.pPlot
 		ax.imshow(img, aspect='auto', extent=(interval[0], interval[1], interval[0], interval[1]))
 	
-	def plotRay(self, ray, interval):
+	def plotSamplingRay(self, ray, interval):
 		params = np.linspace(interval[0], interval[1], self.precision)
-		points = self.generatePoints1var(ray.eval, params)
+		points = self.generatePoints1var(ray.evalFromEye, params)
 		
 		ax = self.gPlot
 		ax.plot(points[:,0], points[:,1], color='k')
+		
+	def plotViewRay(self, ray, interval):
+		params = np.linspace(interval[0], interval[1], self.precision)
+		points = self.generatePoints1var(ray.evalFromEye, params)
+		
+		ax = self.samplingPlot
+		ax.plot(points[:,0], points[:,1], color='r')
 	
 	def plotIntersectionPoints(self, points):
 		ax = self.gPlot
@@ -131,6 +138,12 @@ class Plotter:
 		
 		for point in points:
 			ax.plot(point[0], point[1], marker='x', color='k')
+			
+	def plotSamplePoints(self, points):
+		ax = self.samplingPlot
+		
+		for point in points:
+			ax.plot(point[0], point[1], marker='x', color='r')
 			
 	def plotPixelPoints(self, pixels):
 		ax = self.gPlot
