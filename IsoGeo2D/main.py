@@ -35,141 +35,168 @@ def createRho():
     
     return Spline2D(p, uKnots, vKnots, coeffs)
 
-def run():
-    splineInterval = [0, 0.99999]
-    
-    eye = np.array([-2, 0.55])
-    pixels = []
-    numPixels = 5
-    pixelXs = [-0.5] * numPixels
-    pixelYs = np.linspace(0.25, 0.85, numPixels)
-    
-    for pixelX,pixelY in itertools.izip(pixelXs,pixelYs):
-        pixels.append(np.array([pixelX,pixelY]))
-
-    rayCount = 10
-    samplingsPerRay = 10
-    
-    plotter = Plotter(splineInterval, numPixels)
-    
-    phi = createPhi()
-    phiPlane = SplinePlane(phi, splineInterval, 0.00001)
-    plotter.plotGrids(phi.evaluate, 10, 10)
-    
-    rho = createRho()
-    transfer = trans.createTransferFunction(100)
-    plotter.plotScalarField(rho, transfer)
-    
-    boundingBox = phiPlane.createBoundingBox()
-    plotter.plotBoundingBox(boundingBox)
-    
-    plotter.draw()
-    
-    samplingDefault = -1
-    samplingScalars = np.ones((rayCount, samplingsPerRay)) * samplingDefault
-    
-    xDelta = float(boundingBox.getWidth())/samplingsPerRay
-    yDelta = float(boundingBox.getHeight())/rayCount
-    
-    bb = boundingBox
-    textureBoundingBox = BoundingBox(bb.left+xDelta/2, bb.right-xDelta/2, bb.bottom+yDelta/2, bb.top-yDelta/2)
-    
-    xValues = np.linspace(boundingBox.left+xDelta/2, boundingBox.right-xDelta/2, samplingsPerRay)
-    yValues = np.linspace(boundingBox.bottom+yDelta/2, boundingBox.top-yDelta/2, rayCount)    
-    
-    for i, y in enumerate(yValues):
-        samplingRay = Ray2D(np.array([eye[0], y]), np.array([0, y]))
-
-        plotter.plotSamplingRay(samplingRay, [0, 10])
-        plotter.draw()
+class Main:
+    def __init__(self):
+        self.splineInterval = [0, 0.99999]
+        self.numPixels = 5
+        self.samplingDefault = -1
         
-        intersections = phiPlane.findTwoIntersections(samplingRay)
+        self.phi = createPhi()
+        self.phiPlane = SplinePlane(self.phi, self.splineInterval, 0.00001)
+        self.rho = createRho()
         
-        if intersections == None:
-            continue
+        self.plotter = Plotter(self.splineInterval, self.numPixels)
         
-        inLineParam = intersections[0].lineParam
-        outLineParam = intersections[1].lineParam
+        self.eye = np.array([-2, 0.55])
         
-        inGeomPoint = samplingRay.eval(inLineParam)
-        outGeomPoint = samplingRay.eval(outLineParam)
-
-        plotter.plotIntersectionPoints([inGeomPoint, outGeomPoint])
-        plotter.draw()
+    def generateScalarTexture(self, boundingBox, width, height):
+        phi = self.phi
+        phiPlane = self.phiPlane
+        rho = self.rho
+        plotter = self.plotter
         
-        geomPoints = []
-        paramPoints = []
+        rayCount = height
+        samplingsPerRay = width
         
-        prevUV = intersections[0].paramPoint
+        xDelta = float(boundingBox.getWidth())/samplingsPerRay
+        yDelta = float(boundingBox.getHeight())/rayCount
         
-        for j, x in enumerate(xValues):
-            if x < inGeomPoint[0] or x > outGeomPoint[0]:
+        xValues = np.linspace(boundingBox.left+xDelta/2, boundingBox.right-xDelta/2, samplingsPerRay)
+        yValues = np.linspace(boundingBox.bottom+yDelta/2, boundingBox.top-yDelta/2, rayCount)
+        
+        samplingScalars = np.ones((rayCount, samplingsPerRay)) * self.samplingDefault    
+        
+        for i, y in enumerate(yValues):
+            samplingRay = Ray2D(np.array([self.eye[0], y]), np.array([0, y]))
+    
+            plotter.plotSamplingRay(samplingRay, [0, 10])
+            plotter.draw()
+            
+            intersections = phiPlane.findTwoIntersections(samplingRay)
+            
+            if intersections == None:
                 continue
             
-            geomPoint = np.array([x, y])
-            geomPoints.append(geomPoint)
-
-            def f(u,v):
-                return phi.evaluate(u,v) - geomPoint
-            def fJacob(u, v):
-                return np.matrix([phi.evaluatePartialDerivativeU(u, v), 
-                                  phi.evaluatePartialDerivativeV(u, v)]).transpose()
-                                  
-            paramPoint = newton.newtonsMethod2DClamped(f, fJacob, prevUV, splineInterval)
-            paramPoints.append(paramPoint)
+            inLineParam = intersections[0].lineParam
+            outLineParam = intersections[1].lineParam
             
-            scalar = rho.evaluate(paramPoint[0], paramPoint[1])
-            samplingScalars[i][j] = scalar
-            
-            prevUV = paramPoint
-            
-        plotter.plotGeomPoints(geomPoints)
-        plotter.plotParamPoints(paramPoints)
-        plotter.draw()
+            inGeomPoint = samplingRay.eval(inLineParam)
+            outGeomPoint = samplingRay.eval(outLineParam)
     
-    plotter.plotSampleScalars(samplingScalars, boundingBox)    
-    plotter.draw()
-    
-    scalarTexture = Texture2D(samplingScalars)
-    pixelColors = np.empty((numPixels, 4))
-    
-    for i, pixel in enumerate(pixels):
-        viewRay = Ray2D(eye, pixel)
-        plotter.plotViewRay(viewRay, [0, 10])
-        
-        viewRayDelta = 0.2
-        samplePoints = viewRay.generateSamplePoints(0, 10, viewRayDelta)
-        tags = []
-        sampleColors = []
-        sampleDeltas = []
-        
-        for samplePoint in samplePoints:
-            bb = textureBoundingBox
+            plotter.plotIntersectionPoints([inGeomPoint, outGeomPoint])
+            plotter.draw()
             
-            if bb.enclosesPoint(samplePoint):
-                u = (samplePoint[0]-bb.left)/bb.getWidth()
-                v = (samplePoint[1]-bb.bottom)/bb.getHeight()
+            geomPoints = []
+            paramPoints = []
+            
+            prevUV = intersections[0].paramPoint
+            
+            for j, x in enumerate(xValues):
+                if x < inGeomPoint[0] or x > outGeomPoint[0]:
+                    continue
                 
-                if not scalarTexture.closest([u, v]) == samplingDefault:
-                    tags.append(SamplingTag.IN_TEXTURE)
-                    
-                    sampleScalar = scalarTexture.fetch([u, v])
-                    sampleColors.append(transfer(sampleScalar))
-                    sampleDeltas.append(viewRayDelta)
-                else:
-                    tags.append(SamplingTag.NOT_IN_TEXTURE)
-            else:
-                tags.append(SamplingTag.NOT_IN_BOUNDINGBOX)
+                geomPoint = np.array([x, y])
+                geomPoints.append(geomPoint)
+    
+                def f(u,v):
+                    return phi.evaluate(u,v) - geomPoint
+                def fJacob(u, v):
+                    return np.matrix([phi.evaluatePartialDerivativeU(u, v), 
+                                      phi.evaluatePartialDerivativeV(u, v)]).transpose()
+                                      
+                paramPoint = newton.newtonsMethod2DClamped(f, fJacob, prevUV, self.splineInterval)
+                paramPoints.append(paramPoint)
+                
+                scalar = rho.evaluate(paramPoint[0], paramPoint[1])
+                samplingScalars[i][j] = scalar
+                
+                prevUV = paramPoint
+                
+            plotter.plotGeomPoints(geomPoints)
+            plotter.plotParamPoints(paramPoints)
+            plotter.draw()
             
-        pixelColors[i] = compositing.frontToBack(sampleColors, sampleDeltas)
-        plotter.plotSamplePoints(samplePoints, tags)
+        return Texture2D(samplingScalars)
+    
+    def run(self):
+        numPixels = self.numPixels
+        plotter = self.plotter
+
+        pixels = []
+        pixelXs = [-0.5] * numPixels
+        pixelYs = np.linspace(0.25, 0.85, numPixels)
+        
+        for pixelX,pixelY in itertools.izip(pixelXs,pixelYs):
+            pixels.append(np.array([pixelX,pixelY]))
+        
+        plotter.plotGrids(self.phi.evaluate, 10, 10)
+
+        transfer = trans.createTransferFunction(100)
+        plotter.plotScalarField(self.rho, transfer)
+        
+        plotter.draw()
+        
+        samplingDefault = self.samplingDefault
+        
+        bb = self.phiPlane.createBoundingBox()
+        plotter.plotBoundingBox(bb)
+        plotter.draw()
+        
+        width = 10
+        height = 10
+        
+        xDelta = float(bb.getWidth())/width
+        yDelta = float(bb.getHeight())/height
+        textureBoundingBox = BoundingBox(bb.left+xDelta/2, bb.right-xDelta/2, bb.bottom+yDelta/2, bb.top-yDelta/2)
+        
+        scalarTexture = self.generateScalarTexture(bb, width, height)
+        
+        plotter.plotSampleScalars(scalarTexture.textureData, bb)    
+        plotter.draw()
+        
+        pixelColors = np.empty((numPixels, 4))
+        
+        for i, pixel in enumerate(pixels):
+            viewRay = Ray2D(self.eye, pixel)
+            plotter.plotViewRay(viewRay, [0, 10])
+            
+            viewRayDelta = 0.2
+            samplePoints = viewRay.generateSamplePoints(0, 10, viewRayDelta)
+            tags = []
+            sampleColors = []
+            sampleDeltas = []
+            
+            for samplePoint in samplePoints:
+                bb = textureBoundingBox
+                
+                if bb.enclosesPoint(samplePoint):
+                    u = (samplePoint[0]-bb.left)/bb.getWidth()
+                    v = (samplePoint[1]-bb.bottom)/bb.getHeight()
+                    
+                    if not scalarTexture.closest([u, v]) == samplingDefault:
+                        tags.append(SamplingTag.IN_TEXTURE)
+                        
+                        sampleScalar = scalarTexture.fetch([u, v])
+                        sampleColors.append(transfer(sampleScalar))
+                        sampleDeltas.append(viewRayDelta)
+                    else:
+                        tags.append(SamplingTag.NOT_IN_TEXTURE)
+                else:
+                    tags.append(SamplingTag.NOT_IN_BOUNDINGBOX)
+                
+            pixelColors[i] = compositing.frontToBack(sampleColors, sampleDeltas)
+            plotter.plotSamplePoints(samplePoints, tags)
+            plotter.draw()
+        
+        plotter.plotScalarTexture(scalarTexture)
+        plotter.draw()
+        
+        plotter.plotPixelColors(pixelColors)
         plotter.draw()
     
-    plotter.plotScalarTexture(scalarTexture)
-    plotter.draw()
-    
-    plotter.plotPixelColors(pixelColors)
-    plotter.draw()
+def run():
+    main = Main()
+    main.run()
 
 if __name__ == "__main__":
     run()
