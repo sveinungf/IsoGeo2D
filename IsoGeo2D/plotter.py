@@ -9,8 +9,8 @@ class Plotter:
 		self.splineInterval = splineInterval
 		self.precision = 100
 		
-		plt.figure(figsize=(16, 12))
-		gridSpec = GridSpec(3, 3, height_ratios=[7, 5, 1])
+		plt.figure(figsize=(14, 12))
+		gridSpec = GridSpec(2, 3, width_ratios=[10, 10, 1])
 		self.gridSpec = gridSpec
 		
 		gPlotAxis = (-0.6, 1.3, -0.2, 1.3)
@@ -22,23 +22,18 @@ class Plotter:
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.pPlot = ax
 		
-		ax = plt.subplot(gridSpec[1:3, 0])
+		ax = plt.subplot(gridSpec[1, 0])
 		ax.axis(gPlotAxis)
 		self.samplingPlot = ax
 		
-		ax = plt.subplot(gridSpec[1:3, 1])
+		ax = plt.subplot(gridSpec[1, 1])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.interpolationPlot = ax
-		
+
 		ax = plt.subplot(gridSpec[1, 2])
-		ax.axis((-0.5, numPixels-0.5, 0, 1))
-		ax.set_xticks(np.arange(numPixels))
-		self.pixelComponentsPlot = ax
-		
-		ax = plt.subplot(gridSpec[2, 2])
-		ax.axis((-0.5, numPixels-0.5, 0, 1))
-		ax.set_xticks(np.arange(numPixels))
-		ax.yaxis.set_major_locator(plt.NullLocator()) # Removes ticks
+		ax.axis((0, 1, -0.5, numPixels-0.5))
+		ax.set_yticks(np.arange(numPixels))
+		ax.xaxis.set_major_locator(plt.NullLocator()) # Removes ticks
 		self.pixelPlot = ax
 		
 		plt.ion()
@@ -165,17 +160,10 @@ class Plotter:
 			ax.text(pixel[0], pixel[1], str(i))
 		
 	def plotPixelColors(self, pixelColors):
-		ax = self.pixelComponentsPlot
-		indexes = np.arange(len(pixelColors))
-		
-		ax.plot(indexes, pixelColors[:,0], marker='o', color='#ff0000')
-		ax.plot(indexes, pixelColors[:,1], marker='o', color='#00ff00')
-		ax.plot(indexes, pixelColors[:,2], marker='o', color='#0000ff')		
-		
 		ax = self.pixelPlot
 		
 		for i, pixelColor in enumerate(pixelColors):
-			r = Rectangle((i-.5, 0), 1, 1, facecolor=tuple(pixelColor))
+			r = Rectangle((0, i-0.5), 1, 1, facecolor=tuple(pixelColor))
 			ax.add_patch(r)
 		
 	def plotBoundingBox(self, boundingBox):
