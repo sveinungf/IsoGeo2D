@@ -3,6 +3,7 @@ import itertools
 import newton
 import numpy as np
 import transfer as trans
+from boundingbox import BoundingBox
 from plotter import Plotter
 from ray import Ray2D
 from splineplane import SplinePlane
@@ -38,7 +39,7 @@ def run():
     
     eye = np.array([-2, 0.55])
     pixels = []
-    numPixels = 3
+    numPixels = 5
     pixelXs = [-0.5] * numPixels
     pixelYs = np.linspace(0.85, 0.25, numPixels)
     
@@ -68,6 +69,9 @@ def run():
     
     xDelta = float(boundingBox.getWidth())/samplingsPerRay
     yDelta = float(boundingBox.getHeight())/rayCount
+    
+    bb = boundingBox
+    textureBoundingBox = BoundingBox(bb.left+xDelta/2, bb.right-xDelta/2, bb.bottom+yDelta/2, bb.top-yDelta/2)
     
     xValues = np.linspace(boundingBox.left+xDelta/2, boundingBox.right-xDelta/2, samplingsPerRay)
     yValues = np.linspace(boundingBox.bottom+yDelta/2, boundingBox.top-yDelta/2, rayCount)    
@@ -139,6 +143,8 @@ def run():
         
     plotter.draw()
     
+    scalarTexture = Texture2D(samplingScalars)
+    
     for pixel in pixels:
         viewRay = Ray2D(eye, pixel)
         plotter.plotViewRay(viewRay, [0, 10])
@@ -147,8 +153,16 @@ def run():
         tags = []
         
         for samplePoint in samplePoints:
-            if boundingBox.enclosesPoint(samplePoint):
-                tags.append(1)
+            bb = textureBoundingBox
+            
+            if bb.enclosesPoint(samplePoint):
+                u = (samplePoint[0]-bb.left)/bb.getWidth()
+                v = (samplePoint[1]-bb.bottom)/bb.getHeight()
+                
+                if not scalarTexture.closest([u, v]) == samplingDefault:
+                    tags.append(2)
+                else: 
+                    tags.append(1)
             else:
                 tags.append(0)
             
@@ -157,7 +171,6 @@ def run():
     
     pixelColors = np.empty((rayCount, 4))
     
-    scalarTexture = Texture2D(samplingScalars)
     plotter.plotScalarTexture(scalarTexture)
     plotter.draw()
     

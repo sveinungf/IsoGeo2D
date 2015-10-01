@@ -148,10 +148,13 @@ class Plotter:
 		ax = self.samplingPlot
 		
 		for point,tag in itertools.izip(points,tags):
-			if tag == 0:
-				pointColor = 'r'
-			else:
+			if tag == 1:
 				pointColor = '#de7e00'
+			elif tag == 2:
+				pointColor = 'g'
+			else:
+				pointColor = 'r'
+				
 
 			ax.plot(point[0], point[1], marker='o', color=pointColor)
 			
@@ -221,7 +224,7 @@ class Plotter:
 			row = []
 			
 			for u in uRange:
-				x = scalarTexture.fetch(u, v)
+				x = scalarTexture.fetch([u, v])
 				row.append(tuple(np.repeat(x, 3)))
 		
 			img.append(row)
