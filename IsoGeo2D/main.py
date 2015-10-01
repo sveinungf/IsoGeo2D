@@ -43,7 +43,9 @@ class Main:
         
         self.phi = createPhi()
         self.phiPlane = SplinePlane(self.phi, self.splineInterval, 0.00001)
+        
         self.rho = createRho()
+        self.transfer = trans.createTransferFunction(100)
         
         self.plotter = Plotter(self.splineInterval, self.numPixels)
         
@@ -118,6 +120,38 @@ class Main:
             
         return Texture2D(samplingScalars)
     
+    def raycast(self, viewRay, scalarTexture, textureBoundingBox):
+        plotter = self.plotter
+        
+        viewRayDelta = 0.2
+        samplePoints = viewRay.generateSamplePoints(0, 10, viewRayDelta)
+        tags = []
+        sampleColors = []
+        sampleDeltas = []
+        
+        for samplePoint in samplePoints:
+            bb = textureBoundingBox
+            
+            if bb.enclosesPoint(samplePoint):
+                u = (samplePoint[0]-bb.left)/bb.getWidth()
+                v = (samplePoint[1]-bb.bottom)/bb.getHeight()
+                
+                if not scalarTexture.closest([u, v]) == self.samplingDefault:
+                    tags.append(SamplingTag.IN_TEXTURE)
+                    
+                    sampleScalar = scalarTexture.fetch([u, v])
+                    sampleColors.append(self.transfer(sampleScalar))
+                    sampleDeltas.append(viewRayDelta)
+                else:
+                    tags.append(SamplingTag.NOT_IN_TEXTURE)
+            else:
+                tags.append(SamplingTag.NOT_IN_BOUNDINGBOX)
+            
+        plotter.plotSamplePoints(samplePoints, tags)
+        plotter.draw()
+        
+        return compositing.frontToBack(sampleColors, sampleDeltas) 
+        
     def run(self):
         numPixels = self.numPixels
         plotter = self.plotter
@@ -130,13 +164,8 @@ class Main:
             pixels.append(np.array([pixelX,pixelY]))
         
         plotter.plotGrids(self.phi.evaluate, 10, 10)
-
-        transfer = trans.createTransferFunction(100)
-        plotter.plotScalarField(self.rho, transfer)
-        
+        plotter.plotScalarField(self.rho, self.transfer)
         plotter.draw()
-        
-        samplingDefault = self.samplingDefault
         
         bb = self.phiPlane.createBoundingBox()
         plotter.plotBoundingBox(bb)
@@ -152,6 +181,7 @@ class Main:
         scalarTexture = self.generateScalarTexture(bb, width, height)
         
         plotter.plotSampleScalars(scalarTexture.textureData, bb)    
+        plotter.plotScalarTexture(scalarTexture)
         plotter.draw()
         
         pixelColors = np.empty((numPixels, 4))
@@ -160,36 +190,7 @@ class Main:
             viewRay = Ray2D(self.eye, pixel)
             plotter.plotViewRay(viewRay, [0, 10])
             
-            viewRayDelta = 0.2
-            samplePoints = viewRay.generateSamplePoints(0, 10, viewRayDelta)
-            tags = []
-            sampleColors = []
-            sampleDeltas = []
-            
-            for samplePoint in samplePoints:
-                bb = textureBoundingBox
-                
-                if bb.enclosesPoint(samplePoint):
-                    u = (samplePoint[0]-bb.left)/bb.getWidth()
-                    v = (samplePoint[1]-bb.bottom)/bb.getHeight()
-                    
-                    if not scalarTexture.closest([u, v]) == samplingDefault:
-                        tags.append(SamplingTag.IN_TEXTURE)
-                        
-                        sampleScalar = scalarTexture.fetch([u, v])
-                        sampleColors.append(transfer(sampleScalar))
-                        sampleDeltas.append(viewRayDelta)
-                    else:
-                        tags.append(SamplingTag.NOT_IN_TEXTURE)
-                else:
-                    tags.append(SamplingTag.NOT_IN_BOUNDINGBOX)
-                
-            pixelColors[i] = compositing.frontToBack(sampleColors, sampleDeltas)
-            plotter.plotSamplePoints(samplePoints, tags)
-            plotter.draw()
-        
-        plotter.plotScalarTexture(scalarTexture)
-        plotter.draw()
+            pixelColors[i] = self.raycast(viewRay, scalarTexture, textureBoundingBox)
         
         plotter.plotPixelColors(pixelColors)
         plotter.draw()
