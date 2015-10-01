@@ -3,6 +3,7 @@ import numpy as np
 import pylab as plt
 from matplotlib.gridspec import GridSpec
 from matplotlib.patches import Rectangle
+from samplingtag import SamplingTag
 
 class Plotter:
 	def __init__(self, splineInterval, numPixels):
@@ -143,10 +144,10 @@ class Plotter:
 		ax = self.samplingPlot
 		
 		for point,tag in itertools.izip(points,tags):
-			if tag == 1:
-				pointColor = '#de7e00'
-			elif tag == 2:
+			if tag == SamplingTag.IN_TEXTURE:
 				pointColor = 'g'
+			elif tag == SamplingTag.NOT_IN_TEXTURE:
+				pointColor = '#de7e00'
 			else:
 				pointColor = 'r'
 				
@@ -212,7 +213,8 @@ class Plotter:
 			row = []
 			
 			for u in uRange:
-				x = scalarTexture.fetch([u, v])
+				x = scalarTexture.closest([u, v])
+				x = max(0.,x)
 				row.append(tuple(np.repeat(x, 3)))
 		
 			img.append(row)

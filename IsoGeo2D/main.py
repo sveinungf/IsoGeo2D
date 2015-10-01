@@ -6,6 +6,7 @@ import transfer as trans
 from boundingbox import BoundingBox
 from plotter import Plotter
 from ray import Ray2D
+from samplingtag import SamplingTag
 from splineplane import SplinePlane
 from splines import Spline2D
 from texture import Texture2D
@@ -150,15 +151,15 @@ def run():
                 v = (samplePoint[1]-bb.bottom)/bb.getHeight()
                 
                 if not scalarTexture.closest([u, v]) == samplingDefault:
-                    tags.append(2)
+                    tags.append(SamplingTag.IN_TEXTURE)
                     
                     sampleScalar = scalarTexture.fetch([u, v])
                     sampleColors.append(transfer(sampleScalar))
                     sampleDeltas.append(viewRayDelta)
                 else:
-                    tags.append(1)
+                    tags.append(SamplingTag.NOT_IN_TEXTURE)
             else:
-                tags.append(0)
+                tags.append(SamplingTag.NOT_IN_BOUNDINGBOX)
             
         pixelColors[i] = compositing.frontToBack(sampleColors, sampleDeltas)
         plotter.plotSamplePoints(samplePoints, tags)
