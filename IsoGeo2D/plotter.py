@@ -26,7 +26,7 @@ class Plotter:
 		self.samplingPlot = ax
 		
 		ax = plt.subplot(gridSpec[1:3, 1])
-		ax.axis(gPlotAxis)
+		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.interpolationPlot = ax
 		
 		ax = plt.subplot(gridSpec[1, 2])
