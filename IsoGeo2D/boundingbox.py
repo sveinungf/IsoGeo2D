@@ -10,3 +10,9 @@ class BoundingBox:
     
     def getHeight(self):
         return self.top - self.bottom
+
+    def enclosesXY(self, x, y):
+        return self.left <= x <= self.right and self.bottom <= y <= self.top
+
+    def enclosesPoint(self, point):
+        return self.enclosesXY(point[0], point[1])

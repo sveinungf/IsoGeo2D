@@ -144,7 +144,15 @@ def run():
         plotter.plotViewRay(viewRay, [0, 10])
         
         samplePoints = viewRay.generateSamplePoints(0, 10, 0.2)
-        plotter.plotSamplePoints(samplePoints)
+        tags = []
+        
+        for samplePoint in samplePoints:
+            if boundingBox.enclosesPoint(samplePoint):
+                tags.append(1)
+            else:
+                tags.append(0)
+            
+        plotter.plotSamplePoints(samplePoints, tags)
         plotter.draw()
     
     pixelColors = np.empty((rayCount, 4))

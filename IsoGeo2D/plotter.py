@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 import pylab as plt
 from matplotlib.gridspec import GridSpec
@@ -143,11 +144,16 @@ class Plotter:
 		for point in points:
 			ax.plot(point[0], point[1], marker='x', color='k')
 			
-	def plotSamplePoints(self, points):
+	def plotSamplePoints(self, points, tags):
 		ax = self.samplingPlot
 		
-		for point in points:
-			ax.plot(point[0], point[1], marker='x', color='r')
+		for point,tag in itertools.izip(points,tags):
+			if tag == 0:
+				pointColor = 'r'
+			else:
+				pointColor = '#de7e00'
+
+			ax.plot(point[0], point[1], marker='o', color=pointColor)
 			
 	def plotPixelPoints(self, pixels):
 		ax = self.gPlot
