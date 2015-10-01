@@ -7,6 +7,7 @@ from plotter import Plotter
 from ray import Ray2D
 from splineplane import SplinePlane
 from splines import Spline2D
+from texture import Texture2D
 
 def createPhi():
     p = 2
@@ -35,11 +36,11 @@ def createRho():
 def run():
     splineInterval = [0, 0.99999]
     
-    eye = np.array([-1, 0.55])
+    eye = np.array([-2, 0.55])
     pixels = []
     numPixels = 3
-    pixelXs = [-0.4] * numPixels
-    pixelYs = np.linspace(0.65, 0.45, numPixels)
+    pixelXs = [-0.5] * numPixels
+    pixelYs = np.linspace(0.85, 0.25, numPixels)
     
     for pixelX,pixelY in itertools.izip(pixelXs,pixelYs):
         pixels.append(np.array([pixelX,pixelY]))
@@ -142,11 +143,15 @@ def run():
         viewRay = Ray2D(eye, pixel)
         plotter.plotViewRay(viewRay, [0, 10])
         
-        samplePoints = viewRay.generateSamplePoints(0, 10, 0.1)
+        samplePoints = viewRay.generateSamplePoints(0, 10, 0.2)
         plotter.plotSamplePoints(samplePoints)
         plotter.draw()
     
     pixelColors = np.empty((rayCount, 4))
+    
+    scalarTexture = Texture2D(samplingScalars)
+    plotter.plotScalarTexture(scalarTexture)
+    plotter.draw()
     
     for i in range(len(samplingColors)):
         rayColors = samplingColors[i]

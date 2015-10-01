@@ -8,8 +8,8 @@ class Plotter:
 		self.splineInterval = splineInterval
 		self.precision = 100
 		
-		plt.figure(figsize=(12, 12))
-		gridSpec = GridSpec(3, 2, height_ratios=[7, 5, 1])
+		plt.figure(figsize=(16, 12))
+		gridSpec = GridSpec(3, 3, height_ratios=[7, 5, 1])
 		self.gridSpec = gridSpec
 		
 		gPlotAxis = (-0.6, 1.3, -0.2, 1.3)
@@ -25,12 +25,16 @@ class Plotter:
 		ax.axis(gPlotAxis)
 		self.samplingPlot = ax
 		
-		ax = plt.subplot(gridSpec[1, 1])
+		ax = plt.subplot(gridSpec[1:3, 1])
+		ax.axis(gPlotAxis)
+		self.interpolationPlot = ax
+		
+		ax = plt.subplot(gridSpec[1, 2])
 		ax.axis((-0.5, numPixels-0.5, 0, 1))
 		ax.set_xticks(np.arange(numPixels))
 		self.pixelComponentsPlot = ax
 		
-		ax = plt.subplot(gridSpec[2, 1])
+		ax = plt.subplot(gridSpec[2, 2])
 		ax.axis((-0.5, numPixels-0.5, 0, 1))
 		ax.set_xticks(np.arange(numPixels))
 		ax.yaxis.set_major_locator(plt.NullLocator()) # Removes ticks
@@ -200,6 +204,24 @@ class Plotter:
 					lowerLeft = (boundingBox.left+j*deltaX, boundingBox.bottom+i*deltaY)
 					r = Rectangle(lowerLeft, deltaX, deltaY, facecolor=tuple(color))
 					ax.add_patch(r)
+		
+	def plotScalarTexture(self, scalarTexture):
+		uRange = np.linspace(0, 1, self.precision)
+		vRange = np.linspace(1, 0, self.precision)
+		
+		img = []
+		
+		for v in vRange:
+			row = []
+			
+			for u in uRange:
+				x = scalarTexture.fetch(u, v)
+				row.append(tuple(np.repeat(x, 3)))
+		
+			img.append(row)
+		
+		ax = self.interpolationPlot
+		ax.imshow(img, aspect='auto', extent=(0, 1, 0, 1))
 		
 	def draw(self):
 		plt.draw()
