@@ -41,7 +41,7 @@ def run():
     pixels = []
     numPixels = 5
     pixelXs = [-0.5] * numPixels
-    pixelYs = np.linspace(0.85, 0.25, numPixels)
+    pixelYs = np.linspace(0.25, 0.85, numPixels)
     
     for pixelX,pixelY in itertools.izip(pixelXs,pixelYs):
         pixels.append(np.array([pixelX,pixelY]))
@@ -49,7 +49,7 @@ def run():
     rayCount = 10
     samplingsPerRay = 10
     
-    plotter = Plotter(splineInterval, rayCount)
+    plotter = Plotter(splineInterval, numPixels)
     
     phi = createPhi()
     phiPlane = SplinePlane(phi, splineInterval, 0.00001)
@@ -126,31 +126,21 @@ def run():
         plotter.plotParamPoints(paramPoints)
         plotter.draw()
     
-    samplingColors = np.empty((rayCount, samplingsPerRay, 4))
-    
-    for (i, j), scalar in np.ndenumerate(samplingScalars):
-        if scalar == samplingDefault:
-            samplingColors[i][j] = [0] * 4
-        else:
-            samplingColors[i][j] = transfer(scalar)
-         
-    plotSampleColors = False
-    
-    if plotSampleColors:
-        plotter.plotSampleColors(samplingColors, boundingBox)
-    else:    
-        plotter.plotSampleScalars(samplingScalars, boundingBox)
-        
+    plotter.plotSampleScalars(samplingScalars, boundingBox)    
     plotter.draw()
     
     scalarTexture = Texture2D(samplingScalars)
+    pixelColors = np.empty((numPixels, 4))
     
-    for pixel in pixels:
+    for i, pixel in enumerate(pixels):
         viewRay = Ray2D(eye, pixel)
         plotter.plotViewRay(viewRay, [0, 10])
         
-        samplePoints = viewRay.generateSamplePoints(0, 10, 0.2)
+        viewRayDelta = 0.2
+        samplePoints = viewRay.generateSamplePoints(0, 10, viewRayDelta)
         tags = []
+        sampleColors = []
+        sampleDeltas = []
         
         for samplePoint in samplePoints:
             bb = textureBoundingBox
@@ -161,22 +151,21 @@ def run():
                 
                 if not scalarTexture.closest([u, v]) == samplingDefault:
                     tags.append(2)
-                else: 
+                    
+                    sampleScalar = scalarTexture.fetch([u, v])
+                    sampleColors.append(transfer(sampleScalar))
+                    sampleDeltas.append(viewRayDelta)
+                else:
                     tags.append(1)
             else:
                 tags.append(0)
             
+        pixelColors[i] = compositing.frontToBack(sampleColors, sampleDeltas)
         plotter.plotSamplePoints(samplePoints, tags)
         plotter.draw()
     
-    pixelColors = np.empty((rayCount, 4))
-    
     plotter.plotScalarTexture(scalarTexture)
     plotter.draw()
-    
-    for i in range(len(samplingColors)):
-        rayColors = samplingColors[i]
-        pixelColors[i] = compositing.frontToBack(rayColors, xDelta)
     
     plotter.plotPixelColors(pixelColors)
     plotter.draw()
