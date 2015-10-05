@@ -51,10 +51,19 @@ class Main:
         self.eye = np.array([-2, 0.55])
         self.viewRayDelta = 0.2
         
-    def generateScalarMatrix(self, boundingBox, width, height):
+    def phiInverse(self, geomPoint, uvGuess):
         phi = self.phi
+        
+        def f(u,v):
+            return phi.evaluate(u,v) - geomPoint
+        def fJacob(u, v):
+            return np.matrix([phi.evaluatePartialDerivativeU(u, v), 
+                              phi.evaluatePartialDerivativeV(u, v)]).transpose()
+                              
+        return newton.newtonsMethod2DClamped(f, fJacob, uvGuess, self.splineInterval)
+        
+    def generateScalarMatrix(self, boundingBox, width, height):
         phiPlane = self.phiPlane
-        rho = self.rho
         plotter = self.plotter
         
         rayCount = height
@@ -98,17 +107,11 @@ class Main:
                 
                 geomPoint = np.array([x, y])
                 geomPoints.append(geomPoint)
-    
-                def f(u,v):
-                    return phi.evaluate(u,v) - geomPoint
-                def fJacob(u, v):
-                    return np.matrix([phi.evaluatePartialDerivativeU(u, v), 
-                                      phi.evaluatePartialDerivativeV(u, v)]).transpose()
-                                      
-                paramPoint = newton.newtonsMethod2DClamped(f, fJacob, prevUV, self.splineInterval)
+
+                paramPoint = self.phiInverse(geomPoint, prevUV)
                 paramPoints.append(paramPoint)
                 
-                scalar = rho.evaluate(paramPoint[0], paramPoint[1])
+                scalar = self.rho.evaluate(paramPoint[0], paramPoint[1])
                 samplingScalars[i][j] = scalar
                 
                 prevUV = paramPoint
@@ -153,18 +156,9 @@ class Main:
                 if bb.enclosesPoint(samplePoint):
                     if inGeomPoint[0] <= samplePoint[0] <= outGeomPoint[0]:
                         tags.append(SamplingTag.IN_OBJECT)
-                        phi = self.phi
-                        rho = self.rho
-                        
-                        def f(u,v):
-                            return phi.evaluate(u,v) - samplePoint
-                        def fJacob(u, v):
-                            return np.matrix([phi.evaluatePartialDerivativeU(u, v), 
-                                              phi.evaluatePartialDerivativeV(u, v)]).transpose()
-                        
-                        paramPoint = newton.newtonsMethod2DClamped(f, fJacob, prevUV, self.splineInterval)
-                        
-                        sampleScalar = rho.evaluate(paramPoint[0], paramPoint[1])
+
+                        paramPoint = self.phiInverse(samplePoint, prevUV)
+                        sampleScalar = self.rho.evaluate(paramPoint[0], paramPoint[1])
                         sampleColors.append(self.transfer(sampleScalar))
                         sampleDeltas.append(self.viewRayDelta)
                         
