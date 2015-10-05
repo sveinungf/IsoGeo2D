@@ -3,7 +3,6 @@ import itertools
 import newton
 import numpy as np
 import transfer as trans
-from boundingbox import BoundingBox
 from plotter import Plotter
 from ray import Ray2D
 from samplingtag import SamplingTag
@@ -118,7 +117,7 @@ class Main:
             plotter.plotParamPoints(paramPoints)
             plotter.draw()
             
-        return Texture2D(samplingScalars)
+        return samplingScalars
     
     def raycast(self, viewRay, scalarTexture, textureBoundingBox):
         plotter = self.plotter
@@ -174,13 +173,10 @@ class Main:
         width = 10
         height = 10
         
-        xDelta = float(bb.getWidth())/width
-        yDelta = float(bb.getHeight())/height
-        textureBoundingBox = BoundingBox(bb.left+xDelta/2, bb.right-xDelta/2, bb.bottom+yDelta/2, bb.top-yDelta/2)
+        samplingScalars = self.generateScalarTexture(bb, width, height)
+        scalarTexture = Texture2D(samplingScalars)
         
-        scalarTexture = self.generateScalarTexture(bb, width, height)
-        
-        plotter.plotSampleScalars(scalarTexture.textureData, bb)    
+        plotter.plotSampleScalars(samplingScalars, bb)    
         plotter.plotScalarTexture(scalarTexture)
         plotter.draw()
         
@@ -190,7 +186,7 @@ class Main:
             viewRay = Ray2D(self.eye, pixel)
             plotter.plotViewRay(viewRay, [0, 10])
             
-            pixelColors[i] = self.raycast(viewRay, scalarTexture, textureBoundingBox)
+            pixelColors[i] = self.raycast(viewRay, scalarTexture, bb)
         
         plotter.plotPixelColors(pixelColors)
         plotter.draw()

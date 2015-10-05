@@ -213,9 +213,9 @@ class Plotter:
 			row = []
 			
 			for u in uRange:
-				x = scalarTexture.closest([u, v])
+				x = scalarTexture.fetch([u, v])
 				x = max(0.,x)
-				row.append(tuple(np.repeat(x, 3)))
+				row.append((x,x,x))
 		
 			img.append(row)
 		
