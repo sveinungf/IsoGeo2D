@@ -1,7 +1,7 @@
 import itertools
+import matplotlib.gridspec as gridspec
 import numpy as np
 import pylab as plt
-from matplotlib.gridspec import GridSpec
 from matplotlib.patches import Rectangle
 from samplingtag import SamplingTag
 
@@ -10,38 +10,49 @@ class Plotter:
 		self.splineInterval = splineInterval
 		self.precision = 100
 		
-		plt.figure(figsize=(14, 12))
-		gridSpec = GridSpec(2, 3, width_ratios=[1, 10, 10])
-		self.gridSpec = gridSpec
-		
-		ax = plt.subplot(gridSpec[0, 0])
-		ax.axis((0, 1, -0.5, numPixels-0.5))
-		ax.set_yticks(np.arange(numPixels))
-		ax.xaxis.set_major_locator(plt.NullLocator()) # Removes ticks
-		self.pixelDirectPlot = ax
-		
+		plt.figure(figsize=(18, 12))
+		mainGrid = gridspec.GridSpec(2, 4, width_ratios=[1, 10, 10, 10])
+
 		gPlotAxis = (-0.6, 1.3, -0.2, 1.3)
-		ax = plt.subplot(gridSpec[0, 1])
+		ax = plt.subplot(mainGrid[0, 1])
 		ax.axis(gPlotAxis)
 		self.gPlot = ax
 		
-		ax = plt.subplot(gridSpec[0, 2])
+		ax = plt.subplot(mainGrid[0, 2])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.pPlot = ax
-		
-		ax = plt.subplot(gridSpec[1, 0])
-		ax.axis((0, 1, -0.5, numPixels-0.5))
-		ax.set_yticks(np.arange(numPixels))
-		ax.xaxis.set_major_locator(plt.NullLocator()) # Removes ticks
-		self.pixelVoxelizedPlot = ax
-		
-		ax = plt.subplot(gridSpec[1, 1])
+
+		ax = plt.subplot(mainGrid[1, 1])
 		ax.axis(gPlotAxis)
 		self.samplingPlot = ax
 		
-		ax = plt.subplot(gridSpec[1, 2])
+		ax = plt.subplot(mainGrid[1, 2])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.interpolationPlot = ax
+		
+		pixelPlotAxis = (-0.5, numPixels-0.5, 0, 1)
+		pixelGrid = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=mainGrid[1, 3], hspace=0.4)
+		
+		ax = plt.subplot(pixelGrid[0])
+		ax.axis(pixelPlotAxis)
+		ax.set_xticks(np.arange(numPixels))
+		ax.yaxis.set_major_locator(plt.NullLocator()) # Removes ticks
+		ax.set_title("Reference")
+		self.pixelReferencePlot = ax
+		
+		ax = plt.subplot(pixelGrid[1])
+		ax.axis(pixelPlotAxis)
+		ax.set_xticks(np.arange(numPixels))
+		ax.yaxis.set_major_locator(plt.NullLocator()) # Removes ticks
+		ax.set_title("Direct")
+		self.pixelDirectPlot = ax
+		
+		ax = plt.subplot(pixelGrid[2])
+		ax.axis(pixelPlotAxis)
+		ax.set_xticks(np.arange(numPixels))
+		ax.yaxis.set_major_locator(plt.NullLocator()) # Removes ticks
+		ax.set_title("Voxelized")
+		self.pixelVoxelizedPlot = ax
 		
 		plt.ion()
 		plt.show()
@@ -169,7 +180,7 @@ class Plotter:
 	
 	def __plotPixelColors(self, ax, pixelColors):
 		for i, pixelColor in enumerate(pixelColors):
-			r = Rectangle((0, i-0.5), 1, 1, facecolor=tuple(pixelColor))
+			r = Rectangle((i-0.5, 0), 1, 1, facecolor=tuple(pixelColor))
 			ax.add_patch(r)
 	
 	def plotPixelColorsDirect(self, pixelColors):
