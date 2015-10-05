@@ -211,7 +211,10 @@ class Main:
 
         pixels = []
         pixelXs = [-0.5] * numPixels
-        pixelYs = np.linspace(0.25, 0.85, numPixels)
+        firstPixelY = 0.25
+        lastPixelY = 0.85
+        pixelYs = np.linspace(firstPixelY, lastPixelY, numPixels)
+        pixelWidth = (lastPixelY-firstPixelY)/(numPixels-1)
         
         for pixelX,pixelY in itertools.izip(pixelXs,pixelYs):
             pixels.append(np.array([pixelX,pixelY]))
@@ -237,8 +240,11 @@ class Main:
         pixelColorsVoxelized = np.empty((numPixels, 4))
         
         for i, pixel in enumerate(pixels):
-            viewRay = Ray2D(self.eye, pixel)
+            viewRay = Ray2D(self.eye, pixel, pixelWidth)
             plotter.plotViewRay(viewRay, [0, 10])
+            
+            if i == 3:
+                plotter.plotViewRayFrustum(viewRay, [0, 10])
             
             pixelColorsDirect[i] = self.raycastDirect(viewRay, bb)
             pixelColorsVoxelized[i] = self.raycastVoxelized(viewRay, scalarTexture, bb)

@@ -11,27 +11,27 @@ class Plotter:
 		self.precision = 100
 		
 		plt.figure(figsize=(18, 12))
-		mainGrid = gridspec.GridSpec(2, 4, width_ratios=[1, 10, 10, 10])
+		mainGrid = gridspec.GridSpec(2, 3)
 
 		gPlotAxis = (-0.6, 1.3, -0.2, 1.3)
-		ax = plt.subplot(mainGrid[0, 1])
+		ax = plt.subplot(mainGrid[0, 0])
 		ax.axis(gPlotAxis)
 		self.gPlot = ax
 		
-		ax = plt.subplot(mainGrid[0, 2])
+		ax = plt.subplot(mainGrid[0, 1])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.pPlot = ax
 
-		ax = plt.subplot(mainGrid[1, 1])
+		ax = plt.subplot(mainGrid[1, 0])
 		ax.axis(gPlotAxis)
 		self.samplingPlot = ax
 		
-		ax = plt.subplot(mainGrid[1, 2])
+		ax = plt.subplot(mainGrid[1, 1])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.interpolationPlot = ax
 		
 		pixelPlotAxis = (-0.5, numPixels-0.5, 0, 1)
-		pixelGrid = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=mainGrid[1, 3], hspace=0.4)
+		pixelGrid = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=mainGrid[1, 2], hspace=0.4)
 		
 		ax = plt.subplot(pixelGrid[0])
 		ax.axis(pixelPlotAxis)
@@ -141,6 +141,15 @@ class Plotter:
 		
 		ax = self.samplingPlot
 		ax.plot(points[:,0], points[:,1], color='r')
+		
+	def plotViewRayFrustum(self, ray, interval):
+		params = np.linspace(interval[0], interval[1], self.precision)
+		upperPoints = self.generatePoints1var(ray.evalFrustumUpper, params)
+		lowerPoints = self.generatePoints1var(ray.evalFrustumLower, params)
+		
+		ax = self.gPlot
+		ax.plot(upperPoints[:,0], upperPoints[:,1], color='r', linestyle='--')
+		ax.plot(lowerPoints[:,0], lowerPoints[:,1], color='r', linestyle='--')
 	
 	def plotIntersectionPoints(self, points):
 		ax = self.gPlot

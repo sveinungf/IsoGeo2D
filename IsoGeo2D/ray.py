@@ -6,11 +6,14 @@ def normalize2D(vector):
     return np.array([vector[0] / magnitude, vector[1] / magnitude])
     
 class Ray2D:
-    def __init__(self, eye, pixel):
+    def __init__(self, eye, pixel, pixelWidth=0):
         self.eye = eye
         self.pixel = pixel
+        self.pixelWidth = pixelWidth
         
         self.viewDir = normalize2D(pixel - eye)
+        self.frustumUpperDir = normalize2D(pixel + pixelWidth/2 - eye)
+        self.frustumLowerDir = normalize2D(pixel - pixelWidth/2 - eye)
 
     def eval(self, t):
         return self.evalFromPixel(t)
@@ -23,6 +26,12 @@ class Ray2D:
     
     def deval(self, t):
         return self.viewDir
+    
+    def evalFrustumUpper(self, t):
+        return self.eye + self.frustumUpperDir*t
+    
+    def evalFrustumLower(self, t):
+        return self.eye + self.frustumLowerDir*t
 
     def generateSamplePoints(self, begin, end, delta):
         result = []
