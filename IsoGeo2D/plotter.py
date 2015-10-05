@@ -11,31 +11,37 @@ class Plotter:
 		self.precision = 100
 		
 		plt.figure(figsize=(14, 12))
-		gridSpec = GridSpec(2, 3, width_ratios=[10, 10, 1])
+		gridSpec = GridSpec(2, 3, width_ratios=[1, 10, 10])
 		self.gridSpec = gridSpec
 		
-		gPlotAxis = (-0.6, 1.3, -0.2, 1.3)
 		ax = plt.subplot(gridSpec[0, 0])
+		ax.axis((0, 1, -0.5, numPixels-0.5))
+		ax.set_yticks(np.arange(numPixels))
+		ax.xaxis.set_major_locator(plt.NullLocator()) # Removes ticks
+		self.pixelDirectPlot = ax
+		
+		gPlotAxis = (-0.6, 1.3, -0.2, 1.3)
+		ax = plt.subplot(gridSpec[0, 1])
 		ax.axis(gPlotAxis)
 		self.gPlot = ax
 		
-		ax = plt.subplot(gridSpec[0, 1])
+		ax = plt.subplot(gridSpec[0, 2])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.pPlot = ax
 		
 		ax = plt.subplot(gridSpec[1, 0])
-		ax.axis(gPlotAxis)
-		self.samplingPlot = ax
-		
-		ax = plt.subplot(gridSpec[1, 1])
-		ax.axis((-0.1, 1.1, -0.1, 1.1))
-		self.interpolationPlot = ax
-
-		ax = plt.subplot(gridSpec[1, 2])
 		ax.axis((0, 1, -0.5, numPixels-0.5))
 		ax.set_yticks(np.arange(numPixels))
 		ax.xaxis.set_major_locator(plt.NullLocator()) # Removes ticks
-		self.pixelPlot = ax
+		self.pixelVoxelizedPlot = ax
+		
+		ax = plt.subplot(gridSpec[1, 1])
+		ax.axis(gPlotAxis)
+		self.samplingPlot = ax
+		
+		ax = plt.subplot(gridSpec[1, 2])
+		ax.axis((-0.1, 1.1, -0.1, 1.1))
+		self.interpolationPlot = ax
 		
 		plt.ion()
 		plt.show()
@@ -119,6 +125,9 @@ class Plotter:
 		params = np.linspace(interval[0], interval[1], self.precision)
 		points = self.generatePoints1var(ray.evalFromEye, params)
 		
+		ax = self.gPlot
+		ax.plot(points[:,0], points[:,1], color='r')
+		
 		ax = self.samplingPlot
 		ax.plot(points[:,0], points[:,1], color='r')
 	
@@ -139,33 +148,35 @@ class Plotter:
 		
 		for point in points:
 			ax.plot(point[0], point[1], marker='x', color='k')
-			
-	def plotSamplePoints(self, points, tags):
-		ax = self.samplingPlot
-		
+	
+	def __plotSamplePoints(self, ax, points, tags):
 		for point,tag in itertools.izip(points,tags):
-			if tag == SamplingTag.IN_TEXTURE:
+			if tag == SamplingTag.IN_OBJECT:
 				pointColor = 'g'
-			elif tag == SamplingTag.NOT_IN_TEXTURE:
+			elif tag == SamplingTag.NOT_IN_OBJECT:
 				pointColor = '#de7e00'
 			else:
 				pointColor = 'r'
 				
 
-			ax.plot(point[0], point[1], marker='o', color=pointColor)
-			
-	def plotPixelPoints(self, pixels):
-		ax = self.gPlot
-		
-		for i, pixel in enumerate(pixels):
-			ax.text(pixel[0], pixel[1], str(i))
-		
-	def plotPixelColors(self, pixelColors):
-		ax = self.pixelPlot
-		
+			ax.plot(point[0], point[1], marker='o', color=pointColor)		
+	
+	def plotSamplePointsDirect(self, points, tags):
+		self.__plotSamplePoints(self.gPlot, points, tags)
+					
+	def plotSamplePointsVoxelized(self, points, tags):
+		self.__plotSamplePoints(self.samplingPlot, points, tags)
+	
+	def __plotPixelColors(self, ax, pixelColors):
 		for i, pixelColor in enumerate(pixelColors):
 			r = Rectangle((0, i-0.5), 1, 1, facecolor=tuple(pixelColor))
 			ax.add_patch(r)
+	
+	def plotPixelColorsDirect(self, pixelColors):
+		self.__plotPixelColors(self.pixelDirectPlot, pixelColors)
+					
+	def plotPixelColorsVoxelized(self, pixelColors):
+		self.__plotPixelColors(self.pixelVoxelizedPlot, pixelColors)
 		
 	def plotBoundingBox(self, boundingBox):
 		lowerLeft = (boundingBox.left, boundingBox.bottom)

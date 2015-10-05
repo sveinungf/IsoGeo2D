@@ -49,8 +49,9 @@ class Main:
         self.plotter = Plotter(self.splineInterval, self.numPixels)
         
         self.eye = np.array([-2, 0.55])
+        self.viewRayDelta = 0.2
         
-    def generateScalarTexture(self, boundingBox, width, height):
+    def generateScalarMatrix(self, boundingBox, width, height):
         phi = self.phi
         phiPlane = self.phiPlane
         rho = self.rho
@@ -70,8 +71,7 @@ class Main:
         for i, y in enumerate(yValues):
             samplingRay = Ray2D(np.array([self.eye[0], y]), np.array([0, y]))
     
-            plotter.plotSamplingRay(samplingRay, [0, 10])
-            plotter.draw()
+            #plotter.plotSamplingRay(samplingRay, [0, 10])
             
             intersections = phiPlane.findTwoIntersections(samplingRay)
             
@@ -119,37 +119,97 @@ class Main:
             
         return samplingScalars
     
-    def raycast(self, viewRay, scalarTexture, textureBoundingBox):
+    def raycastDirect(self, viewRay, boundingBox):
         plotter = self.plotter
         
-        viewRayDelta = 0.2
-        samplePoints = viewRay.generateSamplePoints(0, 10, viewRayDelta)
         tags = []
         sampleColors = []
         sampleDeltas = []
         
+        samplePoints = viewRay.generateSamplePoints(0, 10, self.viewRayDelta)
+        intersections = self.phiPlane.findTwoIntersections(viewRay)
+        
+        if intersections == None:
+            for samplePoint in samplePoints:
+                bb = boundingBox
+                
+                if bb.enclosesPoint(samplePoint):
+                    tags.append(SamplingTag.NOT_IN_OBJECT)
+                else:
+                    tags.append(SamplingTag.NOT_IN_BOUNDINGBOX)
+                
+        else:
+            inLineParam = intersections[0].lineParam
+            outLineParam = intersections[1].lineParam
+                
+            inGeomPoint = viewRay.eval(inLineParam)
+            outGeomPoint = viewRay.eval(outLineParam)
+            
+            prevUV = intersections[0].paramPoint
+            
+            for samplePoint in samplePoints:
+                bb = boundingBox
+                
+                if bb.enclosesPoint(samplePoint):
+                    if inGeomPoint[0] <= samplePoint[0] <= outGeomPoint[0]:
+                        tags.append(SamplingTag.IN_OBJECT)
+                        phi = self.phi
+                        rho = self.rho
+                        
+                        def f(u,v):
+                            return phi.evaluate(u,v) - samplePoint
+                        def fJacob(u, v):
+                            return np.matrix([phi.evaluatePartialDerivativeU(u, v), 
+                                              phi.evaluatePartialDerivativeV(u, v)]).transpose()
+                        
+                        paramPoint = newton.newtonsMethod2DClamped(f, fJacob, prevUV, self.splineInterval)
+                        
+                        sampleScalar = rho.evaluate(paramPoint[0], paramPoint[1])
+                        sampleColors.append(self.transfer(sampleScalar))
+                        sampleDeltas.append(self.viewRayDelta)
+                        
+                        prevUV = paramPoint
+                    else:
+                        tags.append(SamplingTag.NOT_IN_OBJECT)
+                else:
+                    tags.append(SamplingTag.NOT_IN_BOUNDINGBOX)
+        
+        plotter.plotSamplePointsDirect(samplePoints, tags)
+        plotter.draw()
+        
+        return compositing.frontToBack(sampleColors, sampleDeltas)
+        
+    def raycastVoxelized(self, viewRay, scalarTexture, boundingBox):
+        plotter = self.plotter
+        
+        tags = []
+        sampleColors = []
+        sampleDeltas = []
+        
+        samplePoints = viewRay.generateSamplePoints(0, 10, self.viewRayDelta)
+        
         for samplePoint in samplePoints:
-            bb = textureBoundingBox
+            bb = boundingBox
             
             if bb.enclosesPoint(samplePoint):
                 u = (samplePoint[0]-bb.left)/bb.getWidth()
                 v = (samplePoint[1]-bb.bottom)/bb.getHeight()
                 
                 if not scalarTexture.closest([u, v]) == self.samplingDefault:
-                    tags.append(SamplingTag.IN_TEXTURE)
+                    tags.append(SamplingTag.IN_OBJECT)
                     
                     sampleScalar = scalarTexture.fetch([u, v])
                     sampleColors.append(self.transfer(sampleScalar))
-                    sampleDeltas.append(viewRayDelta)
+                    sampleDeltas.append(self.viewRayDelta)
                 else:
-                    tags.append(SamplingTag.NOT_IN_TEXTURE)
+                    tags.append(SamplingTag.NOT_IN_OBJECT)
             else:
                 tags.append(SamplingTag.NOT_IN_BOUNDINGBOX)
             
-        plotter.plotSamplePoints(samplePoints, tags)
+        plotter.plotSamplePointsVoxelized(samplePoints, tags)
         plotter.draw()
         
-        return compositing.frontToBack(sampleColors, sampleDeltas) 
+        return compositing.frontToBack(sampleColors, sampleDeltas)
         
     def run(self):
         numPixels = self.numPixels
@@ -164,7 +224,6 @@ class Main:
         
         plotter.plotGrids(self.phi.evaluate, 10, 10)
         plotter.plotScalarField(self.rho, self.transfer)
-        plotter.draw()
         
         bb = self.phiPlane.createBoundingBox()
         plotter.plotBoundingBox(bb)
@@ -173,22 +232,25 @@ class Main:
         width = 10
         height = 10
         
-        samplingScalars = self.generateScalarTexture(bb, width, height)
+        samplingScalars = self.generateScalarMatrix(bb, width, height)
         scalarTexture = Texture2D(samplingScalars)
         
         plotter.plotSampleScalars(samplingScalars, bb)    
         plotter.plotScalarTexture(scalarTexture)
         plotter.draw()
         
-        pixelColors = np.empty((numPixels, 4))
+        pixelColorsDirect = np.empty((numPixels, 4))
+        pixelColorsVoxelized = np.empty((numPixels, 4))
         
         for i, pixel in enumerate(pixels):
             viewRay = Ray2D(self.eye, pixel)
             plotter.plotViewRay(viewRay, [0, 10])
             
-            pixelColors[i] = self.raycast(viewRay, scalarTexture, bb)
+            pixelColorsDirect[i] = self.raycastDirect(viewRay, bb)
+            pixelColorsVoxelized[i] = self.raycastVoxelized(viewRay, scalarTexture, bb)
         
-        plotter.plotPixelColors(pixelColors)
+        plotter.plotPixelColorsDirect(pixelColorsDirect)
+        plotter.plotPixelColorsVoxelized(pixelColorsVoxelized)
         plotter.draw()
     
 def run():
