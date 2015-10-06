@@ -227,8 +227,6 @@ class Main:
         return pixels
         
     def run(self):
-        numPixels = self.numPixels
-        numPixelsRef = self.numPixelsRef
         plotter = self.plotter
         
         plotter.plotGrids(self.phi.evaluate, 10, 10)
@@ -246,39 +244,39 @@ class Main:
         plotter.plotSampleScalars(samplingScalars, bb)    
         plotter.plotScalarTexture(scalarTexture)
         
-        pixelsRef = self.createPixels(numPixelsRef)
-        pixelWidth = (self.lastPixelY-self.firstPixelY)/(numPixelsRef-1)
-        pixelColorsRef = np.empty((numPixelsRef, 4))
+        numPixelsRef = self.numPixelsRef
+        refPixels = self.createPixels(numPixelsRef)
+        refPixelWidth = (self.lastPixelY-self.firstPixelY)/(numPixelsRef-1)
+        refPixelColors = np.empty((numPixelsRef, 4))
         
-        for i, pixel in enumerate(pixelsRef):
-            viewRay = Ray2D(self.eye, pixel, pixelWidth)
-            pixelColorsRef[i] = self.raycastDirect(viewRay, self.viewRayDeltaRef, bb, False)
-            
-        plotter.plotPixelColorsReference(pixelColorsRef)
+        for i, refPixel in enumerate(refPixels):
+            viewRay = Ray2D(self.eye, refPixel, refPixelWidth)
+            refPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDeltaRef, bb, False)
         
+        numPixels = self.numPixels
         pixels = self.createPixels(numPixels)
         pixelWidth = (self.lastPixelY-self.firstPixelY)/(numPixels-1)
+        directPixelColors = np.empty((numPixels, 4))
+        voxelizedPixelColors = np.empty((numPixels, 4))
         
-        pixelColorsDirect = np.empty((numPixels, 4))
-        pixelColorsVoxelized = np.empty((numPixels, 4))
-        
-        for i, pixel in enumerate(pixels):
-            viewRay = Ray2D(self.eye, pixel, pixelWidth)
+        for i, refPixel in enumerate(pixels):
+            viewRay = Ray2D(self.eye, refPixel, pixelWidth)
             plotter.plotViewRay(viewRay, [0, 10])
             
             if i == 0:
                 plotter.plotViewRayFrustum(viewRay, [0, 10])
             
-            pixelColorsDirect[i] = self.raycastDirect(viewRay, self.viewRayDelta, bb, True)
-            pixelColorsVoxelized[i] = self.raycastVoxelized(viewRay, scalarTexture, bb)
+            directPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDelta, bb, True)
+            voxelizedPixelColors[i] = self.raycastVoxelized(viewRay, scalarTexture, bb)
         
-        plotter.plotPixelColorsDirect(pixelColorsDirect)
-        plotter.plotPixelColorsVoxelized(pixelColorsVoxelized)
+        plotter.plotPixelColorsReference(refPixelColors)
+        plotter.plotPixelColorsDirect(directPixelColors)
+        plotter.plotPixelColorsVoxelized(voxelizedPixelColors)
         
-        directDiffs = colordiff.compare(pixelColorsRef, pixelColorsDirect)
+        directDiffs = colordiff.compare(refPixelColors, directPixelColors)
         plotter.plotPixelColorDiffsDirect(directDiffs)
         
-        voxelizedDiffs = colordiff.compare(pixelColorsRef, pixelColorsVoxelized)
+        voxelizedDiffs = colordiff.compare(refPixelColors, voxelizedPixelColors)
         plotter.plotPixelColorDiffsVoxelized(voxelizedDiffs)
         
         plotter.draw()
