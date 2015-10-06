@@ -178,8 +178,13 @@ class Main:
             
             for samplePoint, location in itertools.izip(samplePoints, locations):
                 if location == SamplingLocation.INSIDE_OBJECT:
+                    pixelFrustum = viewRay.frustumBoundingCircle(samplePoint)
+                    
                     pApprox = self.phiInverse(samplePoint, prevUV)
-                    #gApprox = self.phi.evaluate(pApprox[0], pApprox[1])
+                    gApprox = self.phi.evaluate(pApprox[0], pApprox[1])
+                    
+                    if not pixelFrustum.enclosesPoint(gApprox):
+                        print "NOT ENCLOSED"
                     
                     sampleScalar = self.rho.evaluate(pApprox[0], pApprox[1])
                     sampleColors.append(self.transfer(sampleScalar))
@@ -190,8 +195,8 @@ class Main:
         if plot:
             plotter = self.plotter
             
-            frustumBoundingCircle = viewRay.frustumBoundingCircle(samplePoints[3])
-            plotter.plotCircle(frustumBoundingCircle)
+            #frustumBoundingCircle = viewRay.frustumBoundingCircle(samplePoints[3])
+            #plotter.plotCircle(frustumBoundingCircle)
             
             plotter.plotSamplePointsDirect(samplePoints, locations)
         
@@ -265,7 +270,7 @@ class Main:
             viewRay = Ray2D(self.eye, refPixel, pixelWidth)
             plotter.plotViewRay(viewRay, [0, 10])
             
-            plotter.plotViewRayFrustum(viewRay, [0, 10])
+            #plotter.plotViewRayFrustum(viewRay, [0, 10])
             
             directPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDelta, bb, True)
             voxelizedPixelColors[i] = self.raycastVoxelized(viewRay, scalarTexture, bb)
