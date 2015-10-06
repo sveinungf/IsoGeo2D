@@ -1,8 +1,9 @@
 import math
 
 class Intersection:
-    def __init__(self, paramPoint, lineParam):
+    def __init__(self, paramPoint, geomPoint, lineParam):
         self.paramPoint = paramPoint
+        self.geomPoint = geomPoint
         self.lineParam = lineParam
 
     def alreadyIn(self, intersects, tolerance):

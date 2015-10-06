@@ -3,17 +3,17 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 import pylab as plt
 from matplotlib.patches import Rectangle
-from samplingtag import SamplingTag
+from samplinglocation import SamplingLocation
 
 class Plotter:
-	def __init__(self, splineInterval, numPixels):
+	def __init__(self, splineInterval):
 		self.splineInterval = splineInterval
 		self.precision = 100
 		
 		plt.figure(figsize=(18, 12))
 		mainGrid = gridspec.GridSpec(2, 3)
 
-		gPlotAxis = (-0.6, 1.3, -0.2, 1.3)
+		gPlotAxis = (-2.6, 1.3, -0.2, 1.3)
 		ax = plt.subplot(mainGrid[0, 0])
 		ax.axis(gPlotAxis)
 		self.gPlot = ax
@@ -30,33 +30,32 @@ class Plotter:
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.interpolationPlot = ax
 		
-		pixelPlotAxis = (-0.5, numPixels-0.5, 0, 1)
 		pixelGrid = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=mainGrid[1, 2], hspace=0.4)
 		
 		ax = plt.subplot(pixelGrid[0])
-		ax.axis(pixelPlotAxis)
-		ax.set_xticks(np.arange(numPixels))
-		ax.yaxis.set_major_locator(plt.NullLocator()) # Removes ticks
 		ax.set_title("Reference")
+		ax.xaxis.set_major_locator(plt.NullLocator()) # Removes ticks
+		ax.yaxis.set_major_locator(plt.NullLocator())
 		self.pixelReferencePlot = ax
 		
 		ax = plt.subplot(pixelGrid[1])
-		ax.axis(pixelPlotAxis)
-		ax.set_xticks(np.arange(numPixels))
-		ax.yaxis.set_major_locator(plt.NullLocator()) # Removes ticks
 		ax.set_title("Direct")
+		ax.xaxis.set_major_locator(plt.NullLocator())
+		ax.yaxis.set_major_locator(plt.NullLocator())
 		self.pixelDirectPlot = ax
 		
 		ax = plt.subplot(pixelGrid[2])
-		ax.axis(pixelPlotAxis)
-		ax.set_xticks(np.arange(numPixels))
-		ax.yaxis.set_major_locator(plt.NullLocator()) # Removes ticks
 		ax.set_title("Voxelized")
+		ax.xaxis.set_major_locator(plt.NullLocator())
+		ax.yaxis.set_major_locator(plt.NullLocator())
 		self.pixelVoxelizedPlot = ax
 		
 		plt.ion()
 		plt.show()
 
+	def getPixelPlotAxis(self, numPixels):
+		return (-0.5, numPixels-0.5, 0, 1)
+		
 	def generatePoints2var(self, f, xInputs, yInputs):
 		xOutput = []
 		yOutput = []
@@ -150,6 +149,11 @@ class Plotter:
 		ax = self.gPlot
 		ax.plot(upperPoints[:,0], upperPoints[:,1], color='r', linestyle='--')
 		ax.plot(lowerPoints[:,0], lowerPoints[:,1], color='r', linestyle='--')
+		
+	def plotCircle(self, point, radius):
+		circle = plt.Circle((point[0], point[1]), radius, fill=False)
+		ax = self.gPlot
+		ax.add_artist(circle)
 	
 	def plotIntersectionPoints(self, points):
 		ax = self.gPlot
@@ -169,11 +173,11 @@ class Plotter:
 		for point in points:
 			ax.plot(point[0], point[1], marker='x', color='k')
 	
-	def __plotSamplePoints(self, ax, points, tags):
-		for point,tag in itertools.izip(points,tags):
-			if tag == SamplingTag.IN_OBJECT:
+	def __plotSamplePoints(self, ax, points, locations):
+		for point, location in itertools.izip(points,locations):
+			if location == SamplingLocation.INSIDE_OBJECT:
 				pointColor = 'g'
-			elif tag == SamplingTag.NOT_IN_OBJECT:
+			elif location == SamplingLocation.OUTSIDE_OBJECT:
 				pointColor = '#de7e00'
 			else:
 				pointColor = 'r'
@@ -181,19 +185,25 @@ class Plotter:
 
 			ax.plot(point[0], point[1], marker='o', color=pointColor)		
 	
-	def plotSamplePointsDirect(self, points, tags):
-		self.__plotSamplePoints(self.gPlot, points, tags)
+	def plotSamplePointsDirect(self, points, locations):
+		self.__plotSamplePoints(self.gPlot, points, locations)
 					
-	def plotSamplePointsVoxelized(self, points, tags):
-		self.__plotSamplePoints(self.samplingPlot, points, tags)
+	def plotSamplePointsVoxelized(self, points, locations):
+		self.__plotSamplePoints(self.samplingPlot, points, locations)
 	
 	def __plotPixelColors(self, ax, pixelColors):
+		numPixels = len(pixelColors)
+		ax.axis(self.getPixelPlotAxis(numPixels))
+		
 		for i, pixelColor in enumerate(pixelColors):
 			r = Rectangle((i-0.5, 0), 1, 1, facecolor=tuple(pixelColor))
 			ax.add_patch(r)
 	
 	def plotPixelColorsDirect(self, pixelColors):
 		self.__plotPixelColors(self.pixelDirectPlot, pixelColors)
+		
+	def plotPixelColorsReference(self, pixelColors):
+		self.__plotPixelColors(self.pixelReferencePlot, pixelColors)
 					
 	def plotPixelColorsVoxelized(self, pixelColors):
 		self.__plotPixelColors(self.pixelVoxelizedPlot, pixelColors)

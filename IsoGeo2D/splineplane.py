@@ -69,7 +69,7 @@ class SplinePlane:
             else:
                 point = np.array([interval[1], uv[0]])
                 
-            return Intersection(point, uv[1])
+            return Intersection(point, ray.eval(uv[1]), uv[1])
         
         return None
     

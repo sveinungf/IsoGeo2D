@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import numpy.linalg as la
 
 def normalize2D(vector):
     magnitude = float(math.sqrt(vector[0]**2 + vector[1]**2))
@@ -33,6 +34,16 @@ class Ray2D:
     def evalFrustumLower(self, t):
         return self.eye + self.frustumLowerDir*t
 
+    def frustumRadius(self, point):
+        u = self.frustumUpperDir
+        v = self.viewDir
+        
+        cosAngle = np.dot(u,v) / la.norm(u) / la.norm(v)
+        angle = np.arccos(np.clip(cosAngle, -1, 1))
+        eyeDistance = la.norm(point - self.eye)
+        
+        return np.tan(angle) * eyeDistance
+        
     def generateSamplePoints(self, begin, end, delta):
         result = []
         current = begin + delta

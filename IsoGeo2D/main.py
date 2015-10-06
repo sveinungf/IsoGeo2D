@@ -5,7 +5,7 @@ import numpy as np
 import transfer as trans
 from plotter import Plotter
 from ray import Ray2D
-from samplingtag import SamplingTag
+from samplinglocation import SamplingLocation
 from splineplane import SplinePlane
 from splines import Spline2D
 from texture import Texture2D
@@ -37,7 +37,13 @@ def createRho():
 class Main:
     def __init__(self):
         self.splineInterval = [0, 0.99999]
+        
         self.numPixels = 5
+        self.numPixelsRef = 50
+        self.pixelX = -0.5
+        self.firstPixelY = 0.25
+        self.lastPixelY = 0.85
+        
         self.samplingDefault = -1
         
         self.phi = createPhi()
@@ -46,10 +52,11 @@ class Main:
         self.rho = createRho()
         self.transfer = trans.createTransferFunction(100)
         
-        self.plotter = Plotter(self.splineInterval, self.numPixels)
+        self.plotter = Plotter(self.splineInterval)
         
         self.eye = np.array([-2, 0.55])
         self.viewRayDelta = 0.2
+        self.viewRayDeltaRef = 0.05
         
     def phiInverse(self, geomPoint, uvGuess):
         phi = self.phi
@@ -94,7 +101,7 @@ class Main:
             outGeomPoint = samplingRay.eval(outLineParam)
     
             plotter.plotIntersectionPoints([inGeomPoint, outGeomPoint])
-            plotter.draw()
+            #plotter.draw()
             
             geomPoints = []
             paramPoints = []
@@ -118,58 +125,87 @@ class Main:
                 
             plotter.plotGeomPoints(geomPoints)
             plotter.plotParamPoints(paramPoints)
-            plotter.draw()
+            #plotter.draw()
             
         return samplingScalars
     
-    def raycastDirect(self, viewRay, boundingBox):
-        plotter = self.plotter
+    def getSamplePointsLocations(self, samplePoints, intersections, boundingBox):
+        locations = np.empty(len(samplePoints))
         
-        tags = []
+        if intersections == None:
+            for i, samplePoint in enumerate(samplePoints):
+                if boundingBox.enclosesPoint(samplePoints):
+                    locations[i] = SamplingLocation.OUTSIDE_OBJECT
+                else:
+                    locations[i] = SamplingLocation.OUTSIDE_BOUNDINGBOX
+        else:
+            inGeomPoint = intersections[0].geomPoint
+            outGeomPoint = intersections[1].geomPoint
+            
+            for i, samplePoint in enumerate(samplePoints):
+                if boundingBox.enclosesPoint(samplePoint):
+                    if inGeomPoint[0] <= samplePoint[0] <= outGeomPoint[0]:
+                        locations[i] = SamplingLocation.INSIDE_OBJECT
+                    else:
+                        locations[i] = SamplingLocation.OUTSIDE_OBJECT
+                else:
+                    locations[i] = SamplingLocation.OUTSIDE_BOUNDINGBOX
+                    
+        return locations
+
+    def raycastReference(self, viewRay, delta, boundingBox):
         sampleColors = []
         sampleDeltas = []
         
-        samplePoints = viewRay.generateSamplePoints(0, 10, self.viewRayDelta)
+        samplePoints = viewRay.generateSamplePoints(0, 10, delta)
         intersections = self.phiPlane.findTwoIntersections(viewRay)
+        locations = self.getSamplePointsLocations(samplePoints, intersections, boundingBox)
         
-        if intersections == None:
-            for samplePoint in samplePoints:
-                bb = boundingBox
+        #radius = viewRay.frustumRadius(samplePoints[3])
+        #plotter.plotCircle(samplePoints[3], radius)
+        
+        prevUV = intersections[0].paramPoint
+        
+        for samplePoint, location in itertools.izip(samplePoints, locations):
+            if location == SamplingLocation.INSIDE_OBJECT:
+                pApprox = self.phiInverse(samplePoint, prevUV)
+                #gApprox = self.phi.evaluate(pApprox[0], pApprox[1])
                 
-                if bb.enclosesPoint(samplePoint):
-                    tags.append(SamplingTag.NOT_IN_OBJECT)
-                else:
-                    tags.append(SamplingTag.NOT_IN_BOUNDINGBOX)
-                
-        else:
-            inLineParam = intersections[0].lineParam
-            outLineParam = intersections[1].lineParam
-                
-            inGeomPoint = viewRay.eval(inLineParam)
-            outGeomPoint = viewRay.eval(outLineParam)
-            
-            prevUV = intersections[0].paramPoint
-            
-            for samplePoint in samplePoints:
-                bb = boundingBox
-                
-                if bb.enclosesPoint(samplePoint):
-                    if inGeomPoint[0] <= samplePoint[0] <= outGeomPoint[0]:
-                        tags.append(SamplingTag.IN_OBJECT)
-
-                        paramPoint = self.phiInverse(samplePoint, prevUV)
-                        sampleScalar = self.rho.evaluate(paramPoint[0], paramPoint[1])
-                        sampleColors.append(self.transfer(sampleScalar))
-                        sampleDeltas.append(self.viewRayDelta)
+                sampleScalar = self.rho.evaluate(pApprox[0], pApprox[1])
+                sampleColors.append(self.transfer(sampleScalar))
+                sampleDeltas.append(self.viewRayDelta)
                         
-                        prevUV = paramPoint
-                    else:
-                        tags.append(SamplingTag.NOT_IN_OBJECT)
-                else:
-                    tags.append(SamplingTag.NOT_IN_BOUNDINGBOX)
+                prevUV = pApprox
         
-        plotter.plotSamplePointsDirect(samplePoints, tags)
-        plotter.draw()
+        return compositing.frontToBack(sampleColors, sampleDeltas)
+            
+    def raycastDirect(self, viewRay, delta, boundingBox):
+        plotter = self.plotter
+        
+        sampleColors = []
+        sampleDeltas = []
+        
+        samplePoints = viewRay.generateSamplePoints(0, 10, delta)
+        intersections = self.phiPlane.findTwoIntersections(viewRay)
+        locations = self.getSamplePointsLocations(samplePoints, intersections, boundingBox)
+        
+        #radius = viewRay.frustumRadius(samplePoints[3])
+        #plotter.plotCircle(samplePoints[3], radius)
+        
+        prevUV = intersections[0].paramPoint
+        
+        for samplePoint, location in itertools.izip(samplePoints, locations):
+            if location == SamplingLocation.INSIDE_OBJECT:
+                pApprox = self.phiInverse(samplePoint, prevUV)
+                #gApprox = self.phi.evaluate(pApprox[0], pApprox[1])
+                
+                sampleScalar = self.rho.evaluate(pApprox[0], pApprox[1])
+                sampleColors.append(self.transfer(sampleScalar))
+                sampleDeltas.append(self.viewRayDelta)
+                        
+                prevUV = pApprox
+                
+        plotter.plotSamplePointsDirect(samplePoints, locations)
         
         return compositing.frontToBack(sampleColors, sampleDeltas)
         
@@ -190,41 +226,40 @@ class Main:
                 v = (samplePoint[1]-bb.bottom)/bb.getHeight()
                 
                 if not scalarTexture.closest([u, v]) == self.samplingDefault:
-                    tags.append(SamplingTag.IN_OBJECT)
+                    tags.append(SamplingLocation.INSIDE_OBJECT)
                     
                     sampleScalar = scalarTexture.fetch([u, v])
                     sampleColors.append(self.transfer(sampleScalar))
                     sampleDeltas.append(self.viewRayDelta)
                 else:
-                    tags.append(SamplingTag.NOT_IN_OBJECT)
+                    tags.append(SamplingLocation.OUTSIDE_OBJECT)
             else:
-                tags.append(SamplingTag.NOT_IN_BOUNDINGBOX)
+                tags.append(SamplingLocation.OUTSIDE_BOUNDINGBOX)
             
         plotter.plotSamplePointsVoxelized(samplePoints, tags)
-        plotter.draw()
+        #plotter.draw()
         
         return compositing.frontToBack(sampleColors, sampleDeltas)
         
+    def createPixels(self, numPixels):
+        pixels = np.empty((numPixels, 2))
+        pixelXs = np.ones(numPixels) * self.pixelX
+        pixels[:,0] = pixelXs
+        pixels[:,1] = np.linspace(self.firstPixelY, self.lastPixelY, numPixels)
+        
+        return pixels
+        
     def run(self):
         numPixels = self.numPixels
+        numPixelsRef = self.numPixelsRef
         plotter = self.plotter
-
-        pixels = []
-        pixelXs = [-0.5] * numPixels
-        firstPixelY = 0.25
-        lastPixelY = 0.85
-        pixelYs = np.linspace(firstPixelY, lastPixelY, numPixels)
-        pixelWidth = (lastPixelY-firstPixelY)/(numPixels-1)
-        
-        for pixelX,pixelY in itertools.izip(pixelXs,pixelYs):
-            pixels.append(np.array([pixelX,pixelY]))
         
         plotter.plotGrids(self.phi.evaluate, 10, 10)
         plotter.plotScalarField(self.rho, self.transfer)
         
         bb = self.phiPlane.createBoundingBox()
         plotter.plotBoundingBox(bb)
-        plotter.draw()
+        #plotter.draw()
         
         width = 10
         height = 10
@@ -234,7 +269,20 @@ class Main:
         
         plotter.plotSampleScalars(samplingScalars, bb)    
         plotter.plotScalarTexture(scalarTexture)
-        plotter.draw()
+        #plotter.draw()
+        
+        pixelsRef = self.createPixels(numPixelsRef)
+        pixelWidth = (self.lastPixelY-self.firstPixelY)/(numPixelsRef-1)
+        pixelColorsRef = np.empty((numPixelsRef, 4))
+        
+        for i, pixel in enumerate(pixelsRef):
+            viewRay = Ray2D(self.eye, pixel, pixelWidth)
+            pixelColorsRef[i] = self.raycastReference(viewRay, self.viewRayDeltaRef, bb)
+            
+        plotter.plotPixelColorsReference(pixelColorsRef)
+        
+        pixels = self.createPixels(numPixels)
+        pixelWidth = (self.lastPixelY-self.firstPixelY)/(numPixels-1)
         
         pixelColorsDirect = np.empty((numPixels, 4))
         pixelColorsVoxelized = np.empty((numPixels, 4))
@@ -243,10 +291,10 @@ class Main:
             viewRay = Ray2D(self.eye, pixel, pixelWidth)
             plotter.plotViewRay(viewRay, [0, 10])
             
-            if i == 3:
+            if i == 0:
                 plotter.plotViewRayFrustum(viewRay, [0, 10])
             
-            pixelColorsDirect[i] = self.raycastDirect(viewRay, bb)
+            pixelColorsDirect[i] = self.raycastDirect(viewRay, self.viewRayDelta, bb)
             pixelColorsVoxelized[i] = self.raycastVoxelized(viewRay, scalarTexture, bb)
         
         plotter.plotPixelColorsDirect(pixelColorsDirect)
