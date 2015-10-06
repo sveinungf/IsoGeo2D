@@ -30,7 +30,7 @@ class Plotter:
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.interpolationPlot = ax
 		
-		pixelGrid = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=mainGrid[1, 2], hspace=0.4)
+		pixelGrid = gridspec.GridSpecFromSubplotSpec(5, 1, subplot_spec=mainGrid[1, 2], hspace=0.4)
 		
 		ax = plt.subplot(pixelGrid[0])
 		ax.set_title("Reference")
@@ -45,10 +45,22 @@ class Plotter:
 		self.pixelDirectPlot = ax
 		
 		ax = plt.subplot(pixelGrid[2])
+		ax.set_title("Direct color difference")
+		ax.xaxis.set_major_locator(plt.NullLocator())
+		ax.yaxis.set_major_locator(plt.NullLocator())
+		self.pixelDirectDiffPlot = ax
+		
+		ax = plt.subplot(pixelGrid[3])
 		ax.set_title("Voxelized")
 		ax.xaxis.set_major_locator(plt.NullLocator())
 		ax.yaxis.set_major_locator(plt.NullLocator())
 		self.pixelVoxelizedPlot = ax
+		
+		ax = plt.subplot(pixelGrid[4])
+		ax.set_title("Voxelized color difference")
+		ax.xaxis.set_major_locator(plt.NullLocator())
+		ax.yaxis.set_major_locator(plt.NullLocator())
+		self.pixelVoxelizedDiffPlot = ax
 		
 		plt.ion()
 		plt.show()
@@ -198,6 +210,21 @@ class Plotter:
 		for i, pixelColor in enumerate(pixelColors):
 			r = Rectangle((i-0.5, 0), 1, 1, facecolor=tuple(pixelColor))
 			ax.add_patch(r)
+			
+	def __plotPixelColorDiffs(self, ax, colorDiffs):
+		colors = np.empty((len(colorDiffs), 3))
+		
+		for i, colorDiff in enumerate(colorDiffs):
+			if colorDiff <= 1.0:
+				colors[i] = np.array([0.75, 0.75, 0.75])
+			elif colorDiff <= 5.0:
+				colors[i] = np.array([0.0, 0.0, 1.0])
+			elif colorDiff <= 10.0:
+				colors[i] = np.array([0.0, 1.0, 0.0])
+			else:
+				colors[i] = np.array([1.0, 0.0, 0.0])
+				
+		self.__plotPixelColors(ax, colors)
 	
 	def plotPixelColorsDirect(self, pixelColors):
 		self.__plotPixelColors(self.pixelDirectPlot, pixelColors)
@@ -207,6 +234,12 @@ class Plotter:
 					
 	def plotPixelColorsVoxelized(self, pixelColors):
 		self.__plotPixelColors(self.pixelVoxelizedPlot, pixelColors)
+		
+	def plotPixelColorDiffsDirect(self, colorDiffs):
+		self.__plotPixelColorDiffs(self.pixelDirectDiffPlot, colorDiffs)
+		
+	def plotPixelColorDiffsVoxelized(self, colorDiffs):
+		self.__plotPixelColorDiffs(self.pixelVoxelizedDiffPlot, colorDiffs)
 		
 	def plotBoundingBox(self, boundingBox):
 		lowerLeft = (boundingBox.left, boundingBox.bottom)

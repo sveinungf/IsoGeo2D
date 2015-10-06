@@ -1,3 +1,4 @@
+import colordiff
 import compositing
 import itertools
 import newton
@@ -299,6 +300,13 @@ class Main:
         
         plotter.plotPixelColorsDirect(pixelColorsDirect)
         plotter.plotPixelColorsVoxelized(pixelColorsVoxelized)
+        
+        directDiffs = colordiff.compare(pixelColorsRef, pixelColorsDirect)
+        plotter.plotPixelColorDiffsDirect(directDiffs)
+        
+        voxelizedDiffs = colordiff.compare(pixelColorsRef, pixelColorsVoxelized)
+        plotter.plotPixelColorDiffsVoxelized(voxelizedDiffs)
+        
         plotter.draw()
     
 def run():
