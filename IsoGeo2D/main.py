@@ -164,33 +164,8 @@ class Main:
                 locations[i] = SamplingLocation.OUTSIDE_BOUNDINGBOX
             
         return locations
-        
-    def raycastReference(self, viewRay, delta, boundingBox):
-        sampleColors = []
-        sampleDeltas = []
-        
-        samplePoints = viewRay.generateSamplePoints(0, 10, delta)
-        intersections = self.phiPlane.findTwoIntersections(viewRay)
-        locations = self.getDirectSamplePointLocations(samplePoints, intersections, boundingBox)
-        
-        prevUV = intersections[0].paramPoint
-        
-        for samplePoint, location in itertools.izip(samplePoints, locations):
-            if location == SamplingLocation.INSIDE_OBJECT:
-                pApprox = self.phiInverse(samplePoint, prevUV)
-                #gApprox = self.phi.evaluate(pApprox[0], pApprox[1])
-                
-                sampleScalar = self.rho.evaluate(pApprox[0], pApprox[1])
-                sampleColors.append(self.transfer(sampleScalar))
-                sampleDeltas.append(self.viewRayDeltaRef)
-                        
-                prevUV = pApprox
-        
-        return compositing.frontToBack(sampleColors, sampleDeltas)
             
-    def raycastDirect(self, viewRay, delta, boundingBox):
-        plotter = self.plotter
-        
+    def raycastDirect(self, viewRay, delta, boundingBox, plot):
         sampleColors = []
         sampleDeltas = []
         
@@ -210,11 +185,13 @@ class Main:
                 
                 sampleScalar = self.rho.evaluate(pApprox[0], pApprox[1])
                 sampleColors.append(self.transfer(sampleScalar))
-                sampleDeltas.append(self.viewRayDelta)
+                sampleDeltas.append(delta)
                         
                 prevUV = pApprox
                 
-        plotter.plotSamplePointsDirect(samplePoints, locations)
+        if plot:
+            plotter = self.plotter
+            plotter.plotSamplePointsDirect(samplePoints, locations)
         
         return compositing.frontToBack(sampleColors, sampleDeltas)
         
@@ -275,7 +252,7 @@ class Main:
         
         for i, pixel in enumerate(pixelsRef):
             viewRay = Ray2D(self.eye, pixel, pixelWidth)
-            pixelColorsRef[i] = self.raycastReference(viewRay, self.viewRayDeltaRef, bb)
+            pixelColorsRef[i] = self.raycastDirect(viewRay, self.viewRayDeltaRef, bb, False)
             
         plotter.plotPixelColorsReference(pixelColorsRef)
         
@@ -292,7 +269,7 @@ class Main:
             if i == 0:
                 plotter.plotViewRayFrustum(viewRay, [0, 10])
             
-            pixelColorsDirect[i] = self.raycastDirect(viewRay, self.viewRayDelta, bb)
+            pixelColorsDirect[i] = self.raycastDirect(viewRay, self.viewRayDelta, bb, True)
             pixelColorsVoxelized[i] = self.raycastVoxelized(viewRay, scalarTexture, bb)
         
         plotter.plotPixelColorsDirect(pixelColorsDirect)
