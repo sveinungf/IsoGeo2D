@@ -87,22 +87,16 @@ class Main:
         
         for i, y in enumerate(yValues):
             samplingRay = Ray2D(np.array([self.eye[0], y]), np.array([0, y]))
-    
-            #plotter.plotSamplingRay(samplingRay, [0, 10])
             
             intersections = phiPlane.findTwoIntersections(samplingRay)
             
             if intersections == None:
                 continue
-            
-            inLineParam = intersections[0].lineParam
-            outLineParam = intersections[1].lineParam
-            
-            inGeomPoint = samplingRay.eval(inLineParam)
-            outGeomPoint = samplingRay.eval(outLineParam)
+
+            inGeomPoint = intersections[0].geomPoint
+            outGeomPoint = intersections[1].geomPoint
     
             plotter.plotIntersectionPoints([inGeomPoint, outGeomPoint])
-            #plotter.draw()
             
             geomPoints = []
             paramPoints = []
@@ -126,11 +120,10 @@ class Main:
                 
             plotter.plotGeomPoints(geomPoints)
             plotter.plotParamPoints(paramPoints)
-            #plotter.draw()
             
         return samplingScalars
     
-    def getSamplePointsLocations(self, samplePoints, intersections, boundingBox):
+    def getDirectSamplePointLocations(self, samplePoints, intersections, boundingBox):
         locations = np.empty(len(samplePoints))
         
         if intersections == None:
@@ -154,16 +147,31 @@ class Main:
                     
         return locations
 
+    def getVoxelizedSamplePointLocations(self, samplePoints, scalarTexture, boundingBox):
+        locations = np.empty(len(samplePoints))
+        bb = boundingBox
+        
+        for i, samplePoint in enumerate(samplePoints):
+            if bb.enclosesPoint(samplePoint):
+                u = (samplePoint[0]-bb.left)/bb.getWidth()
+                v = (samplePoint[1]-bb.bottom)/bb.getHeight()
+                
+                if not scalarTexture.closest([u, v]) == self.samplingDefault:
+                    locations[i] = SamplingLocation.INSIDE_OBJECT
+                else:
+                    locations[i] = SamplingLocation.OUTSIDE_OBJECT
+            else:
+                locations[i] = SamplingLocation.OUTSIDE_BOUNDINGBOX
+            
+        return locations
+        
     def raycastReference(self, viewRay, delta, boundingBox):
         sampleColors = []
         sampleDeltas = []
         
         samplePoints = viewRay.generateSamplePoints(0, 10, delta)
         intersections = self.phiPlane.findTwoIntersections(viewRay)
-        locations = self.getSamplePointsLocations(samplePoints, intersections, boundingBox)
-        
-        #radius = viewRay.frustumRadius(samplePoints[3])
-        #plotter.plotCircle(samplePoints[3], radius)
+        locations = self.getDirectSamplePointLocations(samplePoints, intersections, boundingBox)
         
         prevUV = intersections[0].paramPoint
         
@@ -188,7 +196,7 @@ class Main:
         
         samplePoints = viewRay.generateSamplePoints(0, 10, delta)
         intersections = self.phiPlane.findTwoIntersections(viewRay)
-        locations = self.getSamplePointsLocations(samplePoints, intersections, boundingBox)
+        locations = self.getDirectSamplePointLocations(samplePoints, intersections, boundingBox)
         
         #radius = viewRay.frustumRadius(samplePoints[3])
         #plotter.plotCircle(samplePoints[3], radius)
@@ -212,33 +220,24 @@ class Main:
         
     def raycastVoxelized(self, viewRay, scalarTexture, boundingBox):
         plotter = self.plotter
+        bb = boundingBox
         
-        tags = []
         sampleColors = []
         sampleDeltas = []
         
         samplePoints = viewRay.generateSamplePoints(0, 10, self.viewRayDelta)
+        locations = self.getVoxelizedSamplePointLocations(samplePoints, scalarTexture, boundingBox)
         
-        for samplePoint in samplePoints:
-            bb = boundingBox
-            
-            if bb.enclosesPoint(samplePoint):
+        for samplePoint, location in itertools.izip(samplePoints, locations):
+            if location == SamplingLocation.INSIDE_OBJECT:
                 u = (samplePoint[0]-bb.left)/bb.getWidth()
                 v = (samplePoint[1]-bb.bottom)/bb.getHeight()
                 
-                if not scalarTexture.closest([u, v]) == self.samplingDefault:
-                    tags.append(SamplingLocation.INSIDE_OBJECT)
-                    
-                    sampleScalar = scalarTexture.fetch([u, v])
-                    sampleColors.append(self.transfer(sampleScalar))
-                    sampleDeltas.append(self.viewRayDelta)
-                else:
-                    tags.append(SamplingLocation.OUTSIDE_OBJECT)
-            else:
-                tags.append(SamplingLocation.OUTSIDE_BOUNDINGBOX)
+                sampleScalar = scalarTexture.fetch([u, v])
+                sampleColors.append(self.transfer(sampleScalar))
+                sampleDeltas.append(self.viewRayDelta)
             
-        plotter.plotSamplePointsVoxelized(samplePoints, tags)
-        #plotter.draw()
+        plotter.plotSamplePointsVoxelized(samplePoints, locations)
         
         return compositing.frontToBack(sampleColors, sampleDeltas)
         
@@ -260,7 +259,6 @@ class Main:
         
         bb = self.phiPlane.createBoundingBox()
         plotter.plotBoundingBox(bb)
-        #plotter.draw()
         
         width = 10
         height = 10
@@ -270,7 +268,6 @@ class Main:
         
         plotter.plotSampleScalars(samplingScalars, bb)    
         plotter.plotScalarTexture(scalarTexture)
-        #plotter.draw()
         
         pixelsRef = self.createPixels(numPixelsRef)
         pixelWidth = (self.lastPixelY-self.firstPixelY)/(numPixelsRef-1)
