@@ -39,7 +39,7 @@ class Main:
         self.splineInterval = [0, 0.99999]
         
         self.numPixels = 5
-        self.numPixelsRef = 50
+        self.numPixelsRef = 5
         self.pixelX = -0.5
         self.firstPixelY = 0.25
         self.lastPixelY = 0.85
@@ -173,7 +173,7 @@ class Main:
                 
                 sampleScalar = self.rho.evaluate(pApprox[0], pApprox[1])
                 sampleColors.append(self.transfer(sampleScalar))
-                sampleDeltas.append(self.viewRayDelta)
+                sampleDeltas.append(self.viewRayDeltaRef)
                         
                 prevUV = pApprox
         
