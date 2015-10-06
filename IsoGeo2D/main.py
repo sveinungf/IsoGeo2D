@@ -55,7 +55,7 @@ class Main:
         
         self.plotter = Plotter(self.splineInterval)
         
-        self.eye = np.array([-2, 0.55])
+        self.eye = np.array([-1.5, 0.35])
         self.viewRayDelta = 0.2
         self.viewRayDeltaRef = 0.05
         
@@ -128,7 +128,7 @@ class Main:
         
         if intersections == None:
             for i, samplePoint in enumerate(samplePoints):
-                if boundingBox.enclosesPoint(samplePoints):
+                if boundingBox.enclosesPoint(samplePoint):
                     locations[i] = SamplingLocation.OUTSIDE_OBJECT
                 else:
                     locations[i] = SamplingLocation.OUTSIDE_BOUNDINGBOX
@@ -173,24 +173,26 @@ class Main:
         intersections = self.phiPlane.findTwoIntersections(viewRay)
         locations = self.getDirectSamplePointLocations(samplePoints, intersections, boundingBox)
         
-        #radius = viewRay.frustumRadius(samplePoints[3])
-        #plotter.plotCircle(samplePoints[3], radius)
-        
-        prevUV = intersections[0].paramPoint
-        
-        for samplePoint, location in itertools.izip(samplePoints, locations):
-            if location == SamplingLocation.INSIDE_OBJECT:
-                pApprox = self.phiInverse(samplePoint, prevUV)
-                #gApprox = self.phi.evaluate(pApprox[0], pApprox[1])
-                
-                sampleScalar = self.rho.evaluate(pApprox[0], pApprox[1])
-                sampleColors.append(self.transfer(sampleScalar))
-                sampleDeltas.append(delta)
-                        
-                prevUV = pApprox
+        if not intersections == None:
+            prevUV = intersections[0].paramPoint
+            
+            for samplePoint, location in itertools.izip(samplePoints, locations):
+                if location == SamplingLocation.INSIDE_OBJECT:
+                    pApprox = self.phiInverse(samplePoint, prevUV)
+                    #gApprox = self.phi.evaluate(pApprox[0], pApprox[1])
+                    
+                    sampleScalar = self.rho.evaluate(pApprox[0], pApprox[1])
+                    sampleColors.append(self.transfer(sampleScalar))
+                    sampleDeltas.append(delta)
+                            
+                    prevUV = pApprox
                 
         if plot:
             plotter = self.plotter
+            
+            frustumBoundingCircle = viewRay.frustumBoundingCircle(samplePoints[3])
+            plotter.plotCircle(frustumBoundingCircle)
+            
             plotter.plotSamplePointsDirect(samplePoints, locations)
         
         return compositing.frontToBack(sampleColors, sampleDeltas)
@@ -263,8 +265,7 @@ class Main:
             viewRay = Ray2D(self.eye, refPixel, pixelWidth)
             plotter.plotViewRay(viewRay, [0, 10])
             
-            if i == 0:
-                plotter.plotViewRayFrustum(viewRay, [0, 10])
+            plotter.plotViewRayFrustum(viewRay, [0, 10])
             
             directPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDelta, bb, True)
             voxelizedPixelColors[i] = self.raycastVoxelized(viewRay, scalarTexture, bb)

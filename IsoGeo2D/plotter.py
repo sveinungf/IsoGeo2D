@@ -13,7 +13,7 @@ class Plotter:
 		plt.figure(figsize=(18, 12))
 		mainGrid = gridspec.GridSpec(2, 3)
 
-		gPlotAxis = (-2.6, 1.3, -0.2, 1.3)
+		gPlotAxis = (-0.5, 1.3, -0.6, 1.6)
 		ax = plt.subplot(mainGrid[0, 0])
 		ax.axis(gPlotAxis)
 		self.gPlot = ax
@@ -162,8 +162,10 @@ class Plotter:
 		ax.plot(upperPoints[:,0], upperPoints[:,1], color='r', linestyle='--')
 		ax.plot(lowerPoints[:,0], lowerPoints[:,1], color='r', linestyle='--')
 		
-	def plotCircle(self, point, radius):
-		circle = plt.Circle((point[0], point[1]), radius, fill=False)
+	def plotCircle(self, circle):
+		point = circle.point
+		circle = plt.Circle((point[0], point[1]), circle.radius, fill=False)
+		
 		ax = self.gPlot
 		ax.add_artist(circle)
 	

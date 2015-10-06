@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import numpy.linalg as la
+from circle import Circle
 
 def normalize2D(vector):
     magnitude = float(math.sqrt(vector[0]**2 + vector[1]**2))
@@ -13,8 +14,11 @@ class Ray2D:
         self.pixelWidth = pixelWidth
         
         self.viewDir = normalize2D(pixel - eye)
-        self.frustumUpperDir = normalize2D(pixel + pixelWidth/2 - eye)
-        self.frustumLowerDir = normalize2D(pixel - pixelWidth/2 - eye)
+        
+        pixelTop = np.array([pixel[0], pixel[1] + pixelWidth/2])
+        pixelBottom = np.array([pixel[0], pixel[1] - pixelWidth/2])
+        self.frustumUpperDir = normalize2D(pixelTop - eye)
+        self.frustumLowerDir = normalize2D(pixelBottom - eye)
 
     def eval(self, t):
         return self.evalFromPixel(t)
@@ -34,15 +38,30 @@ class Ray2D:
     def evalFrustumLower(self, t):
         return self.eye + self.frustumLowerDir*t
 
-    def frustumRadius(self, point):
-        u = self.frustumUpperDir
+    def frustumBoundingCircle(self, point):
+        upper = self.frustumUpperDir
+        lower = self.frustumLowerDir
         v = self.viewDir
         
-        cosAngle = np.dot(u,v) / la.norm(u) / la.norm(v)
-        angle = np.arccos(np.clip(cosAngle, -1, 1))
-        eyeDistance = la.norm(point - self.eye)
+        cosUpperAngle = np.dot(upper, v) / la.norm(upper) / la.norm(v)
+        upperAngle = np.arccos(np.clip(cosUpperAngle, -1, 1))
         
-        return np.tan(angle) * eyeDistance
+        cosLowerAngle = np.dot(lower, v) / la.norm(lower) / la.norm(v)
+        lowerAngle = np.arccos(np.clip(cosLowerAngle, -1, 1))
+        
+        eyeDistance = la.norm(point - self.eye)
+        upperDistance = np.tan(upperAngle)*eyeDistance
+        lowerDistance = np.tan(lowerAngle)*eyeDistance
+        
+        perpendicularViewDir = np.array([-self.viewDir[1], self.viewDir[0]])
+        
+        upperIntersectionPoint = point + perpendicularViewDir * upperDistance
+        lowerIntersectionPoint = point - perpendicularViewDir * lowerDistance
+        
+        radius = (upperDistance + lowerDistance) / 2.0
+        midpoint = (upperIntersectionPoint + lowerIntersectionPoint) / 2.0
+        
+        return Circle(midpoint, radius)
         
     def generateSamplePoints(self, begin, end, delta):
         result = []
