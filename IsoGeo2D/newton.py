@@ -47,3 +47,33 @@ def newtonsMethod2DClamped(f, fJacob, uv, clampInterval, tolerance=0.00001, maxA
 		return None
 		
 	return [u, v]
+
+def newtonsMethod2DFrustum(f, fJacob, uv, clampInterval, phi, frustum, maxAttempts=20):
+	attempt = 1
+	u = uv[0]
+	v = uv[1]
+	
+	while attempt < maxAttempts:
+		u = clampInterval[0] if u < clampInterval[0] else u
+		u = clampInterval[1] if u > clampInterval[1] else u
+		v = clampInterval[0] if v < clampInterval[0] else v
+		v = clampInterval[1] if v > clampInterval[1] else v
+		
+		jacob = fJacob(u, v)
+		
+		if linalg.det(jacob) == 0:
+			return None
+		
+		x = linalg.solve(jacob, -f(u, v))
+		[u, v] = x + [u, v]
+		
+		gApprox = phi.evaluate(u, v)
+		if frustum.enclosesPoint(gApprox):
+			break
+
+		attempt += 1
+		
+	if attempt == maxAttempts:
+		return None
+		
+	return [u, v]

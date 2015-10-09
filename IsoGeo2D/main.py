@@ -1,6 +1,7 @@
 import colordiff
 import compositing
 import itertools
+import math
 import newton
 import numpy as np
 import transfer as trans
@@ -42,8 +43,8 @@ class Main:
         self.numPixels = 5
         self.numPixelsRef = 5
         self.pixelX = -0.5
-        self.firstPixelY = 0.25
-        self.lastPixelY = 0.85
+        self.firstPixelY = 0.35
+        self.lastPixelY = 0.95
         
         self.samplingDefault = -1
         
@@ -55,7 +56,7 @@ class Main:
         
         self.plotter = Plotter(self.splineInterval)
         
-        self.eye = np.array([-2.0, 0.55])
+        self.eye = np.array([-2.0, 0.65])
         self.viewRayDelta = 0.2
         self.viewRayDeltaRef = 0.05
         
@@ -69,6 +70,17 @@ class Main:
                               phi.evaluatePartialDerivativeV(u, v)]).transpose()
                               
         return newton.newtonsMethod2DClamped(f, fJacob, uvGuess, self.splineInterval)
+        
+    def phiInverseInFrustum(self, geomPoint, uvGuess, frustum):
+        phi = self.phi
+        
+        def f(u,v):
+            return phi.evaluate(u,v) - geomPoint
+        def fJacob(u, v):
+            return np.matrix([phi.evaluatePartialDerivativeU(u, v), 
+                              phi.evaluatePartialDerivativeV(u, v)]).transpose()
+                              
+        return newton.newtonsMethod2DFrustum(f, fJacob, uvGuess, self.splineInterval, phi, frustum)
         
     def generateScalarMatrix(self, boundingBox, width, height):
         phiPlane = self.phiPlane
@@ -169,36 +181,44 @@ class Main:
         sampleColors = []
         sampleDeltas = []
         
+        plotter = self.plotter
+        
         samplePoints = viewRay.generateSamplePoints(0, 10, delta)
         intersections = self.phiPlane.findTwoIntersections(viewRay)
         locations = self.getDirectSamplePointLocations(samplePoints, intersections, boundingBox)
         
         if not intersections == None:
+            geomPoints = []
             prevUV = intersections[0].paramPoint
+            firstIteration = True
             
             for samplePoint, location in itertools.izip(samplePoints, locations):
                 if location == SamplingLocation.INSIDE_OBJECT:
                     pixelFrustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
                     
-                    pApprox = self.phiInverse(samplePoint, prevUV)
+                    pApprox = self.phiInverseInFrustum(samplePoint, prevUV, pixelFrustum)
                     gApprox = self.phi.evaluate(pApprox[0], pApprox[1])
+                    geomPoints.append(gApprox)
                     
-                    if not pixelFrustum.enclosesPoint(gApprox):
-                        print "NOT ENCLOSED"
+                    if plot:
+                        plotter.plotEllipse(pixelFrustum)
                     
                     sampleScalar = self.rho.evaluate(pApprox[0], pApprox[1])
                     sampleColors.append(self.transfer(sampleScalar))
-                    sampleDeltas.append(delta)
-                            
+                    
+                    if not firstIteration:
+                        dist = geomPoints[-1] - geomPoints[-2]
+                        sampleDeltas.append(math.sqrt(dist[0]**2 + dist[1]**2))
+                    
+                    firstIteration = False
                     prevUV = pApprox
-                
+                else:
+                    geomPoints.append(samplePoint)
+        else:
+            geomPoints = samplePoints
+            
         if plot:
-            plotter = self.plotter
-            
-            #frustumBoundingCircle = viewRay.frustumBoundingCircle(samplePoints[3])
-            #plotter.plotCircle(frustumBoundingCircle)
-            
-            plotter.plotSamplePointsDirect(samplePoints, locations)
+            plotter.plotSamplePointsDirect(geomPoints, locations)
         
         return compositing.frontToBack(sampleColors, sampleDeltas)
         
