@@ -166,8 +166,8 @@ class Plotter:
 		
 	def plotEllipse(self, ellipse):
 		point = tuple(ellipse.point)
-		radians = math.degrees(ellipse.angle)
-		e = Ellipse(point, ellipse.width, ellipse.height, radians, fill=False)
+		degrees = math.degrees(ellipse.angle)
+		e = Ellipse(point, ellipse.width, ellipse.height, degrees, fill=False)
 		
 		ax = self.gPlot
 		ax.add_artist(e)
