@@ -1,7 +1,9 @@
 import itertools
+import math
 import matplotlib.gridspec as gridspec
 import numpy as np
 import pylab as plt
+from matplotlib.patches import Ellipse
 from matplotlib.patches import Rectangle
 from samplinglocation import SamplingLocation
 
@@ -162,12 +164,13 @@ class Plotter:
 		ax.plot(upperPoints[:,0], upperPoints[:,1], color='r', linestyle='--')
 		ax.plot(lowerPoints[:,0], lowerPoints[:,1], color='r', linestyle='--')
 		
-	def plotCircle(self, circle):
-		point = circle.point
-		circle = plt.Circle((point[0], point[1]), circle.radius, fill=False)
+	def plotEllipse(self, ellipse):
+		point = tuple(ellipse.point)
+		radians = math.degrees(ellipse.angle)
+		e = Ellipse(point, ellipse.width, ellipse.height, radians, fill=False)
 		
 		ax = self.gPlot
-		ax.add_artist(circle)
+		ax.add_artist(e)
 	
 	def plotIntersectionPoints(self, points):
 		ax = self.gPlot

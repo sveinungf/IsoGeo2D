@@ -55,7 +55,7 @@ class Main:
         
         self.plotter = Plotter(self.splineInterval)
         
-        self.eye = np.array([-1.5, 0.35])
+        self.eye = np.array([-2.0, 0.55])
         self.viewRayDelta = 0.2
         self.viewRayDeltaRef = 0.05
         
@@ -178,7 +178,7 @@ class Main:
             
             for samplePoint, location in itertools.izip(samplePoints, locations):
                 if location == SamplingLocation.INSIDE_OBJECT:
-                    pixelFrustum = viewRay.frustumBoundingCircle(samplePoint)
+                    pixelFrustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
                     
                     pApprox = self.phiInverse(samplePoint, prevUV)
                     gApprox = self.phi.evaluate(pApprox[0], pApprox[1])

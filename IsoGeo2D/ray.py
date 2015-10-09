@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import numpy.linalg as la
-from circle import Circle
+from ellipse import Ellipse
 
 def normalize2D(vector):
     magnitude = float(math.sqrt(vector[0]**2 + vector[1]**2))
@@ -38,10 +38,12 @@ class Ray2D:
     def evalFrustumLower(self, t):
         return self.eye + self.frustumLowerDir*t
 
-    def frustumBoundingCircle(self, point):
+    def frustumBoundingEllipse(self, point, delta):
         upper = self.frustumUpperDir
         lower = self.frustumLowerDir
         v = self.viewDir
+        
+        rayAngle = math.atan(v[1])
         
         cosUpperAngle = np.dot(upper, v) / la.norm(upper) / la.norm(v)
         upperAngle = np.arccos(np.clip(cosUpperAngle, -1, 1))
@@ -58,10 +60,9 @@ class Ray2D:
         upperIntersectionPoint = point + perpendicularViewDir * upperDistance
         lowerIntersectionPoint = point - perpendicularViewDir * lowerDistance
         
-        radius = (upperDistance + lowerDistance) / 2.0
         midpoint = (upperIntersectionPoint + lowerIntersectionPoint) / 2.0
         
-        return Circle(midpoint, radius)
+        return Ellipse(midpoint, delta, upperDistance + lowerDistance, rayAngle)
         
     def generateSamplePoints(self, begin, end, delta):
         result = []
