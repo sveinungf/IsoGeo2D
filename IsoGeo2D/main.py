@@ -65,22 +65,16 @@ class Main:
         
         def f(u,v):
             return phi.evaluate(u,v) - geomPoint
-        def fJacob(u, v):
-            return np.matrix([phi.evaluatePartialDerivativeU(u, v), 
-                              phi.evaluatePartialDerivativeV(u, v)]).transpose()
                               
-        return newton.newtonsMethod2DClamped(f, fJacob, uvGuess, self.splineInterval)
+        return newton.newtonsMethod2DClamped(f, phi.jacob, uvGuess, self.splineInterval)
         
     def phiInverseInFrustum(self, geomPoint, uvGuess, frustum):
         phi = self.phi
         
         def f(u,v):
             return phi.evaluate(u,v) - geomPoint
-        def fJacob(u, v):
-            return np.matrix([phi.evaluatePartialDerivativeU(u, v), 
-                              phi.evaluatePartialDerivativeV(u, v)]).transpose()
                               
-        return newton.newtonsMethod2DFrustum(f, fJacob, uvGuess, self.splineInterval, phi, frustum)
+        return newton.newtonsMethod2DFrustum(f, phi.jacob, uvGuess, self.splineInterval, phi, frustum)
         
     def generateScalarMatrix(self, boundingBox, width, height):
         phiPlane = self.phiPlane

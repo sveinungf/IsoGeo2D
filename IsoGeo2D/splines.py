@@ -92,6 +92,10 @@ class Spline2D:
         
     def evaluatePartialDerivativeV(self, x, y):
         return self.__evaluate(x, y, bSpline, bSplineDerivative)
+    
+    def jacob(self, u, v):
+        return np.matrix([self.evaluatePartialDerivativeU(u, v), 
+                          self.evaluatePartialDerivativeV(u, v)]).transpose()
         
     def __evaluate(self, x, y, uBSplineFunc, vBSplineFunc):
         n = len(self.coeffs[0][0])
