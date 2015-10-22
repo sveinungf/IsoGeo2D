@@ -220,7 +220,7 @@ class Plotter:
 		ax.axis(self.getPixelPlotAxis(numPixels))
 		
 		for i, pixelColor in enumerate(pixelColors):
-			r = Rectangle((i-0.5, 0), 1, 1, facecolor=tuple(pixelColor))
+			r = Rectangle((i-0.5, 0), 1, 1, facecolor=tuple(pixelColor), linewidth=0)
 			ax.add_patch(r)
 			
 	def __plotPixelColorDiffs(self, ax, colorDiffs):

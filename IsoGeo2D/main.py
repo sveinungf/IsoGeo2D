@@ -40,7 +40,7 @@ class Main:
     def __init__(self):
         self.splineInterval = [0, 0.99999]
         
-        self.numPixels = 2**3
+        self.numPixels = 2**4
         self.numPixelsRef = self.numPixels * 10
         self.pixelX = -0.5
         self.screenTop = 0.95
@@ -57,8 +57,11 @@ class Main:
         self.plotter = Plotter(self.splineInterval)
         
         self.eye = np.array([-2.0, 0.65])
-        self.viewRayDelta = 0.2
+        self.viewRayDelta = 0.1
         self.viewRayDeltaRef = 0.05
+        
+        self.textureWidth = 10
+        self.textureHeight = 10
         
     def phiInverse(self, geomPoint, uvGuess):
         phi = self.phi
@@ -76,12 +79,12 @@ class Main:
                               
         return newton.newtonsMethod2DFrustum(f, phi.jacob, uvGuess, self.splineInterval, phi, frustum)
         
-    def generateScalarMatrix(self, boundingBox, width, height):
+    def generateScalarMatrix(self, boundingBox):
         phiPlane = self.phiPlane
         plotter = self.plotter
         
-        rayCount = height
-        samplingsPerRay = width
+        rayCount = self.textureHeight
+        samplingsPerRay = self.textureWidth
         
         xDelta = float(boundingBox.getWidth())/samplingsPerRay
         yDelta = float(boundingBox.getHeight())/rayCount
@@ -266,10 +269,7 @@ class Main:
         bb = self.phiPlane.createBoundingBox()
         plotter.plotBoundingBox(bb)
         
-        width = 10
-        height = 10
-        
-        samplingScalars = self.generateScalarMatrix(bb, width, height)
+        samplingScalars = self.generateScalarMatrix(bb)
         scalarTexture = Texture2D(samplingScalars)
         
         plotter.plotSampleScalars(samplingScalars, bb)    
