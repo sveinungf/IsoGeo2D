@@ -6,7 +6,7 @@ from ellipse import Ellipse
 def normalize2D(vector):
     magnitude = float(math.sqrt(vector[0]**2 + vector[1]**2))
     return np.array([vector[0] / magnitude, vector[1] / magnitude])
-    
+
 class Ray2D:
     def __init__(self, eye, pixel, pixelWidth=0):
         self.eye = eye
@@ -63,6 +63,9 @@ class Ray2D:
         midpoint = (upperIntersectionPoint + lowerIntersectionPoint) / 2.0
         
         return Ellipse(midpoint, delta, upperDistance + lowerDistance, rayAngle)
+    
+    def frustumBoundingEllipseParallel(self, point, delta):
+        return Ellipse(point, delta, self.pixelWidth, 0)
         
     def generateSamplePoints(self, begin, end, delta):
         result = []

@@ -92,7 +92,7 @@ class Main:
         samplingScalars = np.ones((rayCount, samplingsPerRay)) * self.samplingDefault    
         
         for i, y in enumerate(yValues):
-            samplingRay = Ray2D(np.array([self.eye[0], y]), np.array([0, y]))
+            samplingRay = Ray2D(np.array([self.eye[0], y]), np.array([0, y]), yDelta)
             
             intersections = phiPlane.findTwoIntersections(samplingRay)
             
@@ -113,16 +113,21 @@ class Main:
                 if x < inGeomPoint[0] or x > outGeomPoint[0]:
                     continue
                 
-                geomPoint = np.array([x, y])
-                geomPoints.append(geomPoint)
-
-                paramPoint = self.phiInverse(geomPoint, prevUV)
-                paramPoints.append(paramPoint)
+                samplePoint = np.array([x, y])
                 
-                scalar = self.rho.evaluate(paramPoint[0], paramPoint[1])
+                pixelFrustum = samplingRay.frustumBoundingEllipseParallel(samplePoint, xDelta)
+                #plotter.plotEllipse(pixelFrustum)
+                
+                pApprox = self.phiInverseInFrustum(samplePoint, prevUV, pixelFrustum)
+                gApprox = self.phi.evaluate(pApprox[0], pApprox[1])
+                geomPoints.append(gApprox)
+
+                paramPoints.append(pApprox)
+                
+                scalar = self.rho.evaluate(pApprox[0], pApprox[1])
                 samplingScalars[i][j] = scalar
                 
-                prevUV = paramPoint
+                prevUV = pApprox
                 
             plotter.plotGeomPoints(geomPoints)
             plotter.plotParamPoints(paramPoints)
@@ -194,8 +199,8 @@ class Main:
                     gApprox = self.phi.evaluate(pApprox[0], pApprox[1])
                     geomPoints.append(gApprox)
                     
-                    if plot:
-                        plotter.plotEllipse(pixelFrustum)
+                    #if plot:
+                    #    plotter.plotEllipse(pixelFrustum)
                     
                     sampleScalar = self.rho.evaluate(pApprox[0], pApprox[1])
                     sampleColors.append(self.transfer(sampleScalar))
