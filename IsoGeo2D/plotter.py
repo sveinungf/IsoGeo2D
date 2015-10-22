@@ -154,6 +154,13 @@ class Plotter:
 		
 		ax = self.samplingPlot
 		ax.plot(points[:,0], points[:,1], color='r')
+			
+	def plotViewRayReference(self, ray, interval):
+		params = np.linspace(interval[0], interval[1], self.precision)
+		points = self.generatePoints1var(ray.evalFromEye, params)
+		
+		ax = self.gPlot
+		ax.plot(points[:,0], points[:,1], color='g')
 		
 	def plotViewRayFrustum(self, ray, interval):
 		params = np.linspace(interval[0], interval[1], self.precision)

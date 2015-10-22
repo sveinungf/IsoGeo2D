@@ -40,11 +40,11 @@ class Main:
     def __init__(self):
         self.splineInterval = [0, 0.99999]
         
-        self.numPixels = 5
-        self.numPixelsRef = 5
+        self.numPixels = 2**3
+        self.numPixelsRef = self.numPixels * 10
         self.pixelX = -0.5
-        self.firstPixelY = 0.35
-        self.lastPixelY = 0.95
+        self.screenTop = 0.95
+        self.screenBottom = 0.15
         
         self.samplingDefault = -1
         
@@ -247,8 +247,13 @@ class Main:
     def createPixels(self, numPixels):
         pixels = np.empty((numPixels, 2))
         pixelXs = np.ones(numPixels) * self.pixelX
+        
+        deltaY = (self.screenTop - self.screenBottom) / numPixels
+        firstPixelY = self.screenBottom + (deltaY/2.0)
+        lastPixelY = self.screenTop - (deltaY/2.0)
+        
         pixels[:,0] = pixelXs
-        pixels[:,1] = np.linspace(self.firstPixelY, self.lastPixelY, numPixels)
+        pixels[:,1] = np.linspace(firstPixelY, lastPixelY, numPixels)
         
         return pixels
         
@@ -272,16 +277,17 @@ class Main:
         
         numPixelsRef = self.numPixelsRef
         refPixels = self.createPixels(numPixelsRef)
-        refPixelWidth = (self.lastPixelY-self.firstPixelY)/(numPixelsRef-1)
+        refPixelWidth = (self.screenTop-self.screenBottom) / numPixelsRef
         refPixelColors = np.empty((numPixelsRef, 4))
         
         for i, refPixel in enumerate(refPixels):
             viewRay = Ray2D(self.eye, refPixel, refPixelWidth)
+            #plotter.plotViewRayReference(viewRay, [0, 10])
             refPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDeltaRef, bb, False)
         
         numPixels = self.numPixels
         pixels = self.createPixels(numPixels)
-        pixelWidth = (self.lastPixelY-self.firstPixelY)/(numPixels-1)
+        pixelWidth = (self.screenTop-self.screenBottom) / numPixels
         directPixelColors = np.empty((numPixels, 4))
         voxelizedPixelColors = np.empty((numPixels, 4))
         
