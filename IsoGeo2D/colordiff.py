@@ -16,4 +16,14 @@ def compare(referenceRgbas, comparisonRgbas):
     referenceLabs = convertToLabs(referenceRgbas)
     comparisonLabs = convertToLabs(comparisonRgbas)
     
-    return color.deltaE_ciede2000(referenceLabs, comparisonLabs)
+    n = len(comparisonLabs)
+    m = len(referenceLabs) / n
+    
+    diff = np.empty(n)
+    
+    for i in range(m):
+        diff += color.deltaE_ciede2000(referenceLabs[i::m], comparisonLabs)
+        
+    diff /= m
+    
+    return diff
