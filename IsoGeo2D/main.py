@@ -6,6 +6,7 @@ import newton
 import numpy as np
 import transfer as trans
 from plotter import Plotter
+from printer import Printer
 from ray import Ray2D
 from samplinglocation import SamplingLocation
 from splineplane import SplinePlane
@@ -57,8 +58,9 @@ class Main:
         self.plotter = Plotter(self.splineInterval)
         
         self.eye = np.array([-2.0, 0.65])
-        self.viewRayDelta = 0.1
         self.viewRayDeltaRef = 0.05
+        self.viewRayDeltaDirect = 0.1
+        self.viewRayDeltaVoxelized = 0.1
         
         self.textureWidth = 10
         self.textureHeight = 10
@@ -231,7 +233,7 @@ class Main:
         sampleColors = []
         sampleDeltas = []
         
-        samplePoints = viewRay.generateSamplePoints(0, 10, self.viewRayDelta)
+        samplePoints = viewRay.generateSamplePoints(0, 10, self.viewRayDeltaVoxelized)
         locations = self.getVoxelizedSamplePointLocations(samplePoints, scalarTexture, boundingBox)
         
         for samplePoint, location in itertools.izip(samplePoints, locations):
@@ -241,7 +243,7 @@ class Main:
                 
                 sampleScalar = scalarTexture.fetch([u, v])
                 sampleColors.append(self.transfer(sampleScalar))
-                sampleDeltas.append(self.viewRayDelta)
+                sampleDeltas.append(self.viewRayDeltaVoxelized)
             
         plotter.plotSamplePointsVoxelized(samplePoints, locations)
         
@@ -297,7 +299,7 @@ class Main:
             
             #plotter.plotViewRayFrustum(viewRay, [0, 10])
             
-            directPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDelta, bb, True)
+            directPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDeltaDirect, bb, True)
             voxelizedPixelColors[i] = self.raycastVoxelized(viewRay, scalarTexture, bb)
         
         plotter.plotPixelColorsReference(refPixelColors)
@@ -311,6 +313,11 @@ class Main:
         plotter.plotPixelColorDiffsVoxelized(voxelizedDiffs)
         
         plotter.draw()
+        
+        printer = Printer()
+        printer.printDirectDiffs(directDiffs)
+        print ""
+        printer.printVoxelizedDiffs(voxelizedDiffs)
     
 def run():
     main = Main()
