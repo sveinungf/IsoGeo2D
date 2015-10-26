@@ -41,8 +41,8 @@ class Main:
     def __init__(self):
         self.splineInterval = [0, 0.99999]
         
-        self.numPixels = 2**4
-        self.numPixelsRef = self.numPixels * 10
+        self.numPixels = 10
+        self.numPixelsRef = self.numPixels * 1
         self.pixelX = -0.5
         self.screenTop = 0.95
         self.screenBottom = 0.15
@@ -58,12 +58,9 @@ class Main:
         self.plotter = Plotter(self.splineInterval)
         
         self.eye = np.array([-2.0, 0.65])
-        self.viewRayDeltaRef = 0.05
-        self.viewRayDeltaDirect = 0.1
-        self.viewRayDeltaVoxelized = 0.1
-        
-        self.textureWidth = 10
-        self.textureHeight = 10
+        self.viewRayDeltaRef = 0.01
+        self.viewRayDeltaDirect = 0.10
+        self.viewRayDeltaVoxelized = 0.01
         
     def phiInverse(self, geomPoint, uvGuess):
         phi = self.phi
@@ -81,12 +78,12 @@ class Main:
                               
         return newton.newtonsMethod2DFrustum(f, phi.jacob, uvGuess, self.splineInterval, phi, frustum)
         
-    def generateScalarMatrix(self, boundingBox):
+    def generateScalarMatrix(self, boundingBox, width, height):
         phiPlane = self.phiPlane
         plotter = self.plotter
         
-        rayCount = self.textureHeight
-        samplingsPerRay = self.textureWidth
+        rayCount = height
+        samplingsPerRay = width
         
         xDelta = float(boundingBox.getWidth())/samplingsPerRay
         yDelta = float(boundingBox.getHeight())/rayCount
@@ -98,6 +95,7 @@ class Main:
         
         for i, y in enumerate(yValues):
             samplingRay = Ray2D(np.array([self.eye[0], y]), np.array([0, y]), yDelta)
+            #plotter.plotSamplingRay(samplingRay, [0, 10])
             
             intersections = phiPlane.findTwoIntersections(samplingRay)
             
@@ -107,7 +105,7 @@ class Main:
             inGeomPoint = intersections[0].geomPoint
             outGeomPoint = intersections[1].geomPoint
     
-            plotter.plotIntersectionPoints([inGeomPoint, outGeomPoint])
+            #plotter.plotIntersectionPoints([inGeomPoint, outGeomPoint])
             
             geomPoints = []
             paramPoints = []
@@ -134,8 +132,8 @@ class Main:
                 
                 prevUV = pApprox
                 
-            plotter.plotGeomPoints(geomPoints)
-            plotter.plotParamPoints(paramPoints)
+            #plotter.plotGeomPoints(geomPoints)
+            #plotter.plotParamPoints(paramPoints)
             
         return samplingScalars
     
@@ -245,7 +243,7 @@ class Main:
                 sampleColors.append(self.transfer(sampleScalar))
                 sampleDeltas.append(self.viewRayDeltaVoxelized)
             
-        plotter.plotSamplePointsVoxelized(samplePoints, locations)
+        #plotter.plotSamplePointsVoxelized(samplePoints, locations)
         
         return compositing.frontToBack(sampleColors, sampleDeltas)
         
@@ -271,12 +269,6 @@ class Main:
         bb = self.phiPlane.createBoundingBox()
         plotter.plotBoundingBox(bb)
         
-        samplingScalars = self.generateScalarMatrix(bb)
-        scalarTexture = Texture2D(samplingScalars)
-        
-        plotter.plotSampleScalars(samplingScalars, bb)    
-        plotter.plotScalarTexture(scalarTexture)
-        
         numPixelsRef = self.numPixelsRef
         refPixels = self.createPixels(numPixelsRef)
         refPixelWidth = (self.screenTop-self.screenBottom) / numPixelsRef
@@ -290,24 +282,35 @@ class Main:
         numPixels = self.numPixels
         pixels = self.createPixels(numPixels)
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
+        
+        viewRays = np.empty(numPixels, dtype=object)
+        for i, pixel in enumerate(pixels):
+            viewRay = Ray2D(self.eye, pixel, pixelWidth)
+            plotter.plotViewRay(viewRay, [0, 10])
+            viewRays[i] = viewRay
+            
         directPixelColors = np.empty((numPixels, 4))
         voxelizedPixelColors = np.empty((numPixels, 4))
         
-        for i, refPixel in enumerate(pixels):
-            viewRay = Ray2D(self.eye, refPixel, pixelWidth)
-            plotter.plotViewRay(viewRay, [0, 10])
+        for i, viewRay in enumerate(viewRays):
+            directPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDeltaDirect, bb, False)
             
-            #plotter.plotViewRayFrustum(viewRay, [0, 10])
-            
-            directPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDeltaDirect, bb, True)
+        texDimSize = 8
+        samplingScalars = self.generateScalarMatrix(bb, texDimSize, texDimSize)
+        scalarTexture = Texture2D(samplingScalars)
+        
+        plotter.plotSampleScalars(samplingScalars, bb)    
+        plotter.plotScalarTexture(scalarTexture)
+        
+        for i, viewRay in enumerate(viewRays):
             voxelizedPixelColors[i] = self.raycastVoxelized(viewRay, scalarTexture, bb)
         
         plotter.plotPixelColorsReference(refPixelColors)
-        plotter.plotPixelColorsDirect(directPixelColors)
+        #plotter.plotPixelColorsDirect(directPixelColors)
         plotter.plotPixelColorsVoxelized(voxelizedPixelColors)
         
         directDiffs = colordiff.compare(refPixelColors, directPixelColors)
-        plotter.plotPixelColorDiffsDirect(directDiffs)
+        #plotter.plotPixelColorDiffsDirect(directDiffs)
         
         voxelizedDiffs = colordiff.compare(refPixelColors, voxelizedPixelColors)
         plotter.plotPixelColorDiffsVoxelized(voxelizedDiffs)

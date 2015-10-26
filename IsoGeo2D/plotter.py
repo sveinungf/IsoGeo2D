@@ -15,7 +15,7 @@ class Plotter:
 		plt.figure(figsize=(18, 12))
 		mainGrid = gridspec.GridSpec(2, 3)
 
-		gPlotAxis = (-0.5, 1.3, -0.6, 1.6)
+		gPlotAxis = (-0.5, 1.3, -0.3, 1.3)
 		ax = plt.subplot(mainGrid[0, 0])
 		ax.axis(gPlotAxis)
 		self.gPlot = ax
@@ -143,7 +143,7 @@ class Plotter:
 		points = self.generatePoints1var(ray.evalFromEye, params)
 		
 		ax = self.gPlot
-		ax.plot(points[:,0], points[:,1], color='k')
+		ax.plot(points[:,0], points[:,1], color='r')
 		
 	def plotViewRay(self, ray, interval):
 		params = np.linspace(interval[0], interval[1], self.precision)
@@ -168,8 +168,8 @@ class Plotter:
 		lowerPoints = self.generatePoints1var(ray.evalFrustumLower, params)
 		
 		ax = self.gPlot
-		ax.plot(upperPoints[:,0], upperPoints[:,1], color='r', linestyle='--')
-		ax.plot(lowerPoints[:,0], lowerPoints[:,1], color='r', linestyle='--')
+		ax.plot(upperPoints[:,0], upperPoints[:,1], color='b', linestyle='--')
+		ax.plot(lowerPoints[:,0], lowerPoints[:,1], color='b', linestyle='--')
 		
 	def plotEllipse(self, ellipse):
 		point = tuple(ellipse.point)
