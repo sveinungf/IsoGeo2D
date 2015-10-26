@@ -6,7 +6,6 @@ import newton
 import numpy as np
 import transfer as trans
 from plotter import Plotter
-from printer import Printer
 from ray import Ray2D
 from samplinglocation import SamplingLocation
 from splineplane import SplinePlane
@@ -80,7 +79,7 @@ class Main:
         
     def generateScalarMatrix(self, boundingBox, width, height):
         phiPlane = self.phiPlane
-        plotter = self.plotter
+        #plotter = self.plotter
         
         rayCount = height
         samplingsPerRay = width
@@ -225,7 +224,7 @@ class Main:
         return compositing.frontToBack(sampleColors, sampleDeltas)
         
     def raycastVoxelized(self, viewRay, scalarTexture, boundingBox):
-        plotter = self.plotter
+        #plotter = self.plotter
         bb = boundingBox
         
         sampleColors = []
@@ -295,34 +294,44 @@ class Main:
         for i, viewRay in enumerate(viewRays):
             directPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDeltaDirect, bb, False)
             
-        texDimSize = 8
-        samplingScalars = self.generateScalarMatrix(bb, texDimSize, texDimSize)
-        scalarTexture = Texture2D(samplingScalars)
-        
-        plotter.plotSampleScalars(samplingScalars, bb)    
-        plotter.plotScalarTexture(scalarTexture)
-        
-        for i, viewRay in enumerate(viewRays):
-            voxelizedPixelColors[i] = self.raycastVoxelized(viewRay, scalarTexture, bb)
-        
         plotter.plotPixelColorsReference(refPixelColors)
         #plotter.plotPixelColorsDirect(directPixelColors)
-        plotter.plotPixelColorsVoxelized(voxelizedPixelColors)
         
-        directDiff = colordiff.compare(refPixelColors, directPixelColors)
+        #directDiff = colordiff.compare(refPixelColors, directPixelColors)
         #plotter.plotPixelColorDiffsDirect(directDiff.colorDiffs)
-        
-        voxelizedDiff = colordiff.compare(refPixelColors, voxelizedPixelColors)
-        plotter.plotPixelColorDiffsVoxelized(voxelizedDiff.colordiffs)
+        #print "Direct color diffs:"
+        #directDiff.printData()
+        #print ""
         
         plotter.draw()
         
-        print "Direct color diffs:"
-        directDiff.printData()
-        print ""
+        print "Voxelized color diffs"
+        print "---------------------"
+            
+        texDimSize = 8
         
-        print "Voxelized color diffs:"
-        voxelizedDiff.printData()
+        for _ in range(4):
+            samplingScalars = self.generateScalarMatrix(bb, texDimSize, texDimSize)
+            scalarTexture = Texture2D(samplingScalars)
+
+            for i, viewRay in enumerate(viewRays):
+                voxelizedPixelColors[i] = self.raycastVoxelized(viewRay, scalarTexture, bb)
+        
+            voxelizedDiff = colordiff.compare(refPixelColors, voxelizedPixelColors)
+            
+            print "Texture size: {}x{}".format(texDimSize, texDimSize)
+            voxelizedDiff.printData()
+            print ""
+       
+            texDimSize *= 2
+        
+
+        #plotter.plotSampleScalars(samplingScalars, bb)    
+        plotter.plotScalarTexture(scalarTexture)
+        plotter.plotPixelColorsVoxelized(voxelizedPixelColors)
+        plotter.plotPixelColorDiffsVoxelized(voxelizedDiff.colordiffs)
+        
+        plotter.draw()
     
 def run():
     main = Main()
