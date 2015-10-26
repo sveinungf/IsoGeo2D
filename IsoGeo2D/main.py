@@ -309,18 +309,20 @@ class Main:
         #plotter.plotPixelColorsDirect(directPixelColors)
         plotter.plotPixelColorsVoxelized(voxelizedPixelColors)
         
-        directDiffs = colordiff.compare(refPixelColors, directPixelColors)
-        #plotter.plotPixelColorDiffsDirect(directDiffs)
+        directDiff = colordiff.compare(refPixelColors, directPixelColors)
+        #plotter.plotPixelColorDiffsDirect(directDiff.colorDiffs)
         
-        voxelizedDiffs = colordiff.compare(refPixelColors, voxelizedPixelColors)
-        plotter.plotPixelColorDiffsVoxelized(voxelizedDiffs)
+        voxelizedDiff = colordiff.compare(refPixelColors, voxelizedPixelColors)
+        plotter.plotPixelColorDiffsVoxelized(voxelizedDiff.colordiffs)
         
         plotter.draw()
         
-        printer = Printer()
-        printer.printDirectDiffs(directDiffs)
+        print "Direct color diffs:"
+        directDiff.printData()
         print ""
-        printer.printVoxelizedDiffs(voxelizedDiffs)
+        
+        print "Voxelized color diffs:"
+        voxelizedDiff.printData()
     
 def run():
     main = Main()
