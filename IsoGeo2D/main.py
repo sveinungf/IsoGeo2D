@@ -1,13 +1,12 @@
 import colordiff
 import compositing
 import itertools
-import math
-import newton
 import numpy as np
 import transfer as trans
 from plotter import Plotter
 from ray import Ray2D
 from samplinglocation import SamplingLocation
+from splinegeometry import SplineGeometry
 from splineplane import SplinePlane
 from splines import Spline2D
 from texture import Texture2D
@@ -61,22 +60,6 @@ class Main:
         self.viewRayDeltaDirect = 0.10
         self.viewRayDeltaVoxelized = 0.01
         
-    def phiInverse(self, geomPoint, uvGuess):
-        phi = self.phi
-        
-        def f(u,v):
-            return phi.evaluate(u,v) - geomPoint
-                              
-        return newton.newtonsMethod2DClamped(f, phi.jacob, uvGuess, self.splineInterval)
-        
-    def phiInverseInFrustum(self, geomPoint, uvGuess, frustum):
-        phi = self.phi
-        
-        def f(u,v):
-            return phi.evaluate(u,v) - geomPoint
-                              
-        return newton.newtonsMethod2DFrustum(f, phi.jacob, uvGuess, self.splineInterval, phi, frustum)
-        
     def generateScalarMatrix(self, boundingBox, width, height):
         phiPlane = self.phiPlane
         #plotter = self.plotter
@@ -120,8 +103,8 @@ class Main:
                 pixelFrustum = samplingRay.frustumBoundingEllipseParallel(samplePoint, xDelta)
                 #plotter.plotEllipse(pixelFrustum)
                 
-                pApprox = self.phiInverseInFrustum(samplePoint, prevUV, pixelFrustum)
-                gApprox = self.phi.evaluate(pApprox[0], pApprox[1])
+                pApprox = phiPlane.inverseInFrustum(samplePoint, prevUV, pixelFrustum)
+                gApprox = phiPlane.evaluate(pApprox[0], pApprox[1])
                 geomPoints.append(gApprox)
 
                 paramPoints.append(pApprox)
@@ -135,30 +118,6 @@ class Main:
             #plotter.plotParamPoints(paramPoints)
             
         return samplingScalars
-    
-    def getDirectSamplePointLocations(self, samplePoints, intersections, boundingBox):
-        locations = np.empty(len(samplePoints))
-        
-        if intersections == None:
-            for i, samplePoint in enumerate(samplePoints):
-                if boundingBox.enclosesPoint(samplePoint):
-                    locations[i] = SamplingLocation.OUTSIDE_OBJECT
-                else:
-                    locations[i] = SamplingLocation.OUTSIDE_BOUNDINGBOX
-        else:
-            inGeomPoint = intersections[0].geomPoint
-            outGeomPoint = intersections[1].geomPoint
-            
-            for i, samplePoint in enumerate(samplePoints):
-                if boundingBox.enclosesPoint(samplePoint):
-                    if inGeomPoint[0] <= samplePoint[0] <= outGeomPoint[0]:
-                        locations[i] = SamplingLocation.INSIDE_OBJECT
-                    else:
-                        locations[i] = SamplingLocation.OUTSIDE_OBJECT
-                else:
-                    locations[i] = SamplingLocation.OUTSIDE_BOUNDINGBOX
-                    
-        return locations
 
     def getVoxelizedSamplePointLocations(self, samplePoints, scalarTexture, boundingBox):
         locations = np.empty(len(samplePoints))
@@ -177,51 +136,6 @@ class Main:
                 locations[i] = SamplingLocation.OUTSIDE_BOUNDINGBOX
             
         return locations
-            
-    def raycastDirect(self, viewRay, delta, boundingBox, plot):
-        sampleColors = []
-        sampleDeltas = []
-        
-        plotter = self.plotter
-        
-        samplePoints = viewRay.generateSamplePoints(0, 10, delta)
-        intersections = self.phiPlane.findTwoIntersections(viewRay)
-        locations = self.getDirectSamplePointLocations(samplePoints, intersections, boundingBox)
-        
-        if not intersections == None:
-            geomPoints = []
-            prevUV = intersections[0].paramPoint
-            firstIteration = True
-            
-            for samplePoint, location in itertools.izip(samplePoints, locations):
-                if location == SamplingLocation.INSIDE_OBJECT:
-                    pixelFrustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
-                    
-                    pApprox = self.phiInverseInFrustum(samplePoint, prevUV, pixelFrustum)
-                    gApprox = self.phi.evaluate(pApprox[0], pApprox[1])
-                    geomPoints.append(gApprox)
-                    
-                    #if plot:
-                    #    plotter.plotEllipse(pixelFrustum)
-                    
-                    sampleScalar = self.rho.evaluate(pApprox[0], pApprox[1])
-                    sampleColors.append(self.transfer(sampleScalar))
-                    
-                    if not firstIteration:
-                        dist = geomPoints[-1] - geomPoints[-2]
-                        sampleDeltas.append(math.sqrt(dist[0]**2 + dist[1]**2))
-                    
-                    firstIteration = False
-                    prevUV = pApprox
-                else:
-                    geomPoints.append(samplePoint)
-        else:
-            geomPoints = samplePoints
-            
-        if plot:
-            plotter.plotSamplePointsDirect(geomPoints, locations)
-        
-        return compositing.frontToBack(sampleColors, sampleDeltas)
         
     def raycastVoxelized(self, viewRay, scalarTexture, boundingBox):
         #plotter = self.plotter
@@ -268,6 +182,9 @@ class Main:
         bb = self.phiPlane.createBoundingBox()
         plotter.plotBoundingBox(bb)
         
+        splineGeomRef = SplineGeometry(self.phiPlane, self.rho, self.transfer, self.viewRayDeltaRef)
+        splineGeomDirect = SplineGeometry(self.phiPlane, self.rho, self.transfer, self.viewRayDeltaDirect)
+        
         numPixelsRef = self.numPixelsRef
         refPixels = self.createPixels(numPixelsRef)
         refPixelWidth = (self.screenTop-self.screenBottom) / numPixelsRef
@@ -276,7 +193,8 @@ class Main:
         for i, refPixel in enumerate(refPixels):
             viewRay = Ray2D(self.eye, refPixel, refPixelWidth)
             #plotter.plotViewRayReference(viewRay, [0, 10])
-            refPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDeltaRef, bb, False)
+            #refPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDeltaRef, bb, False)
+            refPixelColors[i] = splineGeomRef.raycast(viewRay)
         
         numPixels = self.numPixels
         pixels = self.createPixels(numPixels)
@@ -292,7 +210,8 @@ class Main:
         voxelizedPixelColors = np.empty((numPixels, 4))
         
         for i, viewRay in enumerate(viewRays):
-            directPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDeltaDirect, bb, False)
+            #directPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDeltaDirect, bb, False)
+            directPixelColors[i] = splineGeomDirect.raycast(viewRay)
             
         plotter.plotPixelColorsReference(refPixelColors)
         #plotter.plotPixelColorsDirect(directPixelColors)
@@ -326,7 +245,7 @@ class Main:
             texDimSize *= 2
         
 
-        #plotter.plotSampleScalars(samplingScalars, bb)    
+        plotter.plotSampleScalars(samplingScalars, bb)    
         plotter.plotScalarTexture(scalarTexture)
         plotter.plotPixelColorsVoxelized(voxelizedPixelColors)
         plotter.plotPixelColorDiffsVoxelized(voxelizedDiff.colordiffs)

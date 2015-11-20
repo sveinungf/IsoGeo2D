@@ -16,11 +16,14 @@ def intersection2D(f, g, df, dg, uGuess, uInterval, tolerance):
     return newton.newtonsMethod2DClamped(h, hJacob, [uGuess, vGuess], uInterval, tolerance)
 
 class SplinePlane:
-    def __init__(self, phi, interval, tolerance):
-        self.phi = phi
+    def __init__(self, phiPlane, interval, tolerance):
+        self.phi = phiPlane
         self.interval = interval
         self.tolerance = tolerance
 
+    def evaluate(self, u, v):
+        return self.phi.evaluate(u, v)
+        
     def bottom(self, u):
         return self.phi.evaluate(u, self.interval[0])
     def dbottom(self, u):
@@ -123,3 +126,12 @@ class SplinePlane:
                 top = coeff[1]
                 
         return BoundingBox(left, right, bottom, top)
+
+    def inverseInFrustum(self, geomPoint, uvGuess, frustum):
+        interval = self.interval
+        phi = self.phi
+        
+        def f(u,v):
+            return phi.evaluate(u,v) - geomPoint
+                              
+        return newton.newtonsMethod2DFrustum(f, phi.jacob, uvGuess, interval, phi, frustum)
