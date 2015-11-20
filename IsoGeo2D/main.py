@@ -1,15 +1,14 @@
 import colordiff
-import compositing
-import itertools
 import numpy as np
 import transfer as trans
 from plotter import Plotter
 from ray import Ray2D
-from samplinglocation import SamplingLocation
 from splinegeometry import SplineGeometry
 from splineplane import SplinePlane
 from splines import Spline2D
 from texture import Texture2D
+from voxelgeometry import VoxelGeometry
+
 
 def createPhi():
     p = 2
@@ -45,8 +44,6 @@ class Main:
         self.screenTop = 0.95
         self.screenBottom = 0.15
         
-        self.samplingDefault = -1
-        
         self.phi = createPhi()
         self.phiPlane = SplinePlane(self.phi, self.splineInterval, 0.00001)
         
@@ -73,7 +70,7 @@ class Main:
         xValues = np.linspace(boundingBox.left+xDelta/2, boundingBox.right-xDelta/2, samplingsPerRay)
         yValues = np.linspace(boundingBox.bottom+yDelta/2, boundingBox.top-yDelta/2, rayCount)
         
-        samplingScalars = np.ones((rayCount, samplingsPerRay)) * self.samplingDefault    
+        samplingScalars = np.ones((rayCount, samplingsPerRay)) * VoxelGeometry.samplingDefault    
         
         for i, y in enumerate(yValues):
             samplingRay = Ray2D(np.array([self.eye[0], y]), np.array([0, y]), yDelta)
@@ -118,47 +115,6 @@ class Main:
             #plotter.plotParamPoints(paramPoints)
             
         return samplingScalars
-
-    def getVoxelizedSamplePointLocations(self, samplePoints, scalarTexture, boundingBox):
-        locations = np.empty(len(samplePoints))
-        bb = boundingBox
-        
-        for i, samplePoint in enumerate(samplePoints):
-            if bb.enclosesPoint(samplePoint):
-                u = (samplePoint[0]-bb.left)/bb.getWidth()
-                v = (samplePoint[1]-bb.bottom)/bb.getHeight()
-                
-                if not scalarTexture.closest([u, v]) == self.samplingDefault:
-                    locations[i] = SamplingLocation.INSIDE_OBJECT
-                else:
-                    locations[i] = SamplingLocation.OUTSIDE_OBJECT
-            else:
-                locations[i] = SamplingLocation.OUTSIDE_BOUNDINGBOX
-            
-        return locations
-        
-    def raycastVoxelized(self, viewRay, scalarTexture, boundingBox):
-        #plotter = self.plotter
-        bb = boundingBox
-        
-        sampleColors = []
-        sampleDeltas = []
-        
-        samplePoints = viewRay.generateSamplePoints(0, 10, self.viewRayDeltaVoxelized)
-        locations = self.getVoxelizedSamplePointLocations(samplePoints, scalarTexture, boundingBox)
-        
-        for samplePoint, location in itertools.izip(samplePoints, locations):
-            if location == SamplingLocation.INSIDE_OBJECT:
-                u = (samplePoint[0]-bb.left)/bb.getWidth()
-                v = (samplePoint[1]-bb.bottom)/bb.getHeight()
-                
-                sampleScalar = scalarTexture.fetch([u, v])
-                sampleColors.append(self.transfer(sampleScalar))
-                sampleDeltas.append(self.viewRayDeltaVoxelized)
-            
-        #plotter.plotSamplePointsVoxelized(samplePoints, locations)
-        
-        return compositing.frontToBack(sampleColors, sampleDeltas)
         
     def createPixels(self, numPixels):
         pixels = np.empty((numPixels, 2))
@@ -182,8 +138,7 @@ class Main:
         bb = self.phiPlane.createBoundingBox()
         plotter.plotBoundingBox(bb)
         
-        splineGeomRef = SplineGeometry(self.phiPlane, self.rho, self.transfer, self.viewRayDeltaRef)
-        splineGeomDirect = SplineGeometry(self.phiPlane, self.rho, self.transfer, self.viewRayDeltaDirect)
+        splineGeom = SplineGeometry(self.phiPlane, self.rho, self.transfer)
         
         numPixelsRef = self.numPixelsRef
         refPixels = self.createPixels(numPixelsRef)
@@ -193,8 +148,7 @@ class Main:
         for i, refPixel in enumerate(refPixels):
             viewRay = Ray2D(self.eye, refPixel, refPixelWidth)
             #plotter.plotViewRayReference(viewRay, [0, 10])
-            #refPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDeltaRef, bb, False)
-            refPixelColors[i] = splineGeomRef.raycast(viewRay)
+            refPixelColors[i] = splineGeom.raycast(viewRay, self.viewRayDeltaRef)
         
         numPixels = self.numPixels
         pixels = self.createPixels(numPixels)
@@ -210,8 +164,7 @@ class Main:
         voxelizedPixelColors = np.empty((numPixels, 4))
         
         for i, viewRay in enumerate(viewRays):
-            #directPixelColors[i] = self.raycastDirect(viewRay, self.viewRayDeltaDirect, bb, False)
-            directPixelColors[i] = splineGeomDirect.raycast(viewRay)
+            directPixelColors[i] = splineGeom.raycast(viewRay, self.viewRayDeltaDirect)
             
         plotter.plotPixelColorsReference(refPixelColors)
         #plotter.plotPixelColorsDirect(directPixelColors)
@@ -232,9 +185,10 @@ class Main:
         for _ in range(4):
             samplingScalars = self.generateScalarMatrix(bb, texDimSize, texDimSize)
             scalarTexture = Texture2D(samplingScalars)
+            voxelGeom = VoxelGeometry(scalarTexture, self.transfer, bb)
 
             for i, viewRay in enumerate(viewRays):
-                voxelizedPixelColors[i] = self.raycastVoxelized(viewRay, scalarTexture, bb)
+                voxelizedPixelColors[i] = voxelGeom.raycast(viewRay, self.viewRayDeltaVoxelized)
         
             voxelizedDiff = colordiff.compare(refPixelColors, voxelizedPixelColors)
             

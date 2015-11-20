@@ -7,11 +7,10 @@ from samplinglocation import SamplingLocation
 
 
 class SplineGeometry:
-    def __init__(self, phiPlane, rho, transfer, viewRayDelta, plotter=None, plotSamplePoints=True, plotEllipse=False):
+    def __init__(self, phiPlane, rho, transfer, plotter=None, plotSamplePoints=True, plotEllipse=False):
         self.phiPlane = phiPlane
         self.rho = rho
         self.transfer = transfer
-        self.viewRayDelta = viewRayDelta
         self.plotter = plotter
         self.plotSamplePoints = plotSamplePoints
         self.plotEllipse = plotEllipse
@@ -44,7 +43,7 @@ class SplineGeometry:
                     
         return locations
     
-    def raycast(self, viewRay):
+    def raycast(self, viewRay, delta):
         phiPlane = self.phiPlane
         rho = self.rho
         plotter = self.plotter
@@ -52,7 +51,7 @@ class SplineGeometry:
         sampleColors = []
         sampleDeltas = []
         
-        samplePoints = viewRay.generateSamplePoints(0, 10, self.viewRayDelta)
+        samplePoints = viewRay.generateSamplePoints(0, 10, delta)
         intersections = phiPlane.findTwoIntersections(viewRay)
         locations = self.__getSamplePointLocations(samplePoints, intersections)
         
@@ -63,7 +62,7 @@ class SplineGeometry:
             
             for samplePoint, location in itertools.izip(samplePoints, locations):
                 if location == SamplingLocation.INSIDE_OBJECT:
-                    pixelFrustum = viewRay.frustumBoundingEllipse(samplePoint, self.viewRayDelta)
+                    pixelFrustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
                     
                     pApprox = phiPlane.inverseInFrustum(samplePoint, prevUV, pixelFrustum)
                     gApprox = phiPlane.evaluate(pApprox[0], pApprox[1])
