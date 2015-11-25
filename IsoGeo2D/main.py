@@ -2,7 +2,7 @@ import numpy as np
 
 import colordiff
 import transfer as trans
-from plotter import Plotter
+from plotter.plotter import Plotter
 from ray import Ray2D
 from splinemodel import SplineModel
 from splineplane import SplinePlane
