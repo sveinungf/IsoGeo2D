@@ -4,7 +4,7 @@ from matplotlib.patches import Rectangle
 
 from samplingtype import SamplingType
 
-class ModelPlotter:
+class ModelPlotter(object):
     def __init__(self, plot):
         self.plot = plot
         

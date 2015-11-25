@@ -215,7 +215,7 @@ class Main:
             texDimSize *= 2
         
 
-        plotter.plotSampleScalars(samplingScalars, bb)    
+        voxelPlotter.plotScalars(samplingScalars, bb)    
         plotter.plotScalarTexture(scalarTexture)
         plotter.plotPixelColorsVoxelized(voxelizedPixelColors)
         plotter.plotPixelColorDiffsVoxelized(voxelizedDiff.colordiffs)

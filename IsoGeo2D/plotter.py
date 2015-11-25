@@ -6,6 +6,7 @@ from matplotlib.patches import Ellipse
 from matplotlib.patches import Rectangle
 
 from modelplotter import ModelPlotter
+from voxelplotter import VoxelPlotter
 
 class Plotter:
 	def __init__(self, splineInterval):
@@ -30,7 +31,7 @@ class Plotter:
 		ax.axis(gPlotAxis)
 		self.samplingPlot = ax
 		
-		self.voxelModelPlotter = ModelPlotter(ax)
+		self.voxelModelPlotter = VoxelPlotter(ax)
 		
 		ax = plt.subplot(mainGrid[1, 1])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
@@ -222,17 +223,6 @@ class Plotter:
 	def plotPixelColorDiffsVoxelized(self, colorDiffs):
 		self.__plotPixelColorDiffs(self.pixelVoxelizedDiffPlot, colorDiffs)
 
-	def plotSampleScalars(self, scalars, boundingBox):
-		ax = self.samplingPlot
-		deltaX = boundingBox.getWidth() / float(len(scalars[0]))
-		deltaY = boundingBox.getHeight() / float(len(scalars))
-		
-		for (i, j), scalar in np.ndenumerate(scalars):
-			if not scalar == -1:
-				lowerLeft = (boundingBox.left+j*deltaX, boundingBox.bottom+i*deltaY)
-				r = Rectangle(lowerLeft, deltaX, deltaY, facecolor=tuple([scalar]*3))
-				ax.add_patch(r)
-		
 	def plotSampleColors(self, colors, boundingBox):
 		ax = self.samplingPlot
 		deltaX = boundingBox.getWidth() / float(len(colors[0]))
