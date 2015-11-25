@@ -1,4 +1,3 @@
-import itertools
 import math
 import matplotlib.gridspec as gridspec
 import numpy as np
@@ -7,7 +6,6 @@ from matplotlib.patches import Ellipse
 from matplotlib.patches import Rectangle
 
 from modelplotter import ModelPlotter
-from samplinglocation import SamplingLocation
 
 class Plotter:
 	def __init__(self, splineInterval):
@@ -22,7 +20,7 @@ class Plotter:
 		ax.axis(gPlotAxis)
 		self.gPlot = ax
 		
-		self.splineModelPlot = ModelPlotter(ax)
+		self.splineModelPlotter = ModelPlotter(ax)
 		
 		ax = plt.subplot(mainGrid[0, 1])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
@@ -32,7 +30,7 @@ class Plotter:
 		ax.axis(gPlotAxis)
 		self.samplingPlot = ax
 		
-		self.voxelModelPlot = ModelPlotter(ax)
+		self.voxelModelPlotter = ModelPlotter(ax)
 		
 		ax = plt.subplot(mainGrid[1, 1])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
@@ -185,24 +183,6 @@ class Plotter:
 		
 		for point in points:
 			ax.plot(point[0], point[1], marker='x', color='k')
-	
-	def __plotSamplePoints(self, ax, points, locations):
-		for point, location in itertools.izip(points,locations):
-			if location == SamplingLocation.INSIDE_OBJECT:
-				pointColor = 'g'
-			elif location == SamplingLocation.OUTSIDE_OBJECT:
-				pointColor = '#de7e00'
-			else:
-				pointColor = 'r'
-				
-
-			ax.plot(point[0], point[1], marker='o', color=pointColor)		
-	
-	def plotSamplePointsDirect(self, points, locations):
-		self.__plotSamplePoints(self.gPlot, points, locations)
-					
-	def plotSamplePointsVoxelized(self, points, locations):
-		self.__plotSamplePoints(self.samplingPlot, points, locations)
 	
 	def __plotPixelColors(self, ax, pixelColors):
 		numPixels = len(pixelColors)

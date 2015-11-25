@@ -1,5 +1,8 @@
+import itertools
 import numpy as np
 from matplotlib.patches import Rectangle
+
+from samplingtype import SamplingType
 
 class ModelPlotter:
     def __init__(self, plot):
@@ -20,6 +23,17 @@ class ModelPlotter:
         
         r = Rectangle(lowerLeft, width, height, fill=False, linestyle='dashed')
         self.plot.add_patch(r)
+        
+    def plotSamplePoints(self, points, types):
+        for point, sampleType in itertools.izip(points, types):
+            if sampleType == SamplingType.SPLINE_MODEL:
+                pointColor = 'b'
+            elif sampleType == SamplingType.VOXEL_MODEL:
+                pointColor = 'g'
+            else:
+                pointColor = 'r'
+                
+            self.plot.plot(point[0], point[1], marker='o', color=pointColor)
         
     def plotViewRay(self, ray, interval):
         params = np.linspace(interval[0], interval[1], 100)

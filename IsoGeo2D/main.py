@@ -131,17 +131,17 @@ class Main:
         
     def run(self):
         plotter = self.plotter
-        splineModelPlot = plotter.splineModelPlot
-        voxelModelPlot = plotter.voxelModelPlot
+        splinePlotter = plotter.splineModelPlotter
+        voxelPlotter = plotter.voxelModelPlotter
         
         plotter.plotGrids(self.phi.evaluate, 10, 10)
         plotter.plotScalarField(self.rho, self.transfer)
         
         bb = self.phiPlane.createBoundingBox()
-        splineModelPlot.plotBoundingBox(bb)
-        voxelModelPlot.plotBoundingBox(bb)
+        splinePlotter.plotBoundingBox(bb)
+        voxelPlotter.plotBoundingBox(bb)
         
-        splineModel = SplineModel(self.phiPlane, self.rho, self.transfer)
+        splineModel = SplineModel(self.phiPlane, self.rho, self.transfer, splinePlotter)
         
         numPixelsRef = self.numPixelsRef
         refPixels = self.createPixels(numPixelsRef)
@@ -166,8 +166,8 @@ class Main:
             viewRay = Ray2D(self.eye, pixel, 10, pixelWidth)
             viewRays[i] = viewRay
             
-            splineModelPlot.plotViewRay(viewRay, [0, 10])
-            voxelModelPlot.plotViewRay(viewRay, [0, 10])
+            splinePlotter.plotViewRay(viewRay, [0, 10])
+            voxelPlotter.plotViewRay(viewRay, [0, 10])
             
         directPixelColors = np.empty((numPixels, 4))
         voxelizedPixelColors = np.empty((numPixels, 4))
@@ -198,7 +198,7 @@ class Main:
             samplingScalars = self.generateScalarMatrix(bb, texDimSize, texDimSize)
             scalarTexture = Texture2D(samplingScalars)
             
-            voxelModel = VoxelModel(scalarTexture, self.transfer, bb)
+            voxelModel = VoxelModel(scalarTexture, self.transfer, bb, voxelPlotter)
 
             for i, viewRay in enumerate(viewRays):
                 intersections = splineModel.phiPlane.findTwoIntersections(viewRay)

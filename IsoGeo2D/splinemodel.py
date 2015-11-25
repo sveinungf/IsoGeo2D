@@ -5,12 +5,12 @@ from samplingtype import SamplingType
 
 
 class SplineModel:
-    def __init__(self, phiPlane, rho, transfer, plotter=None, plotSamplePoints=True):
+    def __init__(self, phiPlane, rho, transfer, plotter):
         self.phiPlane = phiPlane
+        self.plotSamplePoints = False
+        self.plotter = plotter
         self.rho = rho
         self.transfer = transfer
-        self.plotter = plotter
-        self.plotSamplePoints = plotSamplePoints
 
     def sample(self, samplePoint, pGuess, frustum):
         phiPlane = self.phiPlane
@@ -66,7 +66,7 @@ class SplineModel:
             
             viewRayParam += delta
         
-        if not plotter == None and self.plotSamplePoints:
+        if self.plotSamplePoints:
             plotter.plotSamplePoints(samplePoints, sampleTypes)
         
         return compositing.frontToBack(sampleColors, sampleDeltas)
