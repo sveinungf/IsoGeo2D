@@ -222,20 +222,6 @@ class Plotter:
 		
 	def plotPixelColorDiffsVoxelized(self, colorDiffs):
 		self.__plotPixelColorDiffs(self.pixelVoxelizedDiffPlot, colorDiffs)
-
-	def plotSampleColors(self, colors, boundingBox):
-		ax = self.samplingPlot
-		deltaX = boundingBox.getWidth() / float(len(colors[0]))
-		deltaY = boundingBox.getHeight() / float(len(colors))
-		
-		for i in range(len(colors)):
-			for j in range(len(colors[0])):
-				color = colors[i][j]
-				
-				if not color[3] == 0:
-					lowerLeft = (boundingBox.left+j*deltaX, boundingBox.bottom+i*deltaY)
-					r = Rectangle(lowerLeft, deltaX, deltaY, facecolor=tuple(color))
-					ax.add_patch(r)
 		
 	def plotScalarTexture(self, scalarTexture):
 		uRange = np.linspace(0, 1, self.precision)
