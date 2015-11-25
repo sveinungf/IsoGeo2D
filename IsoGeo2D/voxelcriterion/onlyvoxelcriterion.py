@@ -1,5 +1,5 @@
 from voxelcriterion import VoxelCriterion
 
-class OnlyVoxelMCriterion(VoxelCriterion):
+class OnlyVoxelCriterion(VoxelCriterion):
     def lodLevel(self, viewRay, viewRayParam):
         return 0
