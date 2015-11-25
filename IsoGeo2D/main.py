@@ -1,14 +1,14 @@
-import colordiff
 import numpy as np
+
+import colordiff
 import transfer as trans
 from plotter import Plotter
 from ray import Ray2D
-from splinegeometry import SplineGeometry
+from splinemodel import SplineModel
 from splineplane import SplinePlane
 from splines import Spline2D
 from texture import Texture2D
-from voxelgeometry import VoxelGeometry
-
+from voxelmodel import VoxelModel
 
 def createPhi():
     p = 2
@@ -70,10 +70,10 @@ class Main:
         xValues = np.linspace(boundingBox.left+xDelta/2, boundingBox.right-xDelta/2, samplingsPerRay)
         yValues = np.linspace(boundingBox.bottom+yDelta/2, boundingBox.top-yDelta/2, rayCount)
         
-        samplingScalars = np.ones((rayCount, samplingsPerRay)) * VoxelGeometry.samplingDefault    
+        samplingScalars = np.ones((rayCount, samplingsPerRay)) * VoxelModel.samplingDefault    
         
         for i, y in enumerate(yValues):
-            samplingRay = Ray2D(np.array([self.eye[0], y]), np.array([0, y]), yDelta)
+            samplingRay = Ray2D(np.array([self.eye[0], y]), np.array([0, y]), 10, yDelta)
             #plotter.plotSamplingRay(samplingRay, [0, 10])
             
             intersections = phiPlane.findTwoIntersections(samplingRay)
@@ -138,7 +138,7 @@ class Main:
         bb = self.phiPlane.createBoundingBox()
         plotter.plotBoundingBox(bb)
         
-        splineGeom = SplineGeometry(self.phiPlane, self.rho, self.transfer)
+        splineModel = SplineModel(self.phiPlane, self.rho, self.transfer)
         
         numPixelsRef = self.numPixelsRef
         refPixels = self.createPixels(numPixelsRef)
@@ -146,9 +146,13 @@ class Main:
         refPixelColors = np.empty((numPixelsRef, 4))
         
         for i, refPixel in enumerate(refPixels):
-            viewRay = Ray2D(self.eye, refPixel, refPixelWidth)
+            viewRay = Ray2D(self.eye, refPixel, 10, refPixelWidth)
             #plotter.plotViewRayReference(viewRay, [0, 10])
-            refPixelColors[i] = splineGeom.raycast(viewRay, self.viewRayDeltaRef)
+            
+            intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
+            
+            if intersections != None:
+                refPixelColors[i] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaRef)
         
         numPixels = self.numPixels
         pixels = self.createPixels(numPixels)
@@ -156,7 +160,7 @@ class Main:
         
         viewRays = np.empty(numPixels, dtype=object)
         for i, pixel in enumerate(pixels):
-            viewRay = Ray2D(self.eye, pixel, pixelWidth)
+            viewRay = Ray2D(self.eye, pixel, 10, pixelWidth)
             plotter.plotViewRay(viewRay, [0, 10])
             viewRays[i] = viewRay
             
@@ -164,7 +168,10 @@ class Main:
         voxelizedPixelColors = np.empty((numPixels, 4))
         
         for i, viewRay in enumerate(viewRays):
-            directPixelColors[i] = splineGeom.raycast(viewRay, self.viewRayDeltaDirect)
+            intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
+            
+            if intersections != None:
+                directPixelColors[i] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaDirect)
             
         plotter.plotPixelColorsReference(refPixelColors)
         #plotter.plotPixelColorsDirect(directPixelColors)
@@ -185,10 +192,14 @@ class Main:
         for _ in range(4):
             samplingScalars = self.generateScalarMatrix(bb, texDimSize, texDimSize)
             scalarTexture = Texture2D(samplingScalars)
-            voxelGeom = VoxelGeometry(scalarTexture, self.transfer, bb)
+            
+            voxelModel = VoxelModel(scalarTexture, self.transfer, bb)
 
             for i, viewRay in enumerate(viewRays):
-                voxelizedPixelColors[i] = voxelGeom.raycast(viewRay, self.viewRayDeltaVoxelized)
+                intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
+                
+                if intersections != None:
+                    voxelizedPixelColors[i] = voxelModel.raycast(viewRay, intersections, self.viewRayDeltaVoxelized)
         
             voxelizedDiff = colordiff.compare(refPixelColors, voxelizedPixelColors)
             

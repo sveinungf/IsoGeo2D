@@ -8,10 +8,11 @@ def normalize2D(vector):
     return np.array([vector[0] / magnitude, vector[1] / magnitude])
 
 class Ray2D:
-    def __init__(self, eye, pixel, pixelWidth=0):
+    def __init__(self, eye, pixel, maxRange, pixelWidth):
         self.eye = eye
         self.pixel = pixel
         self.pixelWidth = pixelWidth
+        self.maxRange = maxRange
         
         self.viewDir = normalize2D(pixel - eye)
         
@@ -37,6 +38,9 @@ class Ray2D:
     
     def evalFrustumLower(self, t):
         return self.eye + self.frustumLowerDir*t
+    
+    def inRange(self, t):
+        return 0 <= t <= self.maxRange
 
     def frustumBoundingEllipse(self, point, delta):
         upper = self.frustumUpperDir
