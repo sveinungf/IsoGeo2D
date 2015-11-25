@@ -131,12 +131,15 @@ class Main:
         
     def run(self):
         plotter = self.plotter
+        splineModelPlot = plotter.splineModelPlot
+        voxelModelPlot = plotter.voxelModelPlot
         
         plotter.plotGrids(self.phi.evaluate, 10, 10)
         plotter.plotScalarField(self.rho, self.transfer)
         
         bb = self.phiPlane.createBoundingBox()
-        plotter.plotBoundingBox(bb)
+        splineModelPlot.plotBoundingBox(bb)
+        voxelModelPlot.plotBoundingBox(bb)
         
         splineModel = SplineModel(self.phiPlane, self.rho, self.transfer)
         
@@ -161,8 +164,10 @@ class Main:
         viewRays = np.empty(numPixels, dtype=object)
         for i, pixel in enumerate(pixels):
             viewRay = Ray2D(self.eye, pixel, 10, pixelWidth)
-            plotter.plotViewRay(viewRay, [0, 10])
             viewRays[i] = viewRay
+            
+            splineModelPlot.plotViewRay(viewRay, [0, 10])
+            voxelModelPlot.plotViewRay(viewRay, [0, 10])
             
         directPixelColors = np.empty((numPixels, 4))
         voxelizedPixelColors = np.empty((numPixels, 4))

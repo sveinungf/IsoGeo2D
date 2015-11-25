@@ -5,6 +5,8 @@ import numpy as np
 import pylab as plt
 from matplotlib.patches import Ellipse
 from matplotlib.patches import Rectangle
+
+from modelplotter import ModelPlotter
 from samplinglocation import SamplingLocation
 
 class Plotter:
@@ -20,6 +22,8 @@ class Plotter:
 		ax.axis(gPlotAxis)
 		self.gPlot = ax
 		
+		self.splineModelPlot = ModelPlotter(ax)
+		
 		ax = plt.subplot(mainGrid[0, 1])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.pPlot = ax
@@ -27,6 +31,8 @@ class Plotter:
 		ax = plt.subplot(mainGrid[1, 0])
 		ax.axis(gPlotAxis)
 		self.samplingPlot = ax
+		
+		self.voxelModelPlot = ModelPlotter(ax)
 		
 		ax = plt.subplot(mainGrid[1, 1])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
@@ -144,24 +150,7 @@ class Plotter:
 		
 		ax = self.gPlot
 		ax.plot(points[:,0], points[:,1], color='r')
-		
-	def plotViewRay(self, ray, interval):
-		params = np.linspace(interval[0], interval[1], self.precision)
-		points = self.generatePoints1var(ray.evalFromEye, params)
-		
-		ax = self.gPlot
-		ax.plot(points[:,0], points[:,1], color='r')
-		
-		ax = self.samplingPlot
-		ax.plot(points[:,0], points[:,1], color='r')
-			
-	def plotViewRayReference(self, ray, interval):
-		params = np.linspace(interval[0], interval[1], self.precision)
-		points = self.generatePoints1var(ray.evalFromEye, params)
-		
-		ax = self.gPlot
-		ax.plot(points[:,0], points[:,1], color='g')
-		
+
 	def plotViewRayFrustum(self, ray, interval):
 		params = np.linspace(interval[0], interval[1], self.precision)
 		upperPoints = self.generatePoints1var(ray.evalFrustumUpper, params)
@@ -252,18 +241,7 @@ class Plotter:
 		
 	def plotPixelColorDiffsVoxelized(self, colorDiffs):
 		self.__plotPixelColorDiffs(self.pixelVoxelizedDiffPlot, colorDiffs)
-		
-	def plotBoundingBox(self, boundingBox):
-		lowerLeft = (boundingBox.left, boundingBox.bottom)
-		width = boundingBox.getWidth()
-		height = boundingBox.getHeight()
-		
-		r = Rectangle(lowerLeft, width, height, fill=False, linestyle='dashed')
-		self.gPlot.add_patch(r)
-		
-		r = Rectangle(lowerLeft, width, height, fill=False, linestyle='dashed')
-		self.samplingPlot.add_patch(r)
-			
+
 	def plotSampleScalars(self, scalars, boundingBox):
 		ax = self.samplingPlot
 		deltaX = boundingBox.getWidth() / float(len(scalars[0]))
