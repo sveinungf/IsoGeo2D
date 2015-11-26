@@ -19,7 +19,7 @@ def compare(referenceRgbas, comparisonRgbas):
     n = len(comparisonLabs)
     m = len(referenceLabs) / n
     
-    diff = np.empty(n)
+    diff = np.zeros(n)
     
     for i in range(m):
         diff += color.deltaE_ciede2000(referenceLabs[i::m], comparisonLabs)
