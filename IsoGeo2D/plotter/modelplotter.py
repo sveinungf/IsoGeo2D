@@ -25,15 +25,30 @@ class ModelPlotter(object):
         self.plot.add_patch(r)
         
     def plotSamplePoints(self, points, types):
+        splinePoints = []
+        voxelPoints = []
+        outsidePoints = []
+        
         for point, sampleType in itertools.izip(points, types):
             if sampleType == SamplingType.SPLINE_MODEL:
-                pointColor = 'b'
+                splinePoints.append(point)
             elif sampleType == SamplingType.VOXEL_MODEL:
-                pointColor = 'g'
+                voxelPoints.append(point)
             else:
-                pointColor = 'r'
-                
-            self.plot.plot(point[0], point[1], marker='o', color=pointColor)
+                outsidePoints.append(point)
+
+        splinePoints = np.array(splinePoints)
+        voxelPoints = np.array(voxelPoints)
+        outsidePoints = np.array(outsidePoints)
+        
+        if len(splinePoints) > 0:
+            self.plot.plot(splinePoints[:,0], splinePoints[:,1], marker='o', color='b')
+        
+        if len(voxelPoints) > 0:
+            self.plot.plot(voxelPoints[:,0], voxelPoints[:,1], marker='o', color='g')
+        
+        if len(outsidePoints) > 0:
+            self.plot.plot(outsidePoints[:,0], outsidePoints[:,1], marker='o', color='r')
         
     def plotViewRay(self, ray, interval):
         params = np.linspace(interval[0], interval[1], 100)
