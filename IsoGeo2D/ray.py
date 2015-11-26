@@ -13,6 +13,7 @@ class Ray2D:
         self.pixel = pixel
         self.pixelWidth = pixelWidth
         self.maxRange = maxRange
+        self.near = pixel[0] - eye[0]
         
         self.viewDir = normalize2D(pixel - eye)
         

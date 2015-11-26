@@ -3,6 +3,8 @@ import numpy as np
 import colordiff
 import transfer as trans
 from plotter.plotter import Plotter
+from voxelcriterion.geometriccriterion import GeometricCriterion
+from hybridmodel import HybridModel
 from ray import Ray2D
 from splinemodel import SplineModel
 from splineplane import SplinePlane
@@ -150,12 +152,14 @@ class Main:
         
         for i, refPixel in enumerate(refPixels):
             viewRay = Ray2D(self.eye, refPixel, 10, refPixelWidth)
-            #plotter.plotViewRayReference(viewRay, [0, 10])
+            #splinePlotter.plotViewRay(viewRay, [0, 10])
             
             intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
             
             if intersections != None:
                 refPixelColors[i] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaRef)
+            else:
+                refPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
         
         numPixels = self.numPixels
         pixels = self.createPixels(numPixels)
@@ -177,6 +181,8 @@ class Main:
             
             if intersections != None:
                 directPixelColors[i] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaDirect)
+            else:
+                directPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
             
         plotter.plotPixelColorsReference(refPixelColors)
         #plotter.plotPixelColorsDirect(directPixelColors)
@@ -199,12 +205,18 @@ class Main:
             scalarTexture = Texture2D(samplingScalars)
             
             voxelModel = VoxelModel(scalarTexture, self.transfer, bb, voxelPlotter)
+            voxelWidth = bb.getHeight() / float(texDimSize)
+            criterion = GeometricCriterion(pixelWidth, voxelWidth)
+            model = HybridModel(splineModel, voxelModel, criterion, voxelPlotter)
+            model.plotSamplePoints = True
 
             for i, viewRay in enumerate(viewRays):
                 intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
                 
                 if intersections != None:
-                    voxelizedPixelColors[i] = voxelModel.raycast(viewRay, intersections, self.viewRayDeltaVoxelized)
+                    voxelizedPixelColors[i] = model.raycast(viewRay, intersections, self.viewRayDeltaVoxelized)
+                else:
+                    voxelizedPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
         
             voxelizedDiff = colordiff.compare(refPixelColors, voxelizedPixelColors)
             

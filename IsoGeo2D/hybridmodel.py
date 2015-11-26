@@ -5,23 +5,18 @@ from samplingtype import SamplingType
 
 
 class HybridModel:
-    def __init__(self, splineModel, voxelModel, criterion, plotter=None, plotSamplePoints=True):
+    def __init__(self, splineModel, voxelModel, criterion, plotter):
         self.criterion = criterion
-        self.plotSamplePoints = plotSamplePoints
+        self.plotSamplePoints = False
         self.plotter = plotter
         self.splineModel = splineModel
         self.voxelModel = voxelModel
 
-    def raycast(self, viewRay, delta):
+    def raycast(self, viewRay, intersections, delta):
         criterion = self.criterion
         plotter = self.plotter
         splineModel = self.splineModel
         voxelModel = self.voxelModel
-        
-        intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
-        
-        if intersections == None:
-            return None
         
         sampleColors = []
         sampleDeltas = []
@@ -69,7 +64,7 @@ class HybridModel:
             
             viewRayParam += delta
 
-        if not plotter == None and self.plotSamplePoints:
+        if self.plotSamplePoints:
             plotter.plotSamplePoints(samplePoints, sampleTypes)
             
         return compositing.frontToBack(sampleColors, sampleDeltas)
