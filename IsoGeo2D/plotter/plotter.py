@@ -23,11 +23,11 @@ class Plotter:
 		
 		self.splineModelPlotter = ModelPlotter(ax)
 		
-		ax = plt.subplot(mainGrid[0, 1])
+		ax = plt.subplot(mainGrid[1, 0])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.pPlot = ax
 
-		ax = plt.subplot(mainGrid[1, 0])
+		ax = plt.subplot(mainGrid[0, 1])
 		ax.axis(gPlotAxis)
 		self.samplingPlot = ax
 		
