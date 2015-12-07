@@ -41,10 +41,10 @@ class Main:
         self.splineInterval = [0, 0.99999]
         
         self.numPixels = 10
-        self.numPixelsRef = self.numPixels * 2
+        self.numPixelsRef = self.numPixels * 1
         self.pixelX = -0.5
-        self.screenTop = 0.95
-        self.screenBottom = 0.15
+        self.screenTop = 0.90
+        self.screenBottom = 0.2
         
         self.phi = createPhi()
         self.phiPlane = SplinePlane(self.phi, self.splineInterval, 0.00001)
@@ -192,11 +192,12 @@ class Main:
             else:
                 directPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
             
-        plotter.plotPixelColorsReference(refPixelColors)
-        plotter.plotPixelColorsDirect(directPixelColors)
+        plotter.pixelReferencePlot.plotPixelColors(refPixelColors)
+        plotter.pixelDirectPlot.plotPixelColors(directPixelColors)
         
         directDiff = colordiff.compare(refPixelColors, directPixelColors)
-        plotter.plotPixelColorDiffsDirect(directDiff.colordiffs)
+        plotter.pixelDirectDiffPlot.plotPixelColorDiffs(directDiff.colordiffs)
+        
         print "Direct color diffs:"
         print "---------------------"
         directDiff.printData()
@@ -207,15 +208,16 @@ class Main:
         print "Voxelized color diffs"
         print "---------------------"
             
-        texDimSize = 18
+        texDimSize = 16
         
-        for _ in range(1):
+        for _ in range(3):
             samplingScalars = self.generateScalarMatrix(bb, texDimSize, texDimSize)
             scalarTexture = Texture2D(samplingScalars)
             
             voxelModel = VoxelModel(scalarTexture, self.transfer, bb, voxelPlotter)
             voxelWidth = bb.getHeight() / float(texDimSize)
             criterion = GeometricCriterion(pixelWidth, voxelWidth)
+            #model = VoxelModel(scalarTexture, self.transfer, bb, voxelPlotter)
             model = HybridModel(splineModel, voxelModel, criterion, voxelPlotter)
             model.plotSamplePoints = True
 
@@ -233,13 +235,13 @@ class Main:
             voxelizedDiff.printData()
             print ""
        
-            texDimSize *= 2
+            texDimSize += 2
         
 
         voxelPlotter.plotScalars(samplingScalars, bb)    
         plotter.plotScalarTexture(scalarTexture)
-        plotter.plotPixelColorsVoxelized(voxelizedPixelColors)
-        plotter.plotPixelColorDiffsVoxelized(voxelizedDiff.colordiffs)
+        plotter.pixelVoxelizedPlot.plotPixelColors(voxelizedPixelColors)
+        plotter.pixelVoxelizedDiffPlot.plotPixelColorDiffs(voxelizedDiff.colordiffs)
         
         plotter.draw()
     

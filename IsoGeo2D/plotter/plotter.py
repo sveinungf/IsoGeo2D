@@ -3,8 +3,8 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 import pylab as plt
 from matplotlib.patches import Ellipse
-from matplotlib.patches import Rectangle
 
+from pixelplotter import PixelPlotter
 from splineplotter import SplinePlotter
 from voxelplotter import VoxelPlotter
 
@@ -39,43 +39,25 @@ class Plotter:
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.interpolationPlot = ax
 		
-		pixelGrid = gridspec.GridSpecFromSubplotSpec(5, 1, subplot_spec=mainGrid[1, 2], hspace=0.4)
+		pixelGrid = gridspec.GridSpecFromSubplotSpec(6, 1, subplot_spec=mainGrid[1, 2], hspace=0.4)
 		
 		ax = plt.subplot(pixelGrid[0])
-		ax.set_title("Reference")
-		ax.xaxis.set_major_locator(plt.NullLocator()) # Removes ticks
-		ax.yaxis.set_major_locator(plt.NullLocator())
-		self.pixelReferencePlot = ax
-		
-		ax = plt.subplot(pixelGrid[1])
-		ax.set_title("Direct")
-		ax.xaxis.set_major_locator(plt.NullLocator())
-		ax.yaxis.set_major_locator(plt.NullLocator())
-		self.pixelDirectPlot = ax
+		self.pixelReferencePlot = PixelPlotter(ax, "Reference")
 		
 		ax = plt.subplot(pixelGrid[2])
-		ax.set_title("Direct color difference")
-		ax.xaxis.set_major_locator(plt.NullLocator())
-		ax.yaxis.set_major_locator(plt.NullLocator())
-		self.pixelDirectDiffPlot = ax
+		self.pixelDirectPlot = PixelPlotter(ax, "Direct")
 		
 		ax = plt.subplot(pixelGrid[3])
-		ax.set_title("Voxelized")
-		ax.xaxis.set_major_locator(plt.NullLocator())
-		ax.yaxis.set_major_locator(plt.NullLocator())
-		self.pixelVoxelizedPlot = ax
+		self.pixelDirectDiffPlot = PixelPlotter(ax, "Direct color difference")
 		
 		ax = plt.subplot(pixelGrid[4])
-		ax.set_title("Voxelized color difference")
-		ax.xaxis.set_major_locator(plt.NullLocator())
-		ax.yaxis.set_major_locator(plt.NullLocator())
-		self.pixelVoxelizedDiffPlot = ax
+		self.pixelVoxelizedPlot = PixelPlotter(ax, "Voxelized")
+		
+		ax = plt.subplot(pixelGrid[5])
+		self.pixelVoxelizedDiffPlot = PixelPlotter(ax, "Voxelized color difference")
 		
 		plt.ion()
 		plt.show()
-
-	def getPixelPlotAxis(self, numPixels):
-		return (-0.5, numPixels-0.5, 0, 1)
 	
 	def generatePoints1var(self, f, params):
 		output = np.empty((len(params), 2))
@@ -165,44 +147,6 @@ class Plotter:
 		
 		for point in points:
 			ax.plot(point[0], point[1], marker='x', color='k')
-	
-	def __plotPixelColors(self, ax, pixelColors):
-		numPixels = len(pixelColors)
-		ax.axis(self.getPixelPlotAxis(numPixels))
-		
-		for i, pixelColor in enumerate(pixelColors):
-			r = Rectangle((i-0.5, 0), 1, 1, facecolor=tuple(pixelColor), linewidth=0)
-			ax.add_patch(r)
-			
-	def __plotPixelColorDiffs(self, ax, colorDiffs):
-		colors = np.empty((len(colorDiffs), 3))
-		
-		for i, colorDiff in enumerate(colorDiffs):
-			if colorDiff <= 1.0:
-				colors[i] = np.array([0.75, 0.75, 0.75])
-			elif colorDiff <= 5.0:
-				colors[i] = np.array([0.0, 0.0, 1.0])
-			elif colorDiff <= 10.0:
-				colors[i] = np.array([0.0, 1.0, 0.0])
-			else:
-				colors[i] = np.array([1.0, 0.0, 0.0])
-				
-		self.__plotPixelColors(ax, colors)
-	
-	def plotPixelColorsDirect(self, pixelColors):
-		self.__plotPixelColors(self.pixelDirectPlot, pixelColors)
-		
-	def plotPixelColorsReference(self, pixelColors):
-		self.__plotPixelColors(self.pixelReferencePlot, pixelColors)
-					
-	def plotPixelColorsVoxelized(self, pixelColors):
-		self.__plotPixelColors(self.pixelVoxelizedPlot, pixelColors)
-		
-	def plotPixelColorDiffsDirect(self, colorDiffs):
-		self.__plotPixelColorDiffs(self.pixelDirectDiffPlot, colorDiffs)
-		
-	def plotPixelColorDiffsVoxelized(self, colorDiffs):
-		self.__plotPixelColorDiffs(self.pixelVoxelizedDiffPlot, colorDiffs)
 		
 	def plotScalarTexture(self, scalarTexture):
 		uRange = np.linspace(0, 1, self.precision)
