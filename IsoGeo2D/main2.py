@@ -1,5 +1,6 @@
 import numpy as np
 
+import colordiff
 import splineexample
 import transfer as trans
 from plotter.pixelfigure import PixelFigure
@@ -15,14 +16,14 @@ class Main2:
         self.phiPlane = SplinePlane(self.phi, self.splineInterval, 0.00001)
         self.transfer = trans.createTransferFunction(100)
 
-        self.numPixels = 100
+        self.numPixels = 10
         self.pixelX = -0.5
         self.screenTop = 0.90
         self.screenBottom = 0.2
         
         self.eye = np.array([-2.0, 0.65])
         self.viewRayDelta = 0.1
-        self.viewRayDeltaRef = 0.01
+        self.viewRayDeltaRef = 0.001
         self.refTolerance = 0.000000001
         
     def createPixels(self, numPixels):
@@ -45,21 +46,31 @@ class Main2:
         
         splineModel = SplineModel(self.phiPlane, self.rho, self.transfer)
 
-        refPixels = self.createPixels(numPixels)
-        refPixelWidth = (self.screenTop-self.screenBottom) / numPixels
-        refPixelColors = np.empty((numPixels, 4))
+        pixels = self.createPixels(numPixels)
+        pixelWidth = (self.screenTop-self.screenBottom) / numPixels
         
-        for i, refPixel in enumerate(refPixels):
-            viewRay = Ray2D(self.eye, refPixel, 10, refPixelWidth)
+        refPixelColors = np.empty((numPixels, 4))
+        directPixelColors = np.empty((numPixels, 4))
+        
+        backgroundColor = np.array([0.0, 0.0, 0.0, 0.0])
+        
+        for i, pixel in enumerate(pixels):
+            viewRay = Ray2D(self.eye, pixel, 10, pixelWidth)
             
             intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
             
             if intersections != None:
                 refPixelColors[i] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaRef, tolerance=self.refTolerance)
+                directPixelColors[i] = splineModel.raycast(viewRay, intersections, self.viewRayDelta)
             else:
-                refPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
+                refPixelColors[i] = backgroundColor
+                directPixelColors[i] = backgroundColor
+                
+        directDiff = colordiff.compare(refPixelColors, directPixelColors)
+        figure.directDiffsPlot.plotPixelColorDiffs(directDiff.colordiffs)
         
         figure.refPixelsPlot.plotPixelColors(refPixelColors)
+        figure.directPixelsPlot.plotPixelColors(directPixelColors)
         
         figure.draw()
     
