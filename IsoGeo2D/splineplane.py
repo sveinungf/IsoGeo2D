@@ -13,7 +13,7 @@ def intersection2D(f, g, df, dg, uGuess, uInterval, tolerance):
     def hJacob(u, v):
         return np.matrix([df(u), -dg(v)]).transpose()
     
-    return newton.newtonsMethod2DClamped(h, hJacob, [uGuess, vGuess], uInterval, tolerance)
+    return newton.newtonsMethod2DTolerance(h, hJacob, [uGuess, vGuess], uInterval, tolerance)
 
 class SplinePlane:
     def __init__(self, phiPlane, interval, tolerance):
@@ -135,3 +135,12 @@ class SplinePlane:
             return phi.evaluate(u,v) - geomPoint
                               
         return newton.newtonsMethod2DFrustum(f, phi.jacob, uvGuess, interval, phi, frustum)
+
+    def inverseWithinTolerance(self, geomPoint, uvGuess, tolerance):
+        interval = self.interval
+        phi = self.phi
+        
+        def f(u,v):
+            return phi.evaluate(u,v) - geomPoint
+                   
+        return newton.newtonsMethod2DTolerance(f, phi.jacob, uvGuess, interval, tolerance)           

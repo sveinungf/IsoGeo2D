@@ -13,7 +13,7 @@ class VoxelModel:
         self.scalarTexture = scalarTexture
         self.transfer = transfer
     
-    def sample(self, samplePoint):
+    def sampleInFrustum(self, samplePoint):
         bb = self.boundingBox
         scalarTexture = self.scalarTexture
         
@@ -50,7 +50,7 @@ class VoxelModel:
             samplePoint = viewRay.evalFromPixel(viewRayParam)
             
             if inGeomPoint[0] <= samplePoint[0] <= outGeomPoint[0]:
-                sampleColor = self.sample(samplePoint)
+                sampleColor = self.sampleInFrustum(samplePoint)
                     
                 if sampleColor == None:
                     sampleType = SamplingType.OUTSIDE_OBJECT

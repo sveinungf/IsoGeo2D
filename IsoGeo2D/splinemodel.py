@@ -10,7 +10,7 @@ class SplineModel:
         self.rho = rho
         self.transfer = transfer
 
-    def sample(self, samplePoint, pGuess, frustum):
+    def sampleInFrustum(self, samplePoint, pGuess, frustum):
         phiPlane = self.phiPlane
         rho = self.rho
 
@@ -22,7 +22,19 @@ class SplineModel:
         
         return [color, pApprox, gApprox]
     
-    def raycast(self, viewRay, intersections, delta, plotter=None):
+    def sampleWithinTolerance(self, samplePoint, pGuess, tolerance):
+        phiPlane = self.phiPlane
+        rho = self.rho
+
+        pApprox = phiPlane.inverseWithinTolerance(samplePoint, pGuess, tolerance)
+        gApprox = phiPlane.evaluate(pApprox[0], pApprox[1])
+        
+        scalar = rho.evaluate(pApprox[0], pApprox[1])
+        color = self.transfer(scalar)
+        
+        return [color, pApprox, gApprox]        
+    
+    def raycast(self, viewRay, intersections, delta, plotter=None, tolerance=None):
         sampleColors = []
         sampleDeltas = []
         samplePoints = []
@@ -40,9 +52,12 @@ class SplineModel:
             samplePoint = viewRay.evalFromPixel(viewRayParam)
             
             if inGeomPoint[0] <= samplePoint[0] <= outGeomPoint[0]:
-                frustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
-                
-                [sampleColor, pApprox, gApprox] = self.sample(samplePoint, pGuess, frustum)
+                if tolerance == None:
+                    frustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
+                    [sampleColor, pApprox, gApprox] = self.sampleInFrustum(samplePoint, pGuess, frustum)
+                else:
+                    [sampleColor, pApprox, gApprox] = self.sampleWithinTolerance(samplePoint, pGuess, tolerance)
+                    
                 pGuess = pApprox
                 samplePoint = gApprox
                 sampleType = SamplingType.SPLINE_MODEL
