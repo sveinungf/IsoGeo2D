@@ -1,6 +1,7 @@
 import numpy as np
 
 import colordiff
+import splineexample
 import transfer as trans
 from plotter.plotter import Plotter
 from voxelcriterion.geometriccriterion import GeometricCriterion
@@ -8,33 +9,8 @@ from hybridmodel import HybridModel
 from ray import Ray2D
 from splinemodel import SplineModel
 from splineplane import SplinePlane
-from splines import Spline2D
 from texture import Texture2D
 from voxelmodel import VoxelModel
-
-def createPhi():
-    p = 2
-    uKnots = [0, 0, 0, 0.2, 0.7, 1.0, 1.0, 1.0]
-    vKnots = [0, 0, 0, 0.3, 0.6, 1.0, 1.0, 1.0]
-    coeffs = np.array([[[0.0,0.0], [-0.1,0.2], [-0.2,0.5], [0,0.9], [0.0,1.0]],
-                       [[0.25,-0.05], [0.11 ,0.4], [0.4,0.41], [0.5,0.9], [0.25,1.05]],
-                       [[0.5,-0.06], [0.5,0.2], [0.5,0.5], [0.6,0.9], [0.5,1.03]],
-                       [[0.75,-0.05], [0.7,0.2], [0.8,0.5], [0.7,0.9], [0.75,0.95]],
-                       [[1.0,0.0], [1.01,0.2], [1.02,0.5], [1.05,0.7], [1.0,0.8]]])
-    
-    return Spline2D(p, uKnots, vKnots, coeffs)
-
-def createRho():
-    p = 2
-    uKnots = [0, 0, 0, 0.2, 0.7, 1.0, 1.0, 1.0]
-    vKnots = [0, 0, 0, 0.3, 0.6, 1.0, 1.0, 1.0]
-    coeffs = np.array([[[0.6], [0.1], [0.6], [1.0], [1.0]],
-                       [[0.25], [0.11], [1.0], [0.9], [1.0]],
-                       [[0.5], [0.0], [0.3], [0.3], [0.5]],
-                       [[0.75], [0.3], [0.0], [0.7], [0.75]],
-                       [[0.5], [1.0], [1.0], [1.0], [0.8]]])
-    
-    return Spline2D(p, uKnots, vKnots, coeffs)
 
 class Main:
     def __init__(self):
@@ -46,10 +22,10 @@ class Main:
         self.screenTop = 0.90
         self.screenBottom = 0.2
         
-        self.phi = createPhi()
+        self.phi = splineexample.createPhi()
         self.phiPlane = SplinePlane(self.phi, self.splineInterval, 0.00001)
         
-        self.rho = createRho()
+        self.rho = splineexample.createRho()
         self.transfer = trans.createTransferFunction(100)
         
         self.plotter = Plotter(self.splineInterval)
