@@ -6,8 +6,7 @@ def convertToLabs(rgbas):
     
     for i, rgba in enumerate(rgbas):
         rgb = rgba[:3]
-        floatRgb = rgb * 2.0 - 1.0
-        arg = np.array([[floatRgb]], dtype=np.float)
+        arg = np.array([[rgb]], dtype=np.float)
         labs[i] = color.rgb2lab(arg)
         
     return labs
