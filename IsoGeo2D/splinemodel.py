@@ -5,10 +5,8 @@ from samplingtype import SamplingType
 
 
 class SplineModel:
-    def __init__(self, phiPlane, rho, transfer, plotter):
+    def __init__(self, phiPlane, rho, transfer):
         self.phiPlane = phiPlane
-        self.plotSamplePoints = False
-        self.plotter = plotter
         self.rho = rho
         self.transfer = transfer
 
@@ -24,9 +22,7 @@ class SplineModel:
         
         return [color, pApprox, gApprox]
     
-    def raycast(self, viewRay, intersections, delta):
-        plotter = self.plotter
-        
+    def raycast(self, viewRay, intersections, delta, plotter=None):
         sampleColors = []
         sampleDeltas = []
         samplePoints = []
@@ -66,7 +62,7 @@ class SplineModel:
             
             viewRayParam += delta
         
-        if self.plotSamplePoints:
+        if plotter != None:
             plotter.plotSamplePoints(samplePoints, sampleTypes)
         
         return compositing.frontToBack(sampleColors, sampleDeltas)

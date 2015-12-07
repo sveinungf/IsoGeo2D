@@ -5,7 +5,7 @@ import pylab as plt
 from matplotlib.patches import Ellipse
 from matplotlib.patches import Rectangle
 
-from modelplotter import ModelPlotter
+from splineplotter import SplinePlotter
 from voxelplotter import VoxelPlotter
 
 class Plotter:
@@ -20,18 +20,20 @@ class Plotter:
 		ax = plt.subplot(mainGrid[0, 0])
 		ax.axis(gPlotAxis)
 		self.gPlot = ax
+		self.refSplineModelPlotter = SplinePlotter(ax, splineInterval)
 		
-		self.splineModelPlotter = ModelPlotter(ax)
+		ax = plt.subplot(mainGrid[0, 1])
+		ax.axis(gPlotAxis)
+		self.directSplineModelPlotter = SplinePlotter(ax, splineInterval)
+		
+		ax = plt.subplot(mainGrid[0, 2])
+		ax.axis(gPlotAxis)
+		self.samplingPlot = ax		
+		self.voxelModelPlotter = VoxelPlotter(ax)
 		
 		ax = plt.subplot(mainGrid[1, 0])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.pPlot = ax
-
-		ax = plt.subplot(mainGrid[0, 1])
-		ax.axis(gPlotAxis)
-		self.samplingPlot = ax
-		
-		self.voxelModelPlotter = VoxelPlotter(ax)
 		
 		ax = plt.subplot(mainGrid[1, 1])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
@@ -74,17 +76,6 @@ class Plotter:
 
 	def getPixelPlotAxis(self, numPixels):
 		return (-0.5, numPixels-0.5, 0, 1)
-		
-	def generatePoints2var(self, f, xInputs, yInputs):
-		xOutput = []
-		yOutput = []
-		
-		for i in range(len(xInputs)):
-			fResult = f(xInputs[i], yInputs[i])
-			xOutput.append(fResult[0])
-			yOutput.append(fResult[1])
-		
-		return [xOutput, yOutput]
 	
 	def generatePoints1var(self, f, params):
 		output = np.empty((len(params), 2))
@@ -104,22 +95,12 @@ class Plotter:
 			paramsX = [vLine] * self.precision
 			paramsY = np.linspace(interval[0], interval[1], self.precision)
 			
-			[geomX, geomY] = self.generatePoints2var(f, paramsX, paramsY)
-			
-			ax = self.gPlot
-			ax.plot(geomX, geomY, color=lineColor)
-			
 			ax = self.pPlot
 			ax.plot(paramsX, paramsY, color=lineColor)
 			
 		for hLine in hLines:
 			paramsX = np.linspace(interval[0], interval[1], self.precision)
 			paramsY = [hLine] * self.precision
-			
-			[geomX, geomY] = self.generatePoints2var(f, paramsX, paramsY)
-			
-			ax = self.gPlot
-			ax.plot(geomX, geomY, color=lineColor)
 			
 			ax = self.pPlot
 			ax.plot(paramsX, paramsY, color=lineColor)

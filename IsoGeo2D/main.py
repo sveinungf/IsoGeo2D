@@ -41,7 +41,7 @@ class Main:
         self.splineInterval = [0, 0.99999]
         
         self.numPixels = 10
-        self.numPixelsRef = self.numPixels * 1
+        self.numPixelsRef = self.numPixels * 2
         self.pixelX = -0.5
         self.screenTop = 0.95
         self.screenBottom = 0.15
@@ -56,7 +56,7 @@ class Main:
         
         self.eye = np.array([-2.0, 0.65])
         self.viewRayDeltaRef = 0.01
-        self.viewRayDeltaDirect = 0.10
+        self.viewRayDeltaDirect = 0.01
         self.viewRayDeltaVoxelized = 0.01
         
     def generateScalarMatrix(self, boundingBox, width, height):
@@ -132,18 +132,25 @@ class Main:
         return pixels
         
     def run(self):
+        phi = self.phi
         plotter = self.plotter
-        splinePlotter = plotter.splineModelPlotter
+        
+        refSplinePlotter = plotter.refSplineModelPlotter
+        directSplinePlotter = plotter.directSplineModelPlotter
         voxelPlotter = plotter.voxelModelPlotter
+        
+        refSplinePlotter.plotGrid(phi.evaluate, 10, 10)
+        directSplinePlotter.plotGrid(phi.evaluate, 10, 10)
         
         plotter.plotGrids(self.phi.evaluate, 10, 10)
         plotter.plotScalarField(self.rho, self.transfer)
         
         bb = self.phiPlane.createBoundingBox()
-        splinePlotter.plotBoundingBox(bb)
+        refSplinePlotter.plotBoundingBox(bb)
+        directSplinePlotter.plotBoundingBox(bb)
         voxelPlotter.plotBoundingBox(bb)
         
-        splineModel = SplineModel(self.phiPlane, self.rho, self.transfer, splinePlotter)
+        splineModel = SplineModel(self.phiPlane, self.rho, self.transfer)
         
         numPixelsRef = self.numPixelsRef
         refPixels = self.createPixels(numPixelsRef)
@@ -152,7 +159,7 @@ class Main:
         
         for i, refPixel in enumerate(refPixels):
             viewRay = Ray2D(self.eye, refPixel, 10, refPixelWidth)
-            #splinePlotter.plotViewRay(viewRay, [0, 10])
+            refSplinePlotter.plotViewRay(viewRay, [0, 10])
             
             intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
             
@@ -166,41 +173,43 @@ class Main:
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
         
         viewRays = np.empty(numPixels, dtype=object)
-        for i, pixel in enumerate(pixels):
+        directPixelColors = np.empty((numPixels, 4))
+        voxelizedPixelColors = np.empty((numPixels, 4))
+
+        for i in range(numPixels):
+            pixel = pixels[i]
             viewRay = Ray2D(self.eye, pixel, 10, pixelWidth)
             viewRays[i] = viewRay
             
-            splinePlotter.plotViewRay(viewRay, [0, 10])
+            directSplinePlotter.plotViewRay(viewRay, [0, 10])
             voxelPlotter.plotViewRay(viewRay, [0, 10])
-            
-        directPixelColors = np.empty((numPixels, 4))
-        voxelizedPixelColors = np.empty((numPixels, 4))
         
         for i, viewRay in enumerate(viewRays):
             intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
             
             if intersections != None:
-                directPixelColors[i] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaDirect)
+                directPixelColors[i] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaDirect, directSplinePlotter)
             else:
                 directPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
             
         plotter.plotPixelColorsReference(refPixelColors)
-        #plotter.plotPixelColorsDirect(directPixelColors)
+        plotter.plotPixelColorsDirect(directPixelColors)
         
-        #directDiff = colordiff.compare(refPixelColors, directPixelColors)
-        #plotter.plotPixelColorDiffsDirect(directDiff.colorDiffs)
-        #print "Direct color diffs:"
-        #directDiff.printData()
-        #print ""
+        directDiff = colordiff.compare(refPixelColors, directPixelColors)
+        plotter.plotPixelColorDiffsDirect(directDiff.colordiffs)
+        print "Direct color diffs:"
+        print "---------------------"
+        directDiff.printData()
+        print ""
         
         plotter.draw()
         
         print "Voxelized color diffs"
         print "---------------------"
             
-        texDimSize = 8
+        texDimSize = 18
         
-        for _ in range(4):
+        for _ in range(1):
             samplingScalars = self.generateScalarMatrix(bb, texDimSize, texDimSize)
             scalarTexture = Texture2D(samplingScalars)
             
