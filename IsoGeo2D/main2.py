@@ -3,7 +3,7 @@ import numpy as np
 import colordiff
 import splineexample
 import transfer as trans
-from plotter.pixelfigure import PixelFigure
+from plotting.pixelfigure import PixelFigure
 from voxelcriterion.geometriccriterion import GeometricCriterion
 from hybridmodel import HybridModel
 from ray import Ray2D
