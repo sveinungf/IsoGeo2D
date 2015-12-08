@@ -104,18 +104,36 @@ class Main2:
         
         directDiff = colordiff.compare(refPixelColors, directPixelColors)
         figure.directDiffsPlot.plotPixelColorDiffs(directDiff.colordiffs)
+        self.printColorDiffs("Direct", directDiff)
+        
+        voxelDiffs = np.empty(numTextures, dtype=object)
+        hybridDiffs = np.empty(numTextures, dtype=object)
         
         for i in range(numTextures):
             figure.voxelPixelsPlots[i].plotPixelColors(voxelPixelColors[i])
             figure.hybridPixelsPlots[i].plotPixelColors(hybridPixelColors[i])
             
-            voxelDiff = colordiff.compare(refPixelColors, voxelPixelColors[i])
-            hybridDiff = colordiff.compare(refPixelColors, hybridPixelColors[i])
+            voxelDiffs[i] = colordiff.compare(refPixelColors, voxelPixelColors[i])
+            hybridDiffs[i] = colordiff.compare(refPixelColors, hybridPixelColors[i])
             
-            figure.voxelDiffsPlots[i].plotPixelColorDiffs(voxelDiff.colordiffs)
-            figure.hybridDiffsPlots[i].plotPixelColorDiffs(hybridDiff.colordiffs)
+            figure.voxelDiffsPlots[i].plotPixelColorDiffs(voxelDiffs[i].colordiffs)
+            figure.hybridDiffsPlots[i].plotPixelColorDiffs(hybridDiffs[i].colordiffs)
         
+        for i in range(numTextures):
+            texDimSize = texDimSizes[i]
+            self.printColorDiffs("Voxel ({}x{})".format(texDimSize, texDimSize), voxelDiffs[i])
+            
+        for i in range(numTextures):
+            texDimSize = texDimSizes[i]
+            self.printColorDiffs("Hybrid ({}x{})".format(texDimSize, texDimSize), hybridDiffs[i])
+            
         figure.draw()
+        
+    def printColorDiffs(self, name, colordiff):
+        print "{} color diffs".format(name)
+        print "---------------------"
+        colordiff.printData()
+        print ""
     
 def run():
     main = Main2()
