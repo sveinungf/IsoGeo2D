@@ -75,6 +75,7 @@ class Main2:
         refPixelColors = np.empty((numPixels, 4))
         directPixelColors = np.empty((numPixels, 4))
         voxelPixelColors = np.empty((numTextures, numPixels, 4))
+        hybridPixelColors = np.empty((numTextures, numPixels, 4))
         
         backgroundColor = np.array([0.0, 0.0, 0.0, 0.0])
         
@@ -89,12 +90,14 @@ class Main2:
                 
                 for j in range(numTextures):
                     voxelPixelColors[j][i] = voxelModels[j].raycast(viewRay, intersections, self.viewRayDelta)
+                    hybridPixelColors[j][i] = hybridModels[j].raycast(viewRay, intersections, self.viewRayDelta)
             else:
                 refPixelColors[i] = backgroundColor
                 directPixelColors[i] = backgroundColor
                 
                 for j in range(numTextures):
                     voxelPixelColors[j][i] = backgroundColor
+                    hybridPixelColors[j][i] = backgroundColor
         
         figure.refPixelsPlot.plotPixelColors(refPixelColors)
         figure.directPixelsPlot.plotPixelColors(directPixelColors)
@@ -104,9 +107,13 @@ class Main2:
         
         for i in range(numTextures):
             figure.voxelPixelsPlots[i].plotPixelColors(voxelPixelColors[i])
+            figure.hybridPixelsPlots[i].plotPixelColors(hybridPixelColors[i])
             
             voxelDiff = colordiff.compare(refPixelColors, voxelPixelColors[i])
+            hybridDiff = colordiff.compare(refPixelColors, hybridPixelColors[i])
+            
             figure.voxelDiffsPlots[i].plotPixelColorDiffs(voxelDiff.colordiffs)
+            figure.hybridDiffsPlots[i].plotPixelColorDiffs(hybridDiff.colordiffs)
         
         figure.draw()
     
