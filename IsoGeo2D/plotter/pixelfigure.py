@@ -9,7 +9,7 @@ class PixelFigure:
         numTextures = len(texDimSizes)
         
         plt.figure(figsize=(15, 6))
-        mainGrid = gridspec.GridSpec(2 + numTextures * 2, 2)
+        mainGrid = gridspec.GridSpec(2 + numTextures * 2, 2, hspace=(0.3*numTextures))
         
         ax = plt.subplot(mainGrid[0, 0])
         self.refPixelsPlot = PixelPlotter(ax, "Reference")
