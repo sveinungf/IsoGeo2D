@@ -1,12 +1,15 @@
 import matplotlib.gridspec as gridspec
+import numpy as np
 import pylab as plt
 
 from pixelplotter import PixelPlotter
 
 class PixelFigure:
-    def __init__(self):
+    def __init__(self, texDimSizes):
+        numTextures = len(texDimSizes)
+        
         plt.figure(figsize=(15, 6))
-        mainGrid = gridspec.GridSpec(4, 2)
+        mainGrid = gridspec.GridSpec(2 + numTextures * 2, 2)
         
         ax = plt.subplot(mainGrid[0, 0])
         self.refPixelsPlot = PixelPlotter(ax, "Reference")
@@ -17,17 +20,33 @@ class PixelFigure:
         ax = plt.subplot(mainGrid[1, 1])
         self.directDiffsPlot = PixelPlotter(ax, "Direct color diff")
         
-        ax = plt.subplot(mainGrid[2, 0])
-        self.voxelPixelsPlot = PixelPlotter(ax, "Voxel")
+        self.voxelPixelsPlots = np.empty(numTextures, dtype=object)
+        self.voxelDiffsPlots = np.empty(numTextures, dtype=object)
         
-        ax = plt.subplot(mainGrid[2, 1])
-        self.voxelDiffsPlot = PixelPlotter(ax, "Voxel color diffs")
+        self.hybridPixelsPlots = np.empty(numTextures, dtype=object)
+        self.hybridDiffsPlots = np.empty(numTextures, dtype=object)
         
-        ax = plt.subplot(mainGrid[3, 0])
-        self.hybridPixelsPlot = PixelPlotter(ax, "Hybrid")
+        offset = 2
+
+        for i in range(numTextures):
+            texDimSize = texDimSizes[i]
+            
+            ax = plt.subplot(mainGrid[i + offset, 0])
+            self.voxelPixelsPlots[i] = PixelPlotter(ax, "Voxel ({}x{})".format(texDimSize, texDimSize))
+            
+            ax = plt.subplot(mainGrid[i + offset, 1])
+            self.voxelDiffsPlots[i] = PixelPlotter(ax, "Voxel color diffs ({}x{})".format(texDimSize, texDimSize))
         
-        ax = plt.subplot(mainGrid[3, 1])
-        self.hybridDiffsPlot = PixelPlotter(ax, "Hybrid color diffs")
+        offset += numTextures
+        
+        for i in range(numTextures):
+            texDimSize = texDimSizes[i]
+            
+            ax = plt.subplot(mainGrid[i + offset, 0])
+            self.hybridPixelsPlots[i] = PixelPlotter(ax, "Hybrid ({}x{})".format(texDimSize, texDimSize))
+            
+            ax = plt.subplot(mainGrid[i + offset, 1])
+            self.hybridDiffsPlots[i] = PixelPlotter(ax, "Hybrid color diffs ({}x{})".format(texDimSize, texDimSize))
         
         plt.ion()
         plt.show()

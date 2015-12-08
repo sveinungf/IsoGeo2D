@@ -4,9 +4,13 @@ import colordiff
 import splineexample
 import transfer as trans
 from plotter.pixelfigure import PixelFigure
+from voxelcriterion.geometriccriterion import GeometricCriterion
+from hybridmodel import HybridModel
 from ray import Ray2D
 from splinemodel import SplineModel
 from splineplane import SplinePlane
+from texture import Texture2D
+from voxelmodel import VoxelModel
 
 class Main2:
     def __init__(self):
@@ -41,16 +45,36 @@ class Main2:
         
     def run(self):
         numPixels = self.numPixels
+        pixelWidth = (self.screenTop-self.screenBottom) / numPixels
+
+        texDimSizes = np.array([8, 16, 32])
+        numTextures = len(texDimSizes)
+                
+        figure = PixelFigure(texDimSizes)
         
-        figure = PixelFigure()
+        boundingBox = self.phiPlane.createBoundingBox()
         
         splineModel = SplineModel(self.phiPlane, self.rho, self.transfer)
+        voxelModels = np.empty(numTextures, dtype=object)
+        hybridModels = np.empty(numTextures, dtype=object)
+        
+        for i in range(numTextures):
+            texDimSize = texDimSizes[i]
+            samplingScalars = splineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize)
+            scalarTexture = Texture2D(samplingScalars)
+            
+            voxelWidth = boundingBox.getHeight() / float(texDimSize)
+            criterion = GeometricCriterion(pixelWidth, voxelWidth)
+            
+            voxelModels[i] = VoxelModel(scalarTexture, self.transfer, boundingBox)
+            hybridModels[i] = HybridModel(splineModel, voxelModels[i], criterion)
 
         pixels = self.createPixels(numPixels)
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
         
         refPixelColors = np.empty((numPixels, 4))
         directPixelColors = np.empty((numPixels, 4))
+        voxelPixelColors = np.empty((numTextures, numPixels, 4))
         
         backgroundColor = np.array([0.0, 0.0, 0.0, 0.0])
         
@@ -62,15 +86,27 @@ class Main2:
             if intersections != None:
                 refPixelColors[i] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaRef, tolerance=self.refTolerance)
                 directPixelColors[i] = splineModel.raycast(viewRay, intersections, self.viewRayDelta)
+                
+                for j in range(numTextures):
+                    voxelPixelColors[j][i] = voxelModels[j].raycast(viewRay, intersections, self.viewRayDelta)
             else:
                 refPixelColors[i] = backgroundColor
                 directPixelColors[i] = backgroundColor
                 
-        directDiff = colordiff.compare(refPixelColors, directPixelColors)
-        figure.directDiffsPlot.plotPixelColorDiffs(directDiff.colordiffs)
+                for j in range(numTextures):
+                    voxelPixelColors[j][i] = backgroundColor
         
         figure.refPixelsPlot.plotPixelColors(refPixelColors)
         figure.directPixelsPlot.plotPixelColors(directPixelColors)
+        
+        directDiff = colordiff.compare(refPixelColors, directPixelColors)
+        figure.directDiffsPlot.plotPixelColorDiffs(directDiff.colordiffs)
+        
+        for i in range(numTextures):
+            figure.voxelPixelsPlots[i].plotPixelColors(voxelPixelColors[i])
+            
+            voxelDiff = colordiff.compare(refPixelColors, voxelPixelColors[i])
+            figure.voxelDiffsPlots[i].plotPixelColorDiffs(voxelDiff.colordiffs)
         
         figure.draw()
     

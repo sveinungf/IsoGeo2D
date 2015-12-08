@@ -5,7 +5,7 @@ from samplingtype import SamplingType
 
 
 class HybridModel:
-    def __init__(self, splineModel, voxelModel, criterion, plotter):
+    def __init__(self, splineModel, voxelModel, criterion, plotter=None):
         self.criterion = criterion
         self.plotSamplePoints = False
         self.plotter = plotter
@@ -64,7 +64,7 @@ class HybridModel:
             
             viewRayParam += delta
 
-        if self.plotSamplePoints:
+        if plotter != None and self.plotSamplePoints:
             plotter.plotSamplePoints(samplePoints, sampleTypes)
             
         return compositing.frontToBack(sampleColors, sampleDeltas)

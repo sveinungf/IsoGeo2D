@@ -1,14 +1,70 @@
 import math
+import numpy as np
 
 import compositing
+from ray import Ray2D
 from samplingtype import SamplingType
 
 
 class SplineModel:
+    samplingDefault = -1
+    
     def __init__(self, phiPlane, rho, transfer):
         self.phiPlane = phiPlane
         self.rho = rho
         self.transfer = transfer
+        
+    def generateScalarMatrix(self, boundingBox, width, height):
+        phiPlane = self.phiPlane
+        bb = boundingBox
+        
+        rayCount = height
+        samplingsPerRay = width
+        
+        xDelta = float(bb.getWidth())/samplingsPerRay
+        yDelta = float(bb.getHeight())/rayCount
+        
+        xValues = np.linspace(bb.left+xDelta/2, bb.right-xDelta/2, samplingsPerRay)
+        yValues = np.linspace(bb.bottom+yDelta/2, bb.top-yDelta/2, rayCount)
+        
+        samplingScalars = np.ones((rayCount, samplingsPerRay)) * SplineModel.samplingDefault    
+        
+        for i, y in enumerate(yValues):
+            samplingRay = Ray2D(np.array([bb.left-xDelta/2, y]), np.array([0, y]), 10, yDelta)
+            
+            intersections = phiPlane.findTwoIntersections(samplingRay)
+            
+            if intersections == None:
+                continue
+
+            inGeomPoint = intersections[0].geomPoint
+            outGeomPoint = intersections[1].geomPoint
+            
+            geomPoints = []
+            paramPoints = []
+            
+            prevUV = intersections[0].paramPoint
+            
+            for j, x in enumerate(xValues):
+                if x < inGeomPoint[0] or x > outGeomPoint[0]:
+                    continue
+                
+                samplePoint = np.array([x, y])
+                
+                pixelFrustum = samplingRay.frustumBoundingEllipseParallel(samplePoint, xDelta)
+                
+                pApprox = phiPlane.inverseInFrustum(samplePoint, prevUV, pixelFrustum)
+                gApprox = phiPlane.evaluate(pApprox[0], pApprox[1])
+                geomPoints.append(gApprox)
+
+                paramPoints.append(pApprox)
+                
+                scalar = self.rho.evaluate(pApprox[0], pApprox[1])
+                samplingScalars[i][j] = scalar
+                
+                prevUV = pApprox
+            
+        return samplingScalars
 
     def sampleInFrustum(self, samplePoint, pGuess, frustum):
         phiPlane = self.phiPlane

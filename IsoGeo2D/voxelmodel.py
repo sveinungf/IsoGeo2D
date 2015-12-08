@@ -6,7 +6,7 @@ from samplingtype import SamplingType
 class VoxelModel:
     samplingDefault = -1
     
-    def __init__(self, scalarTexture, transfer, boundingBox, plotter):
+    def __init__(self, scalarTexture, transfer, boundingBox, plotter=None):
         self.boundingBox = boundingBox
         self.plotSamplePoints = False
         self.plotter = plotter
@@ -72,7 +72,7 @@ class VoxelModel:
             
             viewRayParam += delta
         
-        if self.plotSamplePoints:
+        if plotter != None and self.plotSamplePoints:
             plotter.plotSamplePoints(samplePoints, sampleTypes)
         
         return compositing.frontToBack(sampleColors, sampleDeltas)
