@@ -35,65 +35,6 @@ class Main:
         self.viewRayDeltaDirect = 0.01
         self.viewRayDeltaVoxelized = 0.01
         
-    def generateScalarMatrix(self, boundingBox, width, height):
-        phiPlane = self.phiPlane
-        #plotter = self.plotter
-        
-        rayCount = height
-        samplingsPerRay = width
-        
-        xDelta = float(boundingBox.getWidth())/samplingsPerRay
-        yDelta = float(boundingBox.getHeight())/rayCount
-        
-        xValues = np.linspace(boundingBox.left+xDelta/2, boundingBox.right-xDelta/2, samplingsPerRay)
-        yValues = np.linspace(boundingBox.bottom+yDelta/2, boundingBox.top-yDelta/2, rayCount)
-        
-        samplingScalars = np.ones((rayCount, samplingsPerRay)) * VoxelModel.samplingDefault    
-        
-        for i, y in enumerate(yValues):
-            samplingRay = Ray2D(np.array([self.eye[0], y]), np.array([0, y]), 10, yDelta)
-            #plotter.plotSamplingRay(samplingRay, [0, 10])
-            
-            intersections = phiPlane.findTwoIntersections(samplingRay)
-            
-            if intersections == None:
-                continue
-
-            inGeomPoint = intersections[0].geomPoint
-            outGeomPoint = intersections[1].geomPoint
-    
-            #plotter.plotIntersectionPoints([inGeomPoint, outGeomPoint])
-            
-            geomPoints = []
-            paramPoints = []
-            
-            prevUV = intersections[0].paramPoint
-            
-            for j, x in enumerate(xValues):
-                if x < inGeomPoint[0] or x > outGeomPoint[0]:
-                    continue
-                
-                samplePoint = np.array([x, y])
-                
-                pixelFrustum = samplingRay.frustumBoundingEllipseParallel(samplePoint, xDelta)
-                #plotter.plotEllipse(pixelFrustum)
-                
-                pApprox = phiPlane.inverseInFrustum(samplePoint, prevUV, pixelFrustum)
-                gApprox = phiPlane.evaluate(pApprox[0], pApprox[1])
-                geomPoints.append(gApprox)
-
-                paramPoints.append(pApprox)
-                
-                scalar = self.rho.evaluate(pApprox[0], pApprox[1])
-                samplingScalars[i][j] = scalar
-                
-                prevUV = pApprox
-                
-            #plotter.plotGeomPoints(geomPoints)
-            #plotter.plotParamPoints(paramPoints)
-            
-        return samplingScalars
-        
     def createPixels(self, numPixels):
         pixels = np.empty((numPixels, 2))
         pixelXs = np.ones(numPixels) * self.pixelX
@@ -187,7 +128,7 @@ class Main:
         texDimSize = 16
         
         for _ in range(3):
-            samplingScalars = self.generateScalarMatrix(bb, texDimSize, texDimSize)
+            samplingScalars = splineModel.generateScalarMatrix(bb, texDimSize, texDimSize)
             scalarTexture = Texture2D(samplingScalars)
             
             voxelModel = VoxelModel(scalarTexture, self.transfer, bb, voxelPlotter)
