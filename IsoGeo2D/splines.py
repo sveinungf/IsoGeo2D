@@ -27,6 +27,27 @@ def bSpline(p, t, x, j):
         b2 = bSpline(p-1, t, x, j+1)
         
         return frac1 * b1 + frac2 * b2
+    
+def bSplines(p, t, mu, x):
+    b = np.zeros(p + 1, dtype=float)
+    b[p] = 1.0
+    
+    for r in range(1 , p+1):
+        k = mu - r + 1
+        
+        denom = t[k+r-1] - t[k-1]
+        w2 = (t[k+r-1] - x) / denom
+        b[p-r] = w2 * b[p-r+1]
+        
+        for j in range(p-r+1, p):
+            k += 1
+            w1 = w2
+            w2 = (t[k+r-1] - x) / (t[k+r-1] - t[k-1])
+            b[j] = (1 - w1) * b[j] + w2 * b[j+1]
+        
+        b[p] *= (1 - w2)
+        
+    return b
 
 
 def bSplineDerivative(p, t, x, j):
@@ -41,6 +62,14 @@ def bSplineDerivative(p, t, x, j):
     
     return p * (frac1 - frac2)
 
+def bSplineDerivatives(p, t, mu, x):
+    bSplines = []
+    
+    for j in range(p+1):
+        b = bSplineDerivative(p, t, x, mu-p+j)
+        bSplines.append(b)
+
+    return bSplines
     
 class Spline1D:
     def __init__(self, degree, knots, coeffs):
@@ -83,22 +112,23 @@ class Spline2D:
         self.uKnots = uKnots
         self.vKnots = vKnots
         self.coeffs = coeffs
+        self.n = len(coeffs[0][0])
         
     def evaluate(self, x, y):
-        return self.__evaluate(x, y, bSpline, bSpline)
+        return self.__evaluate(x, y, bSplines, bSplines)
     
     def evaluatePartialDerivativeU(self, x, y):
-        return self.__evaluate(x, y, bSplineDerivative, bSpline)
+        return self.__evaluate(x, y, bSplineDerivatives, bSplines)
         
     def evaluatePartialDerivativeV(self, x, y):
-        return self.__evaluate(x, y, bSpline, bSplineDerivative)
-    
+        return self.__evaluate(x, y, bSplines, bSplineDerivatives)
+
     def jacob(self, u, v):
         return np.matrix([self.evaluatePartialDerivativeU(u, v), 
                           self.evaluatePartialDerivativeV(u, v)]).transpose()
         
-    def __evaluate(self, x, y, uBSplineFunc, vBSplineFunc):
-        n = len(self.coeffs[0][0])
+    def __evaluate(self, x, y, uBSplinesFunc, vBSplinesFunc):
+        n = self.n
         result = np.zeros(n)
         
         if not (self.uKnots[0] <= x < self.uKnots[-1] and 
@@ -109,20 +139,18 @@ class Spline2D:
         uMu = findMu(self.uKnots, x)
         vMu = findMu(self.vKnots, y)
         
-        uBSplines = []
-        vBSplines = []
+        uBSplines = uBSplinesFunc(p, self.uKnots, uMu, x)
+        vBSplines = vBSplinesFunc(p, self.vKnots, vMu, y)
 
-        for j in range(p+1):
-            uB = uBSplineFunc(p, self.uKnots, x, uMu-p+j)
-            vB = vBSplineFunc(p, self.vKnots, y, vMu-p+j)
-            uBSplines.append(uB)
-            vBSplines.append(vB)
-        
-        c = self.coeffs[uMu-p-1 : uMu, vMu-p-1 : vMu]
-        
+        c = self.coeffs
+
         for u, uB in enumerate(uBSplines):
+            cu = c[uMu-p-1+u]
+            
             for v, vB in enumerate(vBSplines):
+                cuv = cu[vMu-p-1+v]
+                
                 for k in range(n):
-                    result[k] += uB * vB * c[u][v][k]
+                    result[k] += uB * vB * cuv[k]
         
         return result
