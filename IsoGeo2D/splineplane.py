@@ -102,29 +102,35 @@ class SplinePlane:
             return np.asarray([result[1], result[0]])
 
     def createBoundingBox(self):
-        coeffs = self.phi.coeffs
+        phi = self.phi
+        coeffs = phi.coeffs
         
-        left = coeffs[0][0][0]
-        right = coeffs[-1][0][0]
-        bottom = coeffs[:, 0][0][1]
-        top = coeffs[:, -1][0][1]
+        left = coeffs[0][0]
+        right = coeffs[0][-1]
         
-        for coeff in coeffs[0]:
-            if coeff[0] < left:
-                left = coeff[0]
+        for i in range(1, phi.uCoeffsLength):
+            leftCoeff = coeffs[0][i]
+            rightCoeff = coeffs[0][-1 - i]
+            
+            if leftCoeff < left:
+                left = leftCoeff
                 
-        for coeff in coeffs[-1]:
-            if coeff[0] > right:
-                right = coeff[0]
+            if rightCoeff > right:
+                right = rightCoeff
+        
+        bottom = coeffs[1][0]
+        top = coeffs[1][-1]
+        
+        for i in range(1, phi.vCoeffsLength):
+            bottomCoeff = coeffs[1][i * phi.uCoeffsLength]
+            topCoeff = coeffs[1][-1 - i * phi.uCoeffsLength]
+            
+            if bottomCoeff < bottom:
+                bottom = bottomCoeff
                 
-        for coeff in coeffs[:, 0]:
-            if coeff[1] < bottom:
-                bottom = coeff[1]
-                
-        for coeff in coeffs[:, -1]:
-            if coeff[1] > top:
-                top = coeff[1]
-                
+            if topCoeff > top:
+                top = topCoeff
+         
         return BoundingBox(left, right, bottom, top)
 
     def inverseInFrustum(self, geomPoint, uvGuess, frustum):
