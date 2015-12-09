@@ -107,7 +107,10 @@ class SplineModel:
         while viewRay.inRange(viewRayParam):
             samplePoint = viewRay.evalFromPixel(viewRayParam)
             
-            if inGeomPoint[0] <= samplePoint[0] <= outGeomPoint[0]:
+            if samplePoint[0] > outGeomPoint[0]:
+                break
+            
+            if inGeomPoint[0] <= samplePoint[0]:
                 if tolerance == None:
                     frustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
                     [sampleColor, pApprox, gApprox] = self.sampleInFrustum(samplePoint, pGuess, frustum)

@@ -49,7 +49,10 @@ class VoxelModel:
         while viewRay.inRange(viewRayParam):
             samplePoint = viewRay.evalFromPixel(viewRayParam)
             
-            if inGeomPoint[0] <= samplePoint[0] <= outGeomPoint[0]:
+            if samplePoint[0] > outGeomPoint[0]:
+                break
+            
+            if inGeomPoint[0] <= samplePoint[0]:
                 sampleColor = self.sampleInFrustum(samplePoint)
                     
                 if sampleColor == None:
