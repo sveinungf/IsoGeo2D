@@ -91,52 +91,60 @@ class SplineModel:
         return [color, pApprox, gApprox]        
     
     def raycast(self, viewRay, intersections, delta, plotter=None, tolerance=None):
+        geomPoints = []
         sampleColors = []
         sampleDeltas = []
-        samplePoints = []
         sampleTypes = []
         
-        viewRayParam = 0
-        
-        pGuess = intersections[0].paramPoint
+        inParamPoint = intersections[0].paramPoint
         inGeomPoint = intersections[0].geomPoint
+        outParamPoint = intersections[1].paramPoint
         outGeomPoint = intersections[1].geomPoint
         
-        prevGeomPoint = None
+        scalar = self.rho.evaluate(inParamPoint[0], inParamPoint[1])
+        color = self.transfer(scalar)
+        sampleColors.append(color)
         
-        while viewRay.inRange(viewRayParam):
-            samplePoint = viewRay.evalFromPixel(viewRayParam)
-            
-            if samplePoint[0] > outGeomPoint[0]:
-                break
-            
-            if inGeomPoint[0] <= samplePoint[0]:
-                if tolerance == None:
-                    frustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
-                    [sampleColor, pApprox, gApprox] = self.sampleInFrustum(samplePoint, pGuess, frustum)
-                else:
-                    [sampleColor, pApprox, gApprox] = self.sampleWithinTolerance(samplePoint, pGuess, tolerance)
-                    
-                pGuess = pApprox
-                samplePoint = gApprox
-                sampleType = SamplingType.SPLINE_MODEL
-                
-                sampleColors.append(sampleColor)
-                
-                if not prevGeomPoint == None:
-                    dist = samplePoint - prevGeomPoint
-                    sampleDeltas.append(math.sqrt(dist[0]**2 + dist[1]**2))
-                
-                prevGeomPoint = samplePoint
+        geomPoints.append(inGeomPoint)
+        sampleTypes.append(SamplingType.SPLINE_MODEL)
+        
+        pGuess = inParamPoint
+        prevGeomPoint = inGeomPoint
+        
+        viewDirDelta = viewRay.viewDir * delta
+        samplePoint = inGeomPoint + viewDirDelta
+        
+        while samplePoint[0] < outGeomPoint[0]:
+            if tolerance == None:
+                frustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
+                [sampleColor, pApprox, gApprox] = self.sampleInFrustum(samplePoint, pGuess, frustum)
             else:
-                sampleType = SamplingType.OUTSIDE_OBJECT
+                [sampleColor, pApprox, gApprox] = self.sampleWithinTolerance(samplePoint, pGuess, tolerance)
             
-            samplePoints.append(samplePoint)
-            sampleTypes.append(sampleType)
+            sampleColors.append(sampleColor)         
             
-            viewRayParam += delta
+            dist = gApprox - prevGeomPoint
+            sampleDeltas.append(math.sqrt(dist[0]**2 + dist[1]**2))
+                
+            geomPoints.append(gApprox)
+            sampleTypes.append(SamplingType.SPLINE_MODEL)
+            
+            pGuess = pApprox
+            prevGeomPoint = gApprox
+
+            samplePoint += viewDirDelta
         
+        scalar = self.rho.evaluate(outParamPoint[0], outParamPoint[1])
+        color = self.transfer(scalar)
+        sampleColors.append(color)
+        
+        dist = outGeomPoint - prevGeomPoint
+        sampleDeltas.append(math.sqrt(dist[0]**2 + dist[1]**2))
+        
+        geomPoints.append(outGeomPoint)
+        sampleTypes.append(SamplingType.SPLINE_MODEL)
+
         if plotter != None:
-            plotter.plotSamplePoints(samplePoints, sampleTypes)
+            plotter.plotSamplePoints(geomPoints, sampleTypes)
         
         return [len(sampleColors), compositing.frontToBack(sampleColors, sampleDeltas)]
