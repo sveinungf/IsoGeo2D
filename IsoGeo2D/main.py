@@ -9,6 +9,7 @@ from hybridmodel import HybridModel
 from ray import Ray2D
 from splinemodel import SplineModel
 from splineplane import SplinePlane
+from summary import Summary
 from texture import Texture2D
 from voxelmodel import VoxelModel
 
@@ -81,7 +82,7 @@ class Main:
             intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
             
             if intersections != None:
-                refPixelColors[i] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaRef)
+                [_, refPixelColors[i]] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaRef)
             else:
                 refPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
         
@@ -89,9 +90,13 @@ class Main:
         pixels = self.createPixels(numPixels)
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
         
+        numTextures = 3
+        
         viewRays = np.empty(numPixels, dtype=object)
         directPixelColors = np.empty((numPixels, 4))
         voxelizedPixelColors = np.empty((numPixels, 4))
+        
+        maxDirectSamplePoints = 0
 
         for i in range(numPixels):
             pixel = pixels[i]
@@ -105,20 +110,18 @@ class Main:
             intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
             
             if intersections != None:
-                directPixelColors[i] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaDirect, directSplinePlotter)
+                [directSamplePoints, directPixelColors[i]] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaDirect, directSplinePlotter)
+                maxDirectSamplePoints = max(directSamplePoints, maxDirectSamplePoints)
             else:
                 directPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
             
         plotter.pixelReferencePlot.plotPixelColors(refPixelColors)
         plotter.pixelDirectPlot.plotPixelColors(directPixelColors)
         
-        directDiff = colordiff.compare(refPixelColors, directPixelColors)
-        plotter.pixelDirectDiffPlot.plotPixelColorDiffs(directDiff.colordiffs)
-        
-        print "Direct color diffs:"
-        print "---------------------"
-        directDiff.printData()
-        print ""
+        directDiffs = colordiff.compare(refPixelColors, directPixelColors)
+        plotter.pixelDirectDiffPlot.plotPixelColorDiffs(directDiffs)
+        directSummary = Summary(directDiffs, maxDirectSamplePoints)
+        self.printSummary("Direct", directSummary)
         
         plotter.draw()
         
@@ -127,7 +130,7 @@ class Main:
             
         texDimSize = 16
         
-        for _ in range(3):
+        for _ in range(numTextures):
             samplingScalars = splineModel.generateScalarMatrix(bb, texDimSize, texDimSize)
             scalarTexture = Texture2D(samplingScalars)
             
@@ -137,20 +140,21 @@ class Main:
             #model = VoxelModel(scalarTexture, self.transfer, bb, voxelPlotter)
             model = HybridModel(splineModel, voxelModel, criterion, voxelPlotter)
             model.plotSamplePoints = True
+            
+            maxVoxelSamplePoints = 0
 
             for i, viewRay in enumerate(viewRays):
                 intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
                 
                 if intersections != None:
-                    voxelizedPixelColors[i] = model.raycast(viewRay, intersections, self.viewRayDeltaVoxelized)
+                    [voxelSamplePoints, voxelizedPixelColors[i]] = model.raycast(viewRay, intersections, self.viewRayDeltaVoxelized)
+                    maxVoxelSamplePoints = max(voxelSamplePoints, maxVoxelSamplePoints)
                 else:
                     voxelizedPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
         
-            voxelizedDiff = colordiff.compare(refPixelColors, voxelizedPixelColors)
-            
-            print "Texture size: {}x{}".format(texDimSize, texDimSize)
-            voxelizedDiff.printData()
-            print ""
+            voxelizedDiffs = colordiff.compare(refPixelColors, voxelizedPixelColors)
+            summary = Summary(voxelizedDiffs, maxVoxelSamplePoints)
+            self.printSummary("Voxel ({}x{})".format(texDimSize, texDimSize), summary)
        
             texDimSize += 2
         
@@ -158,9 +162,15 @@ class Main:
         voxelPlotter.plotScalars(samplingScalars, bb)    
         plotter.plotScalarTexture(scalarTexture)
         plotter.pixelVoxelizedPlot.plotPixelColors(voxelizedPixelColors)
-        plotter.pixelVoxelizedDiffPlot.plotPixelColorDiffs(voxelizedDiff.colordiffs)
+        plotter.pixelVoxelizedDiffPlot.plotPixelColorDiffs(voxelizedDiffs)
         
         plotter.draw()
+        
+    def printSummary(self, name, summary):
+        print "{} color diffs".format(name)
+        print "---------------------"
+        summary.printData()
+        print ""
     
 def run():
     main = Main()
