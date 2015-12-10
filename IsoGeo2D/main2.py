@@ -1,6 +1,7 @@
 import numpy as np
 
 import fileio.splinereader
+import fileio.voxelio
 import colordiff
 import transfer as trans
 from plotting.pixelfigure import PixelFigure
@@ -15,9 +16,12 @@ from voxelmodel import VoxelModel
 
 class Main2:
     def __init__(self, eyeX=-2.0):
+        self.dataset = 0
+        
         self.splineInterval = [0, 0.99999]
-        self.rho = fileio.splinereader.read('datasets/0/rho.json')
-        self.phi = fileio.splinereader.read('datasets/0/phi.json')
+        datasetDir = "datasets/" + `self.dataset`
+        self.rho = fileio.splinereader.read(datasetDir + "/rho.json")
+        self.phi = fileio.splinereader.read(datasetDir + "/phi.json")
         self.phiPlane = SplinePlane(self.phi, self.splineInterval, 0.00001)
         self.transfer = trans.createTransferFunction(100)
 
@@ -63,6 +67,9 @@ class Main2:
         for i in range(numTextures):
             texDimSize = texDimSizes[i]
             samplingScalars = splineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize)
+            
+            fileio.voxelio.write(self.dataset, samplingScalars)
+            
             scalarTexture = Texture2D(samplingScalars)
             
             voxelWidth = boundingBox.getHeight() / float(texDimSize)
