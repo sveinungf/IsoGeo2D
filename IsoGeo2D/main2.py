@@ -1,7 +1,7 @@
 import numpy as np
 
+import fileio.splinereader
 import colordiff
-import splineexample
 import transfer as trans
 from plotting.pixelfigure import PixelFigure
 from voxelcriterion.geometriccriterion import GeometricCriterion
@@ -16,8 +16,8 @@ from voxelmodel import VoxelModel
 class Main2:
     def __init__(self, eyeX=-2.0):
         self.splineInterval = [0, 0.99999]
-        self.rho = splineexample.createRho()
-        self.phi = splineexample.createPhi()
+        self.rho = fileio.splinereader.read('datasets/0/rho.json')
+        self.phi = fileio.splinereader.read('datasets/0/phi.json')
         self.phiPlane = SplinePlane(self.phi, self.splineInterval, 0.00001)
         self.transfer = trans.createTransferFunction(100)
 
