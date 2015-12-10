@@ -13,7 +13,7 @@ class VoxelModel:
         self.scalarTexture = scalarTexture
         self.transfer = transfer
     
-    def sampleInFrustum(self, samplePoint):
+    def sample(self, samplePoint):
         bb = self.boundingBox
         scalarTexture = self.scalarTexture
         
@@ -53,7 +53,7 @@ class VoxelModel:
                 break
             
             if inGeomPoint[0] <= samplePoint[0]:
-                sampleColor = self.sampleInFrustum(samplePoint)
+                sampleColor = self.sample(samplePoint)
                     
                 if sampleColor == None:
                     sampleType = SamplingType.OUTSIDE_OBJECT

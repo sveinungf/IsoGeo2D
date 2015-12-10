@@ -39,7 +39,7 @@ class HybridModel:
             
             if inGeomPoint[0] <= samplePoint[0]:
                 if criterion.lodLevel(viewRay, viewRayParam) >= 0:
-                    sampleColor = voxelModel.sampleInFrustum(samplePoint)
+                    sampleColor = voxelModel.sample(samplePoint)
                     sampleType = SamplingType.VOXEL_MODEL
                 else:
                     frustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
