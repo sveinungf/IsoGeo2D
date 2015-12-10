@@ -29,9 +29,6 @@ def newtonsMethod2DTolerance(f, fJacob, uv, clampInterval, tolerance, maxAttempt
 		
 		jacob = fJacob(u, v)
 		
-		if linalg.det(jacob) == 0:
-			return None
-		
 		x = linalg.solve(jacob, -f(u, v))
 		[u1, v1] = x + [u, v]
 
@@ -57,14 +54,7 @@ def newtonsMethod2DFrustum(f, fJacob, uv, clampInterval, phi, frustum, maxAttemp
 		u = clampInterval[0] if u < clampInterval[0] else u
 		u = clampInterval[1] if u > clampInterval[1] else u
 		
-		# TODO: These shouldn't be here?
-		#v = clampInterval[0] if v < clampInterval[0] else v
-		#v = clampInterval[1] if v > clampInterval[1] else v
-		
 		jacob = fJacob(u, v)
-		
-		if linalg.det(jacob) == 0:
-			return None
 		
 		x = linalg.solve(jacob, -f(u, v))
 		[u, v] = x + [u, v]
