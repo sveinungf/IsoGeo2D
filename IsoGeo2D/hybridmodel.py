@@ -70,4 +70,4 @@ class HybridModel:
         if plotter != None and self.plotSamplePoints:
             plotter.plotSamplePoints(samplePoints, sampleTypes)
             
-        return compositing.frontToBack(sampleColors, sampleDeltas)
+        return [len(sampleColors), compositing.frontToBack(sampleColors, sampleDeltas)]

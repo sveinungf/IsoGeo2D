@@ -9,26 +9,27 @@ from hybridmodel import HybridModel
 from ray import Ray2D
 from splinemodel import SplineModel
 from splineplane import SplinePlane
+from summary import Summary
 from texture import Texture2D
 from voxelmodel import VoxelModel
 
 class Main2:
-    def __init__(self):
+    def __init__(self, eyeX=-2.0):
         self.splineInterval = [0, 0.99999]
         self.rho = splineexample.createRho()
         self.phi = splineexample.createPhi()
         self.phiPlane = SplinePlane(self.phi, self.splineInterval, 0.00001)
         self.transfer = trans.createTransferFunction(100)
 
-        self.numPixels = 10
+        self.numPixels = 100
         self.pixelX = -0.5
-        self.screenTop = 0.90
+        self.screenTop = 0.9
         self.screenBottom = 0.2
         
-        self.eye = np.array([-2.0, 0.65])
+        self.eye = np.array([eyeX, 0.65])
         self.viewRayDelta = 0.1
         self.viewRayDeltaRef = 0.001
-        self.refTolerance = 0.000000001
+        self.refTolerance = 0.001
         
     def createPixels(self, numPixels):
         pixels = np.empty((numPixels, 2))
@@ -47,7 +48,8 @@ class Main2:
         numPixels = self.numPixels
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
 
-        texDimSizes = np.array([8, 16, 32])
+        texDimSizes = np.array([16, 32, 64, 128, 256])
+        
         numTextures = len(texDimSizes)
                 
         figure = PixelFigure(texDimSizes)
@@ -77,6 +79,11 @@ class Main2:
         voxelPixelColors = np.empty((numTextures, numPixels, 4))
         hybridPixelColors = np.empty((numTextures, numPixels, 4))
         
+        maxRefSamplePoints = 0
+        maxDirectSamplePoints = 0
+        maxVoxelSamplePoints = np.zeros(numTextures)
+        maxHybridSamplePoints = np.zeros(numTextures)
+        
         backgroundColor = np.array([0.0, 0.0, 0.0, 0.0])
         
         for i, pixel in enumerate(pixels):
@@ -85,12 +92,18 @@ class Main2:
             intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
             
             if intersections != None:
-                refPixelColors[i] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaRef, tolerance=self.refTolerance)
-                directPixelColors[i] = splineModel.raycast(viewRay, intersections, self.viewRayDelta)
+                [refSamplePoints, refPixelColors[i]] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaRef, tolerance=self.refTolerance)
+                [directSamplePoints, directPixelColors[i]] = splineModel.raycast(viewRay, intersections, self.viewRayDelta)
+                
+                maxRefSamplePoints = max(refSamplePoints, maxRefSamplePoints)
+                maxDirectSamplePoints = max(directSamplePoints, maxDirectSamplePoints)
                 
                 for j in range(numTextures):
-                    voxelPixelColors[j][i] = voxelModels[j].raycast(viewRay, intersections, self.viewRayDelta)
-                    hybridPixelColors[j][i] = hybridModels[j].raycast(viewRay, intersections, self.viewRayDelta)
+                    [voxelSamplePoints, voxelPixelColors[j][i]] = voxelModels[j].raycast(viewRay, intersections, self.viewRayDelta)
+                    [hybridSamplePoints, hybridPixelColors[j][i]] = hybridModels[j].raycast(viewRay, intersections, self.viewRayDelta)
+                    
+                    maxVoxelSamplePoints[j] = max(voxelSamplePoints, maxVoxelSamplePoints[j])
+                    maxHybridSamplePoints[j] = max(hybridSamplePoints, maxHybridSamplePoints[j])
             else:
                 refPixelColors[i] = backgroundColor
                 directPixelColors[i] = backgroundColor
@@ -102,12 +115,15 @@ class Main2:
         figure.refPixelsPlot.plotPixelColors(refPixelColors)
         figure.directPixelsPlot.plotPixelColors(directPixelColors)
         
-        directDiff = colordiff.compare(refPixelColors, directPixelColors)
-        figure.directDiffsPlot.plotPixelColorDiffs(directDiff.colordiffs)
-        self.printColorDiffs("Direct", directDiff)
+        self.printRefSummary(maxRefSamplePoints)
         
-        voxelDiffs = np.empty(numTextures, dtype=object)
-        hybridDiffs = np.empty(numTextures, dtype=object)
+        directDiffs = colordiff.compare(refPixelColors, directPixelColors)
+        figure.directDiffsPlot.plotPixelColorDiffs(directDiffs)
+        directSummary = Summary(directDiffs, maxDirectSamplePoints)
+        self.printSummary("Direct", directSummary)
+        
+        voxelDiffs = np.empty((numTextures, numPixels))
+        hybridDiffs = np.empty((numTextures, numPixels))
         
         for i in range(numTextures):
             figure.voxelPixelsPlots[i].plotPixelColors(voxelPixelColors[i])
@@ -116,27 +132,39 @@ class Main2:
             voxelDiffs[i] = colordiff.compare(refPixelColors, voxelPixelColors[i])
             hybridDiffs[i] = colordiff.compare(refPixelColors, hybridPixelColors[i])
             
-            figure.voxelDiffsPlots[i].plotPixelColorDiffs(voxelDiffs[i].colordiffs)
-            figure.hybridDiffsPlots[i].plotPixelColorDiffs(hybridDiffs[i].colordiffs)
+            figure.voxelDiffsPlots[i].plotPixelColorDiffs(voxelDiffs[i])
+            figure.hybridDiffsPlots[i].plotPixelColorDiffs(hybridDiffs[i])
         
         for i in range(numTextures):
             texDimSize = texDimSizes[i]
-            self.printColorDiffs("Voxel ({}x{})".format(texDimSize, texDimSize), voxelDiffs[i])
+            summary = Summary(voxelDiffs[i], maxVoxelSamplePoints[i])
+            self.printSummary("Voxel ({}x{})".format(texDimSize, texDimSize), summary)
             
         for i in range(numTextures):
             texDimSize = texDimSizes[i]
-            self.printColorDiffs("Hybrid ({}x{})".format(texDimSize, texDimSize), hybridDiffs[i])
+            summary = Summary(hybridDiffs[i], maxHybridSamplePoints[i])
+            self.printSummary("Hybrid ({}x{})".format(texDimSize, texDimSize), summary)
             
         figure.draw()
         
-    def printColorDiffs(self, name, colordiff):
+    def printRefSummary(self, maxSamplePoints):
+        print "Reference"
+        print "---------------------"
+        print "max #S = {}".format(maxSamplePoints)
+        print ""
+        
+    def printSummary(self, name, summary):
         print "{} color diffs".format(name)
         print "---------------------"
-        colordiff.printData()
+        summary.printData()
         print ""
     
-def run():
-    main = Main2()
+def run(eyeX=None):
+    if eyeX != None:
+        main = Main2(eyeX)
+    else:
+        main = Main2()
+        
     main.run()
 
 if __name__ == "__main__":

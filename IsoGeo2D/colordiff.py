@@ -25,17 +25,4 @@ def compare(referenceRgbas, comparisonRgbas):
         
     diff /= m
     
-    return ColorDiffData(diff)
-
-class ColorDiffData:
-    def __init__(self, colordiffs):
-        self.colordiffs = colordiffs
-        
-        self.max = np.amax(colordiffs)
-        self.mean = np.mean(colordiffs)
-        self.var = np.var(colordiffs)
-    
-    def printData(self):
-        print "max  = {}".format(self.max)
-        print "mean = {}".format(self.mean)
-        print "var  = {}".format(self.var)
+    return diff

@@ -139,4 +139,4 @@ class SplineModel:
         if plotter != None:
             plotter.plotSamplePoints(samplePoints, sampleTypes)
         
-        return compositing.frontToBack(sampleColors, sampleDeltas)
+        return [len(sampleColors), compositing.frontToBack(sampleColors, sampleDeltas)]
