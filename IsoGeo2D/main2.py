@@ -52,7 +52,7 @@ class Main2:
         numPixels = self.numPixels
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
 
-        texDimSizes = np.array([32, 64, 128, 256, 512])
+        texDimSizes = np.array([32, 64, 128, 256, 512, 1024, 2048])
         
         numTextures = len(texDimSizes)
                 

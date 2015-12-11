@@ -130,7 +130,7 @@ class SplineModel:
             sampleTypes.append(SamplingType.SPLINE_MODEL)
             
             pGuess = pApprox
-            prevGeomPoint = gApprox
+            prevGeomPoint = np.array(gApprox)
 
             samplePoint += viewDirDelta
         

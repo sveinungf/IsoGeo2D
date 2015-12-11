@@ -7,8 +7,7 @@ class GeometricCriterion(VoxelCriterion):
         self.pixelWidth = pixelWidth
         self.voxelDiagonal = math.sqrt(2) * voxelWidth 
     
-    def lodLevel(self, viewRay, viewRayParam):
-        samplePoint = viewRay.evalFromPixel(viewRayParam)
+    def lodLevel(self, viewRay, samplePoint):
         z = samplePoint[0] - viewRay.eye[0]
         
         pixelFrustumWidth = self.pixelWidth * z / viewRay.near
@@ -17,4 +16,3 @@ class GeometricCriterion(VoxelCriterion):
             return 0
         else:
             return -1
-

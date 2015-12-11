@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 import compositing
 from samplingtype import SamplingType
@@ -15,59 +16,76 @@ class HybridModel:
     def raycast(self, viewRay, intersections, delta):
         criterion = self.criterion
         plotter = self.plotter
+        rho = self.splineModel.rho
         splineModel = self.splineModel
+        transfer = self.splineModel.transfer
         voxelModel = self.voxelModel
         
+        geomPoints = []
         sampleColors = []
         sampleDeltas = []
-        samplePoints = []
         sampleTypes = []
         
-        viewRayParam = 0
-
-        pGuess = intersections[0].paramPoint
+        inParamPoint = intersections[0].paramPoint
         inGeomPoint = intersections[0].geomPoint
+        outParamPoint = intersections[1].paramPoint
         outGeomPoint = intersections[1].geomPoint
         
-        prevGeomPoint = None
+        scalar = rho.evaluate(inParamPoint[0], inParamPoint[1])
+        color = transfer(scalar)
+        sampleColors.append(color)
         
-        while viewRay.inRange(viewRayParam):
-            samplePoint = viewRay.evalFromPixel(viewRayParam)
+        geomPoints.append(inGeomPoint)
+        sampleTypes.append(SamplingType.SPLINE_MODEL)
+        
+        pGuess = inParamPoint
+        prevGeomPoint = inGeomPoint
+        
+        viewDirDelta = viewRay.viewDir * delta
+        samplePoint = inGeomPoint + viewDirDelta
+        
+        while samplePoint[0] < outGeomPoint[0]:
+            lodLevel = criterion.lodLevel(viewRay, samplePoint)
+            useVoxelized = lodLevel >= 0
             
-            if samplePoint[0] > outGeomPoint[0]:
-                break
-            
-            if inGeomPoint[0] <= samplePoint[0]:
-                if criterion.lodLevel(viewRay, viewRayParam) >= 0:
-                    sampleColor = voxelModel.sample(samplePoint)
-                    sampleType = SamplingType.VOXEL_MODEL
-                else:
-                    frustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
-                    
-                    [sampleColor, pApprox, gApprox] = splineModel.sampleInFrustum(samplePoint, pGuess, frustum)
-                    pGuess = pApprox
-                    samplePoint = gApprox
-                    sampleType = SamplingType.SPLINE_MODEL
-                    
-                if sampleColor == None:
-                    sampleType = SamplingType.OUTSIDE_OBJECT
-                else:
-                    sampleColors.append(sampleColor)
-                    
-                    if not prevGeomPoint == None:
-                        dist = samplePoint - prevGeomPoint
-                        sampleDeltas.append(math.sqrt(dist[0]**2 + dist[1]**2))
-                    
-                    prevGeomPoint = samplePoint
+            if useVoxelized:
+                sampleColor = voxelModel.sample(samplePoint)
+                sampleType = SamplingType.VOXEL_MODEL
+                geomPoint = samplePoint
             else:
-                sampleType = SamplingType.OUTSIDE_OBJECT
+                frustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
+                [sampleColor, pApprox, gApprox] = splineModel.sampleInFrustum(samplePoint, pGuess, frustum)
                 
-            samplePoints.append(samplePoint)
+                pGuess = pApprox
+                sampleType = SamplingType.SPLINE_MODEL
+                geomPoint = gApprox
+                
+            if sampleColor == None:
+                sampleType = SamplingType.OUTSIDE_OBJECT
+            else:
+                sampleColors.append(sampleColor)
+                
+                dist = geomPoint - prevGeomPoint
+                sampleDeltas.append(math.sqrt(dist[0]**2 + dist[1]**2))
+                
+                prevGeomPoint = np.array(geomPoint)
+                
+            geomPoints.append(np.array(geomPoint))
             sampleTypes.append(sampleType)
             
-            viewRayParam += delta
+            samplePoint += viewDirDelta
+            
+        scalar = rho.evaluate(outParamPoint[0], outParamPoint[1])
+        color = transfer(scalar)
+        sampleColors.append(color)
+        
+        dist = outGeomPoint - prevGeomPoint
+        sampleDeltas.append(math.sqrt(dist[0]**2 + dist[1]**2))
+        
+        geomPoints.append(outGeomPoint)
+        sampleTypes.append(SamplingType.SPLINE_MODEL)
 
         if plotter != None and self.plotSamplePoints:
-            plotter.plotSamplePoints(samplePoints, sampleTypes)
+            plotter.plotSamplePoints(geomPoints, sampleTypes)
             
         return [len(sampleColors), compositing.frontToBack(sampleColors, sampleDeltas)]

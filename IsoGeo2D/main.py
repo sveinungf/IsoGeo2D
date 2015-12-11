@@ -130,7 +130,7 @@ class Main:
             
         texDimSize = 16
         
-        for _ in range(numTextures):
+        for i in range(numTextures):
             samplingScalars = splineModel.generateScalarMatrix(bb, texDimSize, texDimSize)
             scalarTexture = Texture2D(samplingScalars)
             
@@ -139,7 +139,9 @@ class Main:
             criterion = GeometricCriterion(pixelWidth, voxelWidth)
             #model = VoxelModel(scalarTexture, self.transfer, bb, voxelPlotter)
             model = HybridModel(splineModel, voxelModel, criterion, voxelPlotter)
-            model.plotSamplePoints = True
+            
+            if i == numTextures -1:
+                model.plotSamplePoints = True
             
             maxVoxelSamplePoints = 0
 
