@@ -1,7 +1,7 @@
 import numpy as np
 
 import fileio.splinereader
-import fileio.voxelio
+import fileio.voxelio as voxelio
 import colordiff
 import transfer as trans
 from plotting.pixelfigure import PixelFigure
@@ -52,7 +52,7 @@ class Main2:
         numPixels = self.numPixels
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
 
-        texDimSizes = np.array([16, 32, 64, 128, 256])
+        texDimSizes = np.array([32, 64, 128, 256, 512])
         
         numTextures = len(texDimSizes)
                 
@@ -66,9 +66,14 @@ class Main2:
         
         for i in range(numTextures):
             texDimSize = texDimSizes[i]
-            samplingScalars = splineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize)
             
-            fileio.voxelio.write(self.dataset, samplingScalars)
+            if voxelio.exist(self.dataset, texDimSize, texDimSize):
+                samplingScalars = voxelio.read(self.dataset, texDimSize, texDimSize)
+                print "Read {}x{} texture data from file".format(texDimSize, texDimSize)
+            else:
+                samplingScalars = splineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize)
+                voxelio.write(self.dataset, samplingScalars)
+                print "Wrote {}x{} texture data to file".format(texDimSize, texDimSize)
             
             scalarTexture = Texture2D(samplingScalars)
             
