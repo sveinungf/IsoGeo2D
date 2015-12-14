@@ -33,19 +33,19 @@ def newtonsMethod2DTolerance(f, fJacob, uv, uvIntervals, tolerance, maxAttempts=
 	vInterval = uvIntervals[1]
 	
 	while attempt < maxAttempts:
-		u = clampToInterval(u, uInterval)
-		v = clampToInterval(v, vInterval)
-				
 		jacob = fJacob(u, v)
 		
 		x = linalg.solve(jacob, -f(u, v))
-		[u1, v1] = x + [u, v]
+		[uNew, vNew] = x + [u, v]
 
-		if math.sqrt((u1-u)**2 + (v1-v)**2) < tolerance:
-			return [u1, v1]
-		
-		u = u1
-		v = v1
+		if math.sqrt((uNew-u)**2 + (vNew-v)**2) < tolerance:
+			u = clampToInterval(uNew, uInterval)
+			v = clampToInterval(vNew, vInterval)
+			
+			return [u, v]
+
+		u = clampToInterval(uNew, uInterval)
+		v = clampToInterval(vNew, vInterval)
 
 		attempt += 1
 
