@@ -17,23 +17,32 @@ def newtonsMethod1D(f, df, x, tolerance):
 		x = x1
 
 	return x
+
+def clampToInterval(value, interval):
+	if interval != None:
+		value = interval[0] if value < interval[0] else value
+		value = interval[1] if value > interval[1] else value
 	
-def newtonsMethod2DTolerance(f, fJacob, uv, clampInterval, tolerance, maxAttempts=20):
+	return value
+	
+def newtonsMethod2DTolerance(f, fJacob, uv, uvIntervals, tolerance, maxAttempts=20):
 	attempt = 1
 	u = uv[0]
 	v = uv[1]
+	uInterval = uvIntervals[0]
+	vInterval = uvIntervals[1]
 	
 	while attempt < maxAttempts:
-		u = clampInterval[0] if u < clampInterval[0] else u
-		u = clampInterval[1] if u > clampInterval[1] else u
-		
+		u = clampToInterval(u, uInterval)
+		v = clampToInterval(v, vInterval)
+				
 		jacob = fJacob(u, v)
 		
 		x = linalg.solve(jacob, -f(u, v))
 		[u1, v1] = x + [u, v]
 
 		if math.sqrt((u1-u)**2 + (v1-v)**2) < tolerance:
-			break
+			return [u1, v1]
 		
 		u = u1
 		v = v1
@@ -51,17 +60,18 @@ def newtonsMethod2DFrustum(f, fJacob, uv, clampInterval, phi, frustum, maxAttemp
 	v = uv[1]
 	
 	while attempt < maxAttempts:
-		u = clampInterval[0] if u < clampInterval[0] else u
-		u = clampInterval[1] if u > clampInterval[1] else u
-		
 		jacob = fJacob(u, v)
 		
 		x = linalg.solve(jacob, -f(u, v))
 		[u, v] = x + [u, v]
 		
+		u = clampToInterval(u, clampInterval)
+		v = clampToInterval(v, clampInterval)
+		
 		gApprox = phi.evaluate(u, v)
+		
 		if frustum.enclosesPoint(gApprox):
-			break
+			return [u, v]
 
 		attempt += 1
 		
