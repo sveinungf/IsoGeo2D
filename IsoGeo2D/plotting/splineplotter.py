@@ -1,4 +1,6 @@
+import math
 import numpy as np
+from matplotlib.patches import Ellipse
 
 from modelplotter import ModelPlotter
 
@@ -41,3 +43,14 @@ class SplinePlotter(ModelPlotter):
             [geomX, geomY] = self.__generatePoints2var(f, paramsX, paramsY)
             
             self.plot.plot(geomX, geomY, color=lineColor)
+
+    def plotPoints(self, points):
+        for point in points:
+            self.plot.plot(point[0], point[1], marker='x', color='k')
+
+    def plotEllipse(self, ellipse):
+        point = tuple(ellipse.point)
+        degrees = math.degrees(ellipse.angle)
+        e = Ellipse(point, ellipse.width, ellipse.height, degrees, fill=False)
+
+        self.plot.add_artist(e)

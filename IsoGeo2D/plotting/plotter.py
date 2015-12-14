@@ -4,6 +4,7 @@ import numpy as np
 import pylab as plt
 from matplotlib.patches import Ellipse
 
+from paramplotter import ParamPlotter
 from pixelplotter import PixelPlotter
 from splineplotter import SplinePlotter
 from voxelplotter import VoxelPlotter
@@ -34,6 +35,7 @@ class Plotter:
 		ax = plt.subplot(mainGrid[1, 0])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.pPlot = ax
+		self.paramPlotter = ParamPlotter(ax)
 		
 		ax = plt.subplot(mainGrid[1, 1])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))

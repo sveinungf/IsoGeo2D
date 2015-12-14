@@ -14,7 +14,9 @@ class SplineModel:
         self.rho = rho
         self.transfer = transfer
         
-    def generateScalarMatrix(self, boundingBox, width, height):
+        self.plotBoundingEllipses = False
+        
+    def generateScalarMatrix(self, boundingBox, width, height, paramPlotter=None, geomPlotter=None):
         phiPlane = self.phiPlane
         bb = boundingBox
         
@@ -27,7 +29,11 @@ class SplineModel:
         xValues = np.linspace(bb.left+xDelta/2, bb.right-xDelta/2, samplingsPerRay)
         yValues = np.linspace(bb.bottom+yDelta/2, bb.top-yDelta/2, rayCount)
         
-        samplingScalars = np.ones((rayCount, samplingsPerRay)) * SplineModel.samplingDefault    
+        samplingScalars = np.ones((rayCount, samplingsPerRay)) * SplineModel.samplingDefault
+        
+        geomPoints = []
+        paramPoints = []
+        boundingEllipses = []
         
         for i, y in enumerate(yValues):
             samplingRay = Ray2D(np.array([bb.left-xDelta/2, y]), np.array([0, y]), 10, yDelta)
@@ -40,9 +46,6 @@ class SplineModel:
             inGeomPoint = intersections[0].geomPoint
             outGeomPoint = intersections[1].geomPoint
             
-            geomPoints = []
-            paramPoints = []
-            
             prevUV = intersections[0].paramPoint
             
             for j, x in enumerate(xValues):
@@ -51,9 +54,10 @@ class SplineModel:
                 
                 samplePoint = np.array([x, y])
                 
-                pixelFrustum = samplingRay.frustumBoundingEllipseParallel(samplePoint, xDelta)
+                boundingEllipse = samplingRay.frustumBoundingEllipseParallel(samplePoint, xDelta)
+                boundingEllipses.append(boundingEllipse)
                 
-                pApprox = phiPlane.inverseInFrustum(samplePoint, prevUV, pixelFrustum)
+                pApprox = phiPlane.inverseInFrustum(samplePoint, prevUV, boundingEllipse)
                 gApprox = phiPlane.evaluate(pApprox[0], pApprox[1])
                 geomPoints.append(gApprox)
 
@@ -63,7 +67,17 @@ class SplineModel:
                 samplingScalars[i][j] = scalar
                 
                 prevUV = pApprox
+        
+        if paramPlotter != None:
+            paramPlotter.plotPoints(paramPoints)
             
+        if geomPlotter != None:
+            if self.plotBoundingEllipses:
+                for ellipse in boundingEllipses:
+                    geomPlotter.plotEllipse(ellipse)
+            
+            geomPlotter.plotPoints(geomPoints)
+
         return samplingScalars
 
     def sampleInFrustum(self, samplePoint, pGuess, frustum):

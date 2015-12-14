@@ -56,6 +56,7 @@ class Main:
         refSplinePlotter = plotter.refSplineModelPlotter
         directSplinePlotter = plotter.directSplineModelPlotter
         voxelPlotter = plotter.voxelModelPlotter
+        paramPlotter = plotter.paramPlotter
         
         refSplinePlotter.plotGrid(phi.evaluate, 10, 10)
         directSplinePlotter.plotGrid(phi.evaluate, 10, 10)
@@ -89,8 +90,6 @@ class Main:
         numPixels = self.numPixels
         pixels = self.createPixels(numPixels)
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
-        
-        numTextures = 3
         
         viewRays = np.empty(numPixels, dtype=object)
         directPixelColors = np.empty((numPixels, 4))
@@ -128,38 +127,33 @@ class Main:
         print "Voxelized color diffs"
         print "---------------------"
             
-        texDimSize = 16
+        texDimSize = 4
         
-        for i in range(numTextures):
-            samplingScalars = splineModel.generateScalarMatrix(bb, texDimSize, texDimSize)
-            scalarTexture = Texture2D(samplingScalars)
-            
-            voxelModel = VoxelModel(scalarTexture, self.transfer, bb, voxelPlotter)
-            voxelWidth = bb.getHeight() / float(texDimSize)
-            criterion = GeometricCriterion(pixelWidth, voxelWidth)
-            #model = VoxelModel(scalarTexture, self.transfer, bb, voxelPlotter)
-            model = HybridModel(splineModel, voxelModel, criterion, voxelPlotter)
-            
-            if i == numTextures -1:
-                model.plotSamplePoints = True
-            
-            maxVoxelSamplePoints = 0
+        splineModel.plotBoundingEllipses = True
+        samplingScalars = splineModel.generateScalarMatrix(bb, texDimSize, texDimSize, paramPlotter, refSplinePlotter)
+        scalarTexture = Texture2D(samplingScalars)
+        
+        voxelModel = VoxelModel(scalarTexture, self.transfer, bb, voxelPlotter)
+        voxelWidth = bb.getHeight() / float(texDimSize)
+        criterion = GeometricCriterion(pixelWidth, voxelWidth)
+        #model = VoxelModel(scalarTexture, self.transfer, bb, voxelPlotter)
+        model = HybridModel(splineModel, voxelModel, criterion, voxelPlotter)
+        model.plotSamplePoints = True
+        
+        maxVoxelSamplePoints = 0
 
-            for i, viewRay in enumerate(viewRays):
-                intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
-                
-                if intersections != None:
-                    [voxelSamplePoints, voxelizedPixelColors[i]] = model.raycast(viewRay, intersections, self.viewRayDeltaVoxelized)
-                    maxVoxelSamplePoints = max(voxelSamplePoints, maxVoxelSamplePoints)
-                else:
-                    voxelizedPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
-        
-            voxelizedDiffs = colordiff.compare(refPixelColors, voxelizedPixelColors)
-            summary = Summary(voxelizedDiffs, maxVoxelSamplePoints)
-            self.printSummary("Voxel ({}x{})".format(texDimSize, texDimSize), summary)
-       
-            texDimSize += 2
-        
+        for i, viewRay in enumerate(viewRays):
+            intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
+            
+            if intersections != None:
+                [voxelSamplePoints, voxelizedPixelColors[i]] = model.raycast(viewRay, intersections, self.viewRayDeltaVoxelized)
+                maxVoxelSamplePoints = max(voxelSamplePoints, maxVoxelSamplePoints)
+            else:
+                voxelizedPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
+    
+        voxelizedDiffs = colordiff.compare(refPixelColors, voxelizedPixelColors)
+        summary = Summary(voxelizedDiffs, maxVoxelSamplePoints)
+        self.printSummary("Voxel ({}x{})".format(texDimSize, texDimSize), summary)
 
         voxelPlotter.plotScalars(samplingScalars, bb)    
         plotter.plotScalarTexture(scalarTexture)
