@@ -4,19 +4,6 @@ from intersection import Intersection
 from side import Side
 from boundingbox import BoundingBox
 
-def intersection2D(f, g, df, dg, uGuess, uInterval, tolerance):
-    vGuess = 0
-    
-    def h(u, v):
-        return f(u) - g(v)
-    
-    def hJacob(u, v):
-        return np.matrix([df(u), -dg(v)]).transpose()
-    
-    uvIntervals = [uInterval, None]
-    
-    return newton.newtonsMethod2DTolerance(h, hJacob, [uGuess, vGuess], uvIntervals, tolerance)
-
 class SplinePlane:
     def __init__(self, phiPlane, interval, tolerance):
         self.phi = phiPlane
@@ -59,8 +46,8 @@ class SplinePlane:
         else:
             f = self.right
             df = self.dright
-        
-        uv = intersection2D(f, ray.eval, df, ray.deval, uGuess, self.interval, self.tolerance)
+
+        uv = newton.newtonsMethod2DIntersect(f, df, ray, uGuess, self.interval, self.tolerance)
         
         if uv != None:
             interval = self.interval
@@ -151,5 +138,5 @@ class SplinePlane:
             return phi.evaluate(u,v) - geomPoint
 
         uvIntervals = [self.interval, self.interval]
-        
-        return newton.newtonsMethod2DTolerance(f, phi.jacob, uvGuess, uvIntervals, tolerance)           
+                   
+        return newton.newtonsMethod2DTolerance(phi, uvGuess, geomPoint, uvIntervals, tolerance)
