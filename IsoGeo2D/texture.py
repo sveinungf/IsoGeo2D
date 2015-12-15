@@ -28,7 +28,7 @@ class Texture2D:
         self.f = interpolate.interp2d(x, y, data, kind='linear')
         
     def fetch(self, uv):
-        return self.f(uv[0], uv[1])
+        return self.f(uv[0], uv[1])[0]
 
     def closest(self, uv):
         uIndex = math.floor(uv[0] * self.cols)
