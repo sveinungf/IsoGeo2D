@@ -73,25 +73,21 @@ def newtonsMethod2DIntersect(boundaryPhi, boundaryPhiJacob, ray, uInitialGuess, 
 	def fJacob(u, v):
 		return np.matrix([boundaryPhiJacob(u), -ray.deval(v)]).transpose()
 	
-	xyBoundaryGuess = boundaryPhi(u)
-	xyRayGuess = ray.eval(v)
-	
 	while attempt < maxAttempts:
-		if math.sqrt((xyBoundaryGuess[0]-xyRayGuess[0])**2 + (xyBoundaryGuess[1]-xyRayGuess[1])**2) < tolerance:
-			return [u, v]
+		result = f(u, v)
 		
+		if math.sqrt(result[0]**2 + result[1]**2) < tolerance:
+			return [u, v]
+
 		jacob = fJacob(u, v)
 		
 		if abs(linalg.det(jacob)) < 1e-6:
 			return None
 		
-		x = linalg.solve(jacob, -f(u, v))
+		x = linalg.solve(jacob, -result)
 		
 		[u, v] = x + [u, v]
 		u = clampToInterval(u, uInterval)
-		
-		xyBoundaryGuess = boundaryPhi(u)
-		xyRayGuess = ray.eval(v)
 		
 		attempt += 1
 		
