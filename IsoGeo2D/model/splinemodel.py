@@ -5,7 +5,6 @@ import compositing
 from ray import Ray2D
 from samplingtype import SamplingType
 
-
 class SplineModel:
     samplingDefault = -1
     

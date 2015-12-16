@@ -3,15 +3,15 @@ import numpy as np
 import fileio.splinereader
 import colordiff
 import transfer as trans
+from model.hybridmodel import HybridModel
+from model.splinemodel import SplineModel
+from model.voxelmodel import VoxelModel
 from plotting.plotter import Plotter
 from voxelcriterion.geometriccriterion import GeometricCriterion
-from hybridmodel import HybridModel
 from ray import Ray2D
-from splinemodel import SplineModel
 from splineplane import SplinePlane
 from summary import Summary
 from texture import Texture2D
-from voxelmodel import VoxelModel
 
 class Main:
     def __init__(self):

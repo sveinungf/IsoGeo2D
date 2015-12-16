@@ -4,7 +4,6 @@ import numpy as np
 import compositing
 from samplingtype import SamplingType
 
-
 class HybridModel:
     def __init__(self, splineModel, voxelModel, criterion, plotter=None):
         self.criterion = criterion

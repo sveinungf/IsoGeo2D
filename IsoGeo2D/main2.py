@@ -4,15 +4,15 @@ import fileio.splinereader
 import fileio.voxelio as voxelio
 import colordiff
 import transfer as trans
+from model.hybridmodel import HybridModel
+from model.splinemodel import SplineModel
+from model.voxelmodel import VoxelModel
 from plotting.pixelfigure import PixelFigure
 from voxelcriterion.geometriccriterion import GeometricCriterion
-from hybridmodel import HybridModel
 from ray import Ray2D
-from splinemodel import SplineModel
 from splineplane import SplinePlane
 from summary import Summary
 from texture import Texture2D
-from voxelmodel import VoxelModel
 
 class Main2:
     def __init__(self, eyeX=-2.0):
