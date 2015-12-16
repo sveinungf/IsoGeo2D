@@ -102,18 +102,16 @@ class SplineModel:
     
     def raycast(self, viewRay, intersections, delta, plotter=None, tolerance=None):
         geomPoints = []
-        sampleColors = []
-        sampleDeltas = []
         sampleTypes = []
         
         inParamPoint = intersections[0].paramPoint
         inGeomPoint = intersections[0].geomPoint
-        outParamPoint = intersections[1].paramPoint
         outGeomPoint = intersections[1].geomPoint
         
+        result = np.zeros(4)
+        
         scalar = self.rho.evaluate(inParamPoint[0], inParamPoint[1])
-        color = self.transfer(scalar)
-        sampleColors.append(color)
+        prevColor = self.transfer(scalar)
         
         geomPoints.append(inGeomPoint)
         sampleTypes.append(SamplingType.SPLINE_MODEL)
@@ -129,32 +127,35 @@ class SplineModel:
                 frustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
                 [sampleColor, pApprox, gApprox] = self.sampleInFrustum(samplePoint, pGuess, frustum)
             else:
-                [sampleColor, pApprox, gApprox] = self.sampleWithinTolerance(samplePoint, pGuess, tolerance)
-            
-            sampleColors.append(sampleColor)         
+                [sampleColor, pApprox, gApprox] = self.sampleWithinTolerance(samplePoint, pGuess, tolerance)     
             
             dist = gApprox - prevGeomPoint
-            sampleDeltas.append(math.sqrt(dist[0]**2 + dist[1]**2))
+            actualDelta = math.sqrt(dist[0]**2 + dist[1]**2)
+            
+            result = compositing.accumulate(result, prevColor, actualDelta)
+            prevColor = sampleColor
                 
             geomPoints.append(gApprox)
             sampleTypes.append(SamplingType.SPLINE_MODEL)
+
+            prevGeomPoint = np.array(gApprox)
+            
+            if result[3] >= 1.0:
+                break
             
             pGuess = pApprox
-            prevGeomPoint = np.array(gApprox)
 
             samplePoint += viewDirDelta
         
-        scalar = self.rho.evaluate(outParamPoint[0], outParamPoint[1])
-        color = self.transfer(scalar)
-        sampleColors.append(color)
-        
-        dist = outGeomPoint - prevGeomPoint
-        sampleDeltas.append(math.sqrt(dist[0]**2 + dist[1]**2))
-        
-        geomPoints.append(outGeomPoint)
-        sampleTypes.append(SamplingType.SPLINE_MODEL)
+        if result[3] < 1.0:
+            dist = outGeomPoint - prevGeomPoint
+            actualDelta = math.sqrt(dist[0]**2 + dist[1]**2)
+            result = compositing.accumulate(result, prevColor, actualDelta)
+            
+            geomPoints.append(outGeomPoint)
+            sampleTypes.append(SamplingType.SPLINE_MODEL)
 
         if plotter != None:
             plotter.plotSamplePoints(geomPoints, sampleTypes)
         
-        return [len(sampleColors), compositing.frontToBack(sampleColors, sampleDeltas)]
+        return [len(geomPoints), result]
