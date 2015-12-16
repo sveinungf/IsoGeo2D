@@ -35,7 +35,7 @@ class Main2:
         self.viewRayDeltaRef = 0.001
         self.refTolerance = 0.001
         
-        self.voxelizationTolerance = 1e-8
+        self.voxelizationTolerance = 1e-5
         
     def createPixels(self, numPixels):
         pixels = np.empty((numPixels, 2))
