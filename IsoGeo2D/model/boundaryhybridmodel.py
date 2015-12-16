@@ -1,21 +1,19 @@
 import math
 import numpy as np
 
-import fileio.splinereader
 import compositing
 from samplingtype import SamplingType
 
 class BoundaryHybridModel:
     samplingDefault = -1
     
-    def __init__(self, scalarTexture, transfer, boundingBox, plotter=None):
+    def __init__(self, scalarTexture, rho, transfer, boundingBox, plotter=None):
         self.boundingBox = boundingBox
         self.plotSamplePoints = False
         self.plotter = plotter
+        self.rho = rho
         self.scalarTexture = scalarTexture
         self.transfer = transfer
-        
-        self.rho = fileio.splinereader.read('datasets/0/rho.json')
     
     def sample(self, samplePoint):
         bb = self.boundingBox

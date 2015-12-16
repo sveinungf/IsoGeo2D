@@ -82,7 +82,7 @@ class Main2:
             voxelWidth = boundingBox.getHeight() / float(texDimSize)
             criterion = GeometricCriterion(pixelWidth, voxelWidth)
             
-            voxelModels[i] = BoundaryHybridModel(scalarTexture, self.transfer, boundingBox)
+            voxelModels[i] = BoundaryHybridModel(scalarTexture, self.rho, self.transfer, boundingBox)
             hybridModels[i] = HybridModel(splineModel, voxelModels[i], criterion)
 
         pixels = self.createPixels(numPixels)

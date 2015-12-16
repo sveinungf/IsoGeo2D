@@ -135,7 +135,7 @@ class Main:
         samplingScalars = splineModel.generateScalarMatrix(bb, texDimSize, texDimSize, self.voxelizationTolerance, paramPlotter, refSplinePlotter)
         scalarTexture = Texture2D(samplingScalars)
         
-        voxelModel = BoundaryHybridModel(scalarTexture, self.transfer, bb, voxelPlotter)
+        voxelModel = BoundaryHybridModel(scalarTexture, self.rho, self.transfer, bb, voxelPlotter)
         voxelWidth = bb.getHeight() / float(texDimSize)
         criterion = GeometricCriterion(pixelWidth, voxelWidth)
         #model = BoundaryHybridModel(scalarTexture, self.transfer, bb, voxelPlotter)
