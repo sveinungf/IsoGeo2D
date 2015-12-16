@@ -92,33 +92,11 @@ class SplinePlane:
 
     def createBoundingBox(self):
         phi = self.phi
-        coeffs = phi.coeffs
-        
-        left = coeffs[0][0]
-        right = coeffs[0][-1]
-        
-        for i in range(1, phi.uCoeffsLength):
-            leftCoeff = coeffs[0][i]
-            rightCoeff = coeffs[0][-1 - i]
-            
-            if leftCoeff < left:
-                left = leftCoeff
-                
-            if rightCoeff > right:
-                right = rightCoeff
-        
-        bottom = coeffs[1][0]
-        top = coeffs[1][-1]
-        
-        for i in range(1, phi.vCoeffsLength):
-            bottomCoeff = coeffs[1][i * phi.uCoeffsLength]
-            topCoeff = coeffs[1][-1 - i * phi.uCoeffsLength]
-            
-            if bottomCoeff < bottom:
-                bottom = bottomCoeff
-                
-            if topCoeff > top:
-                top = topCoeff
+    
+        left = phi.coeffMin(0)
+        right = phi.coeffMax(0)
+        bottom = phi.coeffMin(1)
+        top = phi.coeffMax(1)
          
         return BoundingBox(left, right, bottom, top)
 

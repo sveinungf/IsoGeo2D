@@ -14,6 +14,21 @@ class Spline2D:
         
         for i in range(self.coeffElems):
             self.tcks.append([uKnots, vKnots, coeffs[i], degree, degree])
+    
+    def __coeffsExtremum(self, coeffElem, f):
+        coeffs = self.coeffs[coeffElem]
+        extremum = coeffs[0]
+        
+        for i in range(1, len(coeffs)):
+            extremum = f(extremum, coeffs[i])
+            
+        return extremum
+        
+    def coeffMin(self, coeffElem):
+        return self.__coeffsExtremum(coeffElem, min)
+    
+    def coeffMax(self, coeffElem):
+        return self.__coeffsExtremum(coeffElem, max)
         
     def evaluate(self, x, y):
         result = np.empty(self.coeffElems)
