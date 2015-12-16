@@ -3,9 +3,9 @@ import numpy as np
 import fileio.splinereader
 import colordiff
 import transfer as trans
+from model.boundaryhybridmodel import BoundaryHybridModel
 from model.hybridmodel import HybridModel
 from model.splinemodel import SplineModel
-from model.voxelmodel import VoxelModel
 from plotting.plotter import Plotter
 from voxelcriterion.geometriccriterion import GeometricCriterion
 from ray import Ray2D
@@ -135,10 +135,10 @@ class Main:
         samplingScalars = splineModel.generateScalarMatrix(bb, texDimSize, texDimSize, self.voxelizationTolerance, paramPlotter, refSplinePlotter)
         scalarTexture = Texture2D(samplingScalars)
         
-        voxelModel = VoxelModel(scalarTexture, self.transfer, bb, voxelPlotter)
+        voxelModel = BoundaryHybridModel(scalarTexture, self.transfer, bb, voxelPlotter)
         voxelWidth = bb.getHeight() / float(texDimSize)
         criterion = GeometricCriterion(pixelWidth, voxelWidth)
-        #model = VoxelModel(scalarTexture, self.transfer, bb, voxelPlotter)
+        #model = BoundaryHybridModel(scalarTexture, self.transfer, bb, voxelPlotter)
         model = HybridModel(splineModel, voxelModel, criterion, voxelPlotter)
         model.plotSamplePoints = True
         

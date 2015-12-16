@@ -5,7 +5,7 @@ import fileio.splinereader
 import compositing
 from samplingtype import SamplingType
 
-class VoxelModel:
+class BoundaryHybridModel:
     samplingDefault = -1
     
     def __init__(self, scalarTexture, transfer, boundingBox, plotter=None):

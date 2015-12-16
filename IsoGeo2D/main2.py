@@ -4,9 +4,9 @@ import fileio.splinereader
 import fileio.voxelio as voxelio
 import colordiff
 import transfer as trans
+from model.boundaryhybridmodel import BoundaryHybridModel
 from model.hybridmodel import HybridModel
 from model.splinemodel import SplineModel
-from model.voxelmodel import VoxelModel
 from plotting.pixelfigure import PixelFigure
 from voxelcriterion.geometriccriterion import GeometricCriterion
 from ray import Ray2D
@@ -82,7 +82,7 @@ class Main2:
             voxelWidth = boundingBox.getHeight() / float(texDimSize)
             criterion = GeometricCriterion(pixelWidth, voxelWidth)
             
-            voxelModels[i] = VoxelModel(scalarTexture, self.transfer, boundingBox)
+            voxelModels[i] = BoundaryHybridModel(scalarTexture, self.transfer, boundingBox)
             hybridModels[i] = HybridModel(splineModel, voxelModels[i], criterion)
 
         pixels = self.createPixels(numPixels)
