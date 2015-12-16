@@ -57,3 +57,26 @@ class Spline2D:
     def jacob(self, u, v):
         return np.matrix([self.evaluatePartialDerivativeU(u, v), 
                           self.evaluatePartialDerivativeV(u, v)]).transpose()
+
+class Spline2DTrivialR1:
+    def evaluate(self, x, y):
+        return np.array([y])    
+    
+class Spline2DTrivialR2:
+    def coeffMin(self, coeffElem):
+        return 0.0
+    
+    def coeffMax(self, coeffElem):
+        return 1.0
+        
+    def evaluate(self, x, y):
+        return np.array([x, y])
+    
+    def evaluatePartialDerivativeU(self, x, y):
+        return np.array([1.0, 0.0])
+    
+    def evaluatePartialDerivativeV(self, x, y):
+        return np.array([0.0, 1.0])
+    
+    def jacob(self, u, v):
+        return np.matrix([[1.0, 0.0], [0.0, 1.0]])
