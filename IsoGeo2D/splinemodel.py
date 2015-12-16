@@ -16,7 +16,7 @@ class SplineModel:
         
         self.plotBoundingEllipses = False
         
-    def generateScalarMatrix(self, boundingBox, width, height, paramPlotter=None, geomPlotter=None):
+    def generateScalarMatrix(self, boundingBox, width, height, tolerance, paramPlotter=None, geomPlotter=None):
         phiPlane = self.phiPlane
         bb = boundingBox
         
@@ -53,11 +53,8 @@ class SplineModel:
                     continue
                 
                 samplePoint = np.array([x, y])
-                
-                boundingEllipse = samplingRay.frustumBoundingEllipseParallel(samplePoint, xDelta)
-                boundingEllipses.append(boundingEllipse)
-                
-                pApprox = phiPlane.inverseInFrustum(samplePoint, prevUV, boundingEllipse)
+
+                pApprox = phiPlane.inverseWithinTolerance(samplePoint, prevUV, tolerance)
                 gApprox = phiPlane.evaluate(pApprox[0], pApprox[1])
                 geomPoints.append(gApprox)
 

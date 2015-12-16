@@ -35,6 +35,8 @@ class Main2:
         self.viewRayDeltaRef = 0.001
         self.refTolerance = 0.001
         
+        self.voxelizationTolerance = 1e-8
+        
     def createPixels(self, numPixels):
         pixels = np.empty((numPixels, 2))
         pixelXs = np.ones(numPixels) * self.pixelX
@@ -71,7 +73,7 @@ class Main2:
                 samplingScalars = voxelio.read(self.dataset, texDimSize, texDimSize)
                 print "Read {}x{} texture data from file".format(texDimSize, texDimSize)
             else:
-                samplingScalars = splineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize)
+                samplingScalars = splineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize, self.voxelizationTolerance)
                 voxelio.write(self.dataset, samplingScalars)
                 print "Wrote {}x{} texture data to file".format(texDimSize, texDimSize)
             

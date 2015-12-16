@@ -36,6 +36,8 @@ class Main:
         self.viewRayDeltaDirect = 0.01
         self.viewRayDeltaVoxelized = 0.01
         
+        self.voxelizationTolerance = 1e-8
+        
     def createPixels(self, numPixels):
         pixels = np.empty((numPixels, 2))
         pixelXs = np.ones(numPixels) * self.pixelX
@@ -130,7 +132,7 @@ class Main:
         texDimSize = 4
         
         splineModel.plotBoundingEllipses = True
-        samplingScalars = splineModel.generateScalarMatrix(bb, texDimSize, texDimSize, paramPlotter, refSplinePlotter)
+        samplingScalars = splineModel.generateScalarMatrix(bb, texDimSize, texDimSize, self.voxelizationTolerance, paramPlotter, refSplinePlotter)
         scalarTexture = Texture2D(samplingScalars)
         
         voxelModel = VoxelModel(scalarTexture, self.transfer, bb, voxelPlotter)
