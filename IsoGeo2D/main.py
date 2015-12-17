@@ -6,6 +6,7 @@ import transfer as trans
 from model.boundaryhybridmodel import BoundaryHybridModel
 from model.hybridmodel import HybridModel
 from model.splinemodel import SplineModel
+from model.voxelmodel import VoxelModel
 from plotting.plotter import Plotter
 from voxelcriterion.geometriccriterion import GeometricCriterion
 from ray import Ray2D
@@ -129,17 +130,28 @@ class Main:
         print "Voxelized color diffs"
         print "---------------------"
             
-        texDimSize = 16
+        texDimSize = 20
         
         splineModel.plotBoundingEllipses = True
         samplingScalars = splineModel.generateScalarMatrix(bb, texDimSize, texDimSize, self.voxelizationTolerance, paramPlotter, refSplinePlotter)
         scalarTexture = Texture2D(samplingScalars)
         
-        voxelModel = BoundaryHybridModel(self.transfer, scalarTexture, splineModel, bb)
         voxelWidth = bb.getHeight() / float(texDimSize)
         criterion = GeometricCriterion(pixelWidth, voxelWidth)
-        #model = BoundaryHybridModel(self.transfer, scalarTexture, splineModel, bb)
-        model = HybridModel(self.transfer, splineModel, voxelModel, criterion)
+        
+        voxelModel = VoxelModel(self.transfer, scalarTexture, bb)
+        
+        choice = 3
+        
+        if choice == 0:
+            model = voxelModel
+        elif choice == 1:
+            model = BoundaryHybridModel(self.transfer, splineModel, voxelModel)
+        elif choice == 2:
+            model = HybridModel(self.transfer, splineModel, voxelModel, criterion)
+        elif choice == 3:
+            bhModel = BoundaryHybridModel(self.transfer, splineModel, voxelModel)
+            model = HybridModel(self.transfer, splineModel, bhModel, criterion)
         
         maxVoxelSamplePoints = 0
 

@@ -58,9 +58,10 @@ class BaseModel(object):
                 geomPoints.append(sample.geomPoint)
                 sampleTypes.append(sample.type)
                 
-                dist = sample.geomPoint - prevSample.geomPoint
-                actualDelta = math.sqrt(dist[0]**2 + dist[1]**2)
-                resultColor = compositing.accumulate(resultColor, prevColor, actualDelta)
+                if prevSample != None:
+                    dist = sample.geomPoint - prevSample.geomPoint
+                    actualDelta = math.sqrt(dist[0]**2 + dist[1]**2)
+                    resultColor = compositing.accumulate(resultColor, prevColor, actualDelta)
                 
                 prevColor = self.transfer(sample.scalar)
                 prevSample = sample
