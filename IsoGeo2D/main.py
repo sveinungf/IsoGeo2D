@@ -1,6 +1,5 @@
 import numpy as np
 
-import fileio.splinereader
 import colordiff
 import transfer as trans
 from model.boundaryhybridmodel import BoundaryHybridModel
@@ -9,6 +8,7 @@ from model.splinemodel import SplineModel
 from model.voxelmodel import VoxelModel
 from plotting.plotter import Plotter
 from voxelcriterion.geometriccriterion import GeometricCriterion
+from dataset import Dataset
 from ray import Ray2D
 from splineplane import SplinePlane
 from summary import Summary
@@ -16,19 +16,16 @@ from texture import Texture2D
 
 class Main:
     def __init__(self):
+        self.dataset = Dataset(1, 1)
+        
         self.splineInterval = [0, 0.99999]
+        self.transfer = trans.createTransferFunction(100)
         
         self.numPixels = 10
         self.numPixelsRef = self.numPixels * 1
         self.pixelX = -0.5
         self.screenTop = 0.90
         self.screenBottom = 0.2
-
-        self.phi = fileio.splinereader.read('datasets/1/phi.json')
-        self.phiPlane = SplinePlane(self.phi, self.splineInterval, 0.00001)
-        
-        self.rho = fileio.splinereader.read('datasets/1/rho.json')
-        self.transfer = trans.createTransferFunction(100)
         
         self.plotter = Plotter(self.splineInterval)
         
@@ -53,8 +50,11 @@ class Main:
         return pixels
         
     def run(self):
-        phi = self.phi
         plotter = self.plotter
+        
+        rho = self.dataset.rho
+        phi = self.dataset.phi
+        phiPlane = SplinePlane(phi, self.splineInterval, 0.00001)
         
         refSplinePlotter = plotter.refSplineModelPlotter
         directSplinePlotter = plotter.directSplineModelPlotter
@@ -64,15 +64,15 @@ class Main:
         refSplinePlotter.plotGrid(phi.evaluate, 10, 10)
         directSplinePlotter.plotGrid(phi.evaluate, 10, 10)
         
-        plotter.plotGrids(self.phi.evaluate, 10, 10)
-        plotter.plotScalarField(self.rho, self.transfer)
+        plotter.plotGrids(phi.evaluate, 10, 10)
+        plotter.plotScalarField(rho, self.transfer)
         
-        bb = self.phiPlane.createBoundingBox()
+        bb = phiPlane.createBoundingBox()
         refSplinePlotter.plotBoundingBox(bb)
         directSplinePlotter.plotBoundingBox(bb)
         voxelPlotter.plotBoundingBox(bb)
         
-        splineModel = SplineModel(self.transfer, self.phiPlane, self.rho)
+        splineModel = SplineModel(self.transfer, phiPlane, rho)
         
         numPixelsRef = self.numPixelsRef
         refPixels = self.createPixels(numPixelsRef)

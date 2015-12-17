@@ -1,6 +1,5 @@
 import numpy as np
 
-import fileio.splinereader
 import fileio.voxelio as voxelio
 import colordiff
 import transfer as trans
@@ -9,6 +8,7 @@ from model.splinemodel import SplineModel
 from model.voxelmodel import VoxelModel
 from plotting.pixelfigure import PixelFigure
 from voxelcriterion.geometriccriterion import GeometricCriterion
+from dataset import Dataset
 from ray import Ray2D
 from splineplane import SplinePlane
 from summary import Summary
@@ -16,13 +16,9 @@ from texture import Texture2D
 
 class Main2:
     def __init__(self, eyeX=-2.0):
-        self.dataset = 1
+        self.dataset = Dataset(1, 1)
         
         self.splineInterval = [0, 0.99999]
-        datasetDir = "datasets/" + `self.dataset`
-        self.rho = fileio.splinereader.read(datasetDir + "/rho.json")
-        self.phi = fileio.splinereader.read(datasetDir + "/phi.json")
-        self.phiPlane = SplinePlane(self.phi, self.splineInterval, 0.00001)
         self.transfer = trans.createTransferFunction(100)
 
         self.numPixels = 100
@@ -60,10 +56,14 @@ class Main2:
                 
         figure = PixelFigure(texDimSizes)
         
-        boundingBox = self.phiPlane.createBoundingBox()
+        rho = self.dataset.rho
+        phi = self.dataset.phi
+        phiPlane = SplinePlane(phi, self.splineInterval, 0.00001)
         
-        refSplineModel = SplineModel(self.transfer, self.phiPlane, self.rho, self.refTolerance)
-        directSplineModel = SplineModel(self.transfer, self.phiPlane, self.rho)
+        boundingBox = phiPlane.createBoundingBox()
+        
+        refSplineModel = SplineModel(self.transfer, phiPlane, rho, self.refTolerance)
+        directSplineModel = SplineModel(self.transfer, phiPlane, rho)
         voxelModels = np.empty(numTextures, dtype=object)
         hybridModels = np.empty(numTextures, dtype=object)
         
