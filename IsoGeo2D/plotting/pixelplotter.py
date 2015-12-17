@@ -34,3 +34,11 @@ class PixelPlotter():
                 colors[i] = np.array([1.0, 0.0, 0.0])
                 
         self.plotPixelColors(colors)
+
+    def plotRatios(self, ratios):
+        colors = np.empty((len(ratios), 3))
+        
+        for i, ratio in enumerate(ratios):
+            colors[i] = np.array([ratio, ratio, ratio])
+        
+        self.plotPixelColors(colors)

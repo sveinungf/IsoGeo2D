@@ -94,6 +94,8 @@ class Main2:
         voxelPixelColors = np.empty((numTextures, numPixels, 4))
         hybridPixelColors = np.empty((numTextures, numPixels, 4))
         
+        hybridVoxelRatios = np.empty((numTextures, numPixels))
+        
         maxRefSamplePoints = 0
         maxDirectSamplePoints = 0
         maxVoxelSamplePoints = np.zeros(numTextures)
@@ -116,6 +118,8 @@ class Main2:
                 for j in range(numTextures):
                     [voxelSamplePoints, voxelPixelColors[j][i]] = voxelModels[j].raycast(viewRay, intersections, self.viewRayDelta)
                     [hybridSamplePoints, hybridPixelColors[j][i]] = hybridModels[j].raycast(viewRay, intersections, self.viewRayDelta)
+                    
+                    hybridVoxelRatios[j][i] = hybridModels[j].voxelRatio()
                     
                     maxVoxelSamplePoints[j] = max(voxelSamplePoints, maxVoxelSamplePoints[j])
                     maxHybridSamplePoints[j] = max(hybridSamplePoints, maxHybridSamplePoints[j])
@@ -149,6 +153,8 @@ class Main2:
             
             figure.voxelDiffsPlots[i].plotPixelColorDiffs(voxelDiffs[i])
             figure.hybridDiffsPlots[i].plotPixelColorDiffs(hybridDiffs[i])
+            
+            figure.hybridVoxelRatioPlots[i].plotRatios(hybridVoxelRatios[i])
         
         for i in range(numTextures):
             texDimSize = texDimSizes[i]

@@ -8,13 +8,18 @@ class HybridModel(BaseModel):
         self.splineModel = splineModel
         self.voxelModel = voxelModel
         
+        self.splineSamples = 0
+        self.voxelSamples = 0
+        
     def __chooseModel(self, viewRay, samplePoint):
         lodLevel = self.criterion.lodLevel(viewRay, samplePoint)
         useVoxelized = lodLevel >= 0
         
         if useVoxelized:
+            self.voxelSamples += 1
             return self.voxelModel
         else:
+            self.splineSamples += 1
             return self.splineModel
         
     def sample(self, samplePoint, prevSample, viewRay, delta):
@@ -28,3 +33,13 @@ class HybridModel(BaseModel):
     def outSample(self, intersection, viewRay):
         model = self.__chooseModel(viewRay, intersection.geomPoint)
         return model.outSample(intersection, viewRay)
+
+    def voxelRatio(self):
+        x = self.voxelSamples
+        s = self.splineSamples
+        ratio = float(x) / (x + s)
+        
+        self.splineSamples = 0
+        self.voxelSamples = 0
+        
+        return ratio
