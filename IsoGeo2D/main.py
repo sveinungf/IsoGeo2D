@@ -71,7 +71,7 @@ class Main:
         directSplinePlotter.plotBoundingBox(bb)
         voxelPlotter.plotBoundingBox(bb)
         
-        splineModel = SplineModel(self.phiPlane, self.rho, self.transfer)
+        splineModel = SplineModel(self.transfer, self.phiPlane, self.rho)
         
         numPixelsRef = self.numPixelsRef
         refPixels = self.createPixels(numPixelsRef)
@@ -129,17 +129,17 @@ class Main:
         print "Voxelized color diffs"
         print "---------------------"
             
-        texDimSize = 4
+        texDimSize = 16
         
         splineModel.plotBoundingEllipses = True
         samplingScalars = splineModel.generateScalarMatrix(bb, texDimSize, texDimSize, self.voxelizationTolerance, paramPlotter, refSplinePlotter)
         scalarTexture = Texture2D(samplingScalars)
         
-        voxelModel = BoundaryHybridModel(scalarTexture, self.rho, self.transfer, bb, voxelPlotter)
+        voxelModel = BoundaryHybridModel(self.transfer, scalarTexture, splineModel, bb)
         voxelWidth = bb.getHeight() / float(texDimSize)
         criterion = GeometricCriterion(pixelWidth, voxelWidth)
-        #model = BoundaryHybridModel(scalarTexture, self.transfer, bb, voxelPlotter)
-        model = HybridModel(splineModel, voxelModel, criterion, voxelPlotter)
+        model = BoundaryHybridModel(self.transfer, scalarTexture, splineModel, bb)
+        #model = HybridModel(splineModel, voxelModel, criterion, voxelPlotter)
         model.plotSamplePoints = True
         
         maxVoxelSamplePoints = 0
@@ -148,7 +148,7 @@ class Main:
             intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
             
             if intersections != None:
-                [voxelSamplePoints, voxelizedPixelColors[i]] = model.raycast(viewRay, intersections, self.viewRayDeltaVoxelized)
+                [voxelSamplePoints, voxelizedPixelColors[i]] = model.raycast(viewRay, intersections, self.viewRayDeltaVoxelized, plotter.voxelModelPlotter)
                 maxVoxelSamplePoints = max(voxelSamplePoints, maxVoxelSamplePoints)
             else:
                 voxelizedPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])

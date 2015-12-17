@@ -1,18 +1,24 @@
-import math
 import numpy as np
 
-import compositing
+from model.basemodel import BaseModel, Sample
 from ray import Ray2D
 from samplingtype import SamplingType
 
-class SplineModel:
+class SplineSample(Sample):
+    def __init__(self, geomPoint, scalar, paramPoint):
+        super(SplineSample, self).__init__(geomPoint, scalar, SamplingType.SPLINE_MODEL)
+        self.paramPoint = paramPoint
+
+class SplineModel(BaseModel):
     samplingDefault = -1
     
-    def __init__(self, phiPlane, rho, transfer):
+    def __init__(self, transfer, phiPlane, rho, samplingTolerance=None):
+        super(SplineModel, self).__init__(transfer)
+        
         self.phiPlane = phiPlane
         self.rho = rho
-        self.transfer = transfer
-        
+        self.samplingTolerance = samplingTolerance
+
         self.plotBoundingEllipses = False
         
     def generateScalarMatrix(self, boundingBox, width, height, tolerance, paramPlotter=None, geomPlotter=None):
@@ -98,64 +104,30 @@ class SplineModel:
         scalar = rho.evaluate(pApprox[0], pApprox[1])
         color = self.transfer(scalar)
         
-        return [color, pApprox, gApprox]        
+        return [color, pApprox, gApprox]
+
+    def sample(self, samplePoint, prevSample, viewRay, delta):
+        phiPlane = self.phiPlane
+        rho = self.rho
+        
+        pGuess = prevSample.paramPoint
+        
+        if self.samplingTolerance == None:
+            frustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
+            pApprox = phiPlane.inverseInFrustum(samplePoint, pGuess, frustum)
+        else:
+            pApprox = phiPlane.inverseWithinTolerance(samplePoint, pGuess, self.samplingTolerance)
+
+        gApprox = phiPlane.evaluate(pApprox[0], pApprox[1])
+        scalar = rho.evaluate(pApprox[0], pApprox[1])
+
+        return SplineSample(gApprox, scalar, pApprox)
     
-    def raycast(self, viewRay, intersections, delta, plotter=None, tolerance=None):
-        geomPoints = []
-        sampleTypes = []
+    def inSample(self, intersection):
+        pApprox = intersection.paramPoint
+        scalar = self.rho.evaluate(pApprox[0], pApprox[1])
         
-        inParamPoint = intersections[0].paramPoint
-        inGeomPoint = intersections[0].geomPoint
-        outGeomPoint = intersections[1].geomPoint
-        
-        result = np.zeros(4)
-        
-        scalar = self.rho.evaluate(inParamPoint[0], inParamPoint[1])
-        prevColor = self.transfer(scalar)
-        
-        geomPoints.append(inGeomPoint)
-        sampleTypes.append(SamplingType.SPLINE_MODEL)
-        
-        pGuess = inParamPoint
-        prevGeomPoint = inGeomPoint
-        
-        viewDirDelta = viewRay.viewDir * delta
-        samplePoint = inGeomPoint + viewDirDelta
-        
-        while samplePoint[0] < outGeomPoint[0]:
-            if tolerance == None:
-                frustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
-                [sampleColor, pApprox, gApprox] = self.sampleInFrustum(samplePoint, pGuess, frustum)
-            else:
-                [sampleColor, pApprox, gApprox] = self.sampleWithinTolerance(samplePoint, pGuess, tolerance)     
-            
-            dist = gApprox - prevGeomPoint
-            actualDelta = math.sqrt(dist[0]**2 + dist[1]**2)
-            
-            result = compositing.accumulate(result, prevColor, actualDelta)
-            prevColor = sampleColor
-                
-            geomPoints.append(gApprox)
-            sampleTypes.append(SamplingType.SPLINE_MODEL)
-
-            prevGeomPoint = np.array(gApprox)
-            
-            if result[3] >= 1.0:
-                break
-            
-            pGuess = pApprox
-
-            samplePoint += viewDirDelta
-        
-        if result[3] < 1.0:
-            dist = outGeomPoint - prevGeomPoint
-            actualDelta = math.sqrt(dist[0]**2 + dist[1]**2)
-            result = compositing.accumulate(result, prevColor, actualDelta)
-            
-            geomPoints.append(outGeomPoint)
-            sampleTypes.append(SamplingType.SPLINE_MODEL)
-
-        if plotter != None:
-            plotter.plotSamplePoints(geomPoints, sampleTypes)
-        
-        return [len(geomPoints), result]
+        return SplineSample(intersection.geomPoint, scalar, pApprox)
+    
+    def outSample(self, intersection):
+        return self.inSample(intersection)
