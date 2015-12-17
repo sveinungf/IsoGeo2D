@@ -123,11 +123,11 @@ class SplineModel(BaseModel):
 
         return SplineSample(gApprox, scalar, pApprox)
     
-    def inSample(self, intersection):
+    def inSample(self, intersection, viewRay):
         pApprox = intersection.paramPoint
         scalar = self.rho.evaluate(pApprox[0], pApprox[1])
         
         return SplineSample(intersection.geomPoint, scalar, pApprox)
     
-    def outSample(self, intersection):
-        return self.inSample(intersection)
+    def outSample(self, intersection, viewRay):
+        return self.inSample(intersection, viewRay)

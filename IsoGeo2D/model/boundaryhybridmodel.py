@@ -31,8 +31,8 @@ class BoundaryHybridModel(BaseModel):
 
         return Sample(geomPoint, scalar, SamplingType.VOXEL_MODEL)
         
-    def inSample(self, intersection):
-        return self.splineModel.inSample(intersection)
+    def inSample(self, intersection, viewRay):
+        return self.splineModel.inSample(intersection, viewRay)
     
-    def outSample(self, intersection):
-        return self.splineModel.outSample(intersection)
+    def outSample(self, intersection, viewRay):
+        return self.splineModel.outSample(intersection, viewRay)

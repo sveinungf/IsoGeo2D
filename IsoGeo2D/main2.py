@@ -84,7 +84,7 @@ class Main2:
             criterion = GeometricCriterion(pixelWidth, voxelWidth)
             
             voxelModels[i] = BoundaryHybridModel(self.transfer, scalarTexture, directSplineModel, boundingBox)
-            #hybridModels[i] = HybridModel(directSplineModel, voxelModels[i], criterion)
+            hybridModels[i] = HybridModel(self.transfer, directSplineModel, voxelModels[i], criterion)
 
         pixels = self.createPixels(numPixels)
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
@@ -115,10 +115,10 @@ class Main2:
                 
                 for j in range(numTextures):
                     [voxelSamplePoints, voxelPixelColors[j][i]] = voxelModels[j].raycast(viewRay, intersections, self.viewRayDelta)
-                    #[hybridSamplePoints, hybridPixelColors[j][i]] = hybridModels[j].raycast(viewRay, intersections, self.viewRayDelta)
+                    [hybridSamplePoints, hybridPixelColors[j][i]] = hybridModels[j].raycast(viewRay, intersections, self.viewRayDelta)
                     
                     maxVoxelSamplePoints[j] = max(voxelSamplePoints, maxVoxelSamplePoints[j])
-                    #maxHybridSamplePoints[j] = max(hybridSamplePoints, maxHybridSamplePoints[j])
+                    maxHybridSamplePoints[j] = max(hybridSamplePoints, maxHybridSamplePoints[j])
             else:
                 refPixelColors[i] = backgroundColor
                 directPixelColors[i] = backgroundColor
@@ -142,23 +142,23 @@ class Main2:
         
         for i in range(numTextures):
             figure.voxelPixelsPlots[i].plotPixelColors(voxelPixelColors[i])
-            #figure.hybridPixelsPlots[i].plotPixelColors(hybridPixelColors[i])
+            figure.hybridPixelsPlots[i].plotPixelColors(hybridPixelColors[i])
             
             voxelDiffs[i] = colordiff.compare(refPixelColors, voxelPixelColors[i])
-            #hybridDiffs[i] = colordiff.compare(refPixelColors, hybridPixelColors[i])
+            hybridDiffs[i] = colordiff.compare(refPixelColors, hybridPixelColors[i])
             
             figure.voxelDiffsPlots[i].plotPixelColorDiffs(voxelDiffs[i])
-            #figure.hybridDiffsPlots[i].plotPixelColorDiffs(hybridDiffs[i])
+            figure.hybridDiffsPlots[i].plotPixelColorDiffs(hybridDiffs[i])
         
         for i in range(numTextures):
             texDimSize = texDimSizes[i]
             summary = Summary(voxelDiffs[i], maxVoxelSamplePoints[i])
             self.printSummary("Voxel ({}x{})".format(texDimSize, texDimSize), summary)
             
-        #for i in range(numTextures):
-        #    texDimSize = texDimSizes[i]
-        #    summary = Summary(hybridDiffs[i], maxHybridSamplePoints[i])
-        #    self.printSummary("Hybrid ({}x{})".format(texDimSize, texDimSize), summary)
+        for i in range(numTextures):
+            texDimSize = texDimSizes[i]
+            summary = Summary(hybridDiffs[i], maxHybridSamplePoints[i])
+            self.printSummary("Hybrid ({}x{})".format(texDimSize, texDimSize), summary)
             
         figure.draw()
         

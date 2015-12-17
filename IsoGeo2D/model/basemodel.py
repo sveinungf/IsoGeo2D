@@ -21,11 +21,11 @@ class BaseModel(object):
         return
     
     @abc.abstractmethod
-    def inSample(self, intersection):
+    def inSample(self, intersection, viewRay):
         return
     
     @abc.abstractmethod
-    def outSample(self, intersection):
+    def outSample(self, intersection, viewRay):
         return
     
     def raycast(self, viewRay, intersections, delta, plotter=None):
@@ -38,7 +38,7 @@ class BaseModel(object):
         resultColor = np.zeros(4)
         prevColor = None
         
-        sample = self.inSample(intersections[0])
+        sample = self.inSample(intersections[0], viewRay)
         
         if sample != None:
             geomPoints.append(sample.geomPoint)
@@ -71,7 +71,7 @@ class BaseModel(object):
             samplePoint += viewDirDelta
         
         if resultColor[3] < 1.0:
-            sample = self.outSample(intersections[1])
+            sample = self.outSample(intersections[1], viewRay)
 
             if sample != None:
                 geomPoints.append(outGeomPoint)

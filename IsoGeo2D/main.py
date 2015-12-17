@@ -138,9 +138,8 @@ class Main:
         voxelModel = BoundaryHybridModel(self.transfer, scalarTexture, splineModel, bb)
         voxelWidth = bb.getHeight() / float(texDimSize)
         criterion = GeometricCriterion(pixelWidth, voxelWidth)
-        model = BoundaryHybridModel(self.transfer, scalarTexture, splineModel, bb)
-        #model = HybridModel(splineModel, voxelModel, criterion, voxelPlotter)
-        model.plotSamplePoints = True
+        #model = BoundaryHybridModel(self.transfer, scalarTexture, splineModel, bb)
+        model = HybridModel(self.transfer, splineModel, voxelModel, criterion)
         
         maxVoxelSamplePoints = 0
 
