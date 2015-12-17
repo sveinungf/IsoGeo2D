@@ -16,7 +16,7 @@ from texture import Texture2D
 
 class Main2:
     def __init__(self, eyeX=-2.0):
-        self.dataset = 0
+        self.dataset = 1
         
         self.splineInterval = [0, 0.99999]
         datasetDir = "datasets/" + `self.dataset`

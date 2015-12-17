@@ -24,10 +24,10 @@ class Main:
         self.screenTop = 0.90
         self.screenBottom = 0.2
 
-        self.phi = fileio.splinereader.read('datasets/0/phi.json')
+        self.phi = fileio.splinereader.read('datasets/1/phi.json')
         self.phiPlane = SplinePlane(self.phi, self.splineInterval, 0.00001)
         
-        self.rho = fileio.splinereader.read('datasets/0/rho.json')
+        self.rho = fileio.splinereader.read('datasets/1/rho.json')
         self.transfer = trans.createTransferFunction(100)
         
         self.plotter = Plotter(self.splineInterval)
