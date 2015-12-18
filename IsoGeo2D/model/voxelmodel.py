@@ -19,9 +19,6 @@ class VoxelModel(BaseModel):
         u = (samplePoint[0]-bb.left)/bb.getWidth()
         v = (samplePoint[1]-bb.bottom)/bb.getHeight()
         
-        if not bb.enclosesPoint(samplePoint):
-            return None
-        
         if texture.closest([u, v]) == self.samplingDefault:
             return None
         
