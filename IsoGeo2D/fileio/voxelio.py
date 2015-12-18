@@ -2,7 +2,7 @@ import numpy as np
 import os.path
 
 def __filedir(dataset):
-    return "textures/{},{}".format(dataset.phiNumber, dataset.rhoNumber)
+    return "textures/{},{}".format(dataset.rhoNumber, dataset.phiNumber)
 
 def __filename(width, height):
     return "{}x{}.npy".format(width, height)
