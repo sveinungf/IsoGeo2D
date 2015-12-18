@@ -150,7 +150,7 @@ class Plotter:
 		for point in points:
 			ax.plot(point[0], point[1], marker='x', color='k')
 		
-	def plotScalarTexture(self, scalarTexture):
+	def plotScalarTexture(self, scalarTexture, transfer=None):
 		uRange = np.linspace(0, 1, self.precision)
 		vRange = np.linspace(1, 0, self.precision)
 		
@@ -161,8 +161,19 @@ class Plotter:
 			
 			for u in uRange:
 				x = scalarTexture.fetch([u, v])
-				x = max(0.,x)
-				row.append((x,x,x))
+				
+				if x == -1:
+					if transfer == None:
+						cell = [0.0, 0.0, 1.0]
+					else:
+						cell = [0.0, 0.0, 0.0]
+				else:
+					if transfer == None:
+						cell = [x, x, x]
+					else:
+						cell = transfer(x)[:3]
+						
+				row.append(cell)
 		
 			img.append(row)
 		

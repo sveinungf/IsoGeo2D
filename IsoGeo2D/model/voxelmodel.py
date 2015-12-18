@@ -19,10 +19,11 @@ class VoxelModel(BaseModel):
         u = (samplePoint[0]-bb.left)/bb.getWidth()
         v = (samplePoint[1]-bb.bottom)/bb.getHeight()
         
-        if texture.closest([u, v]) == self.samplingDefault:
-            return None
-        
         scalar = texture.fetch([u, v])
+        
+        if scalar == -1:
+            return None
+            
         geomPoint = np.array(samplePoint)
 
         return Sample(geomPoint, scalar, SamplingType.VOXEL_MODEL)
