@@ -119,13 +119,13 @@ class SplineModel(BaseModel):
             pApprox = phiPlane.inverseWithinTolerance(samplePoint, pGuess, self.samplingTolerance)
 
         gApprox = phiPlane.evaluate(pApprox[0], pApprox[1])
-        scalar = rho.evaluate(pApprox[0], pApprox[1])
+        scalar = rho.evaluate(pApprox[0], pApprox[1])[0]
 
         return SplineSample(gApprox, scalar, pApprox)
     
     def inSample(self, intersection, viewRay):
         pApprox = intersection.paramPoint
-        scalar = self.rho.evaluate(pApprox[0], pApprox[1])
+        scalar = self.rho.evaluate(pApprox[0], pApprox[1])[0]
         
         return SplineSample(intersection.geomPoint, scalar, pApprox)
     
