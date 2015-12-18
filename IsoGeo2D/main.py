@@ -72,7 +72,8 @@ class Main:
         directSplinePlotter.plotBoundingBox(bb)
         voxelPlotter.plotBoundingBox(bb)
         
-        splineModel = SplineModel(self.transfer, phiPlane, rho)
+        refSplineModel = SplineModel(self.transfer, phiPlane, rho, 0.0001)
+        directSplineModel = SplineModel(self.transfer, phiPlane, rho)
         
         numPixelsRef = self.numPixelsRef
         refPixels = self.createPixels(numPixelsRef)
@@ -83,10 +84,10 @@ class Main:
             viewRay = Ray2D(self.eye, refPixel, 10, refPixelWidth)
             refSplinePlotter.plotViewRay(viewRay, [0, 10])
             
-            intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
+            intersections = refSplineModel.phiPlane.findTwoIntersections(viewRay)
             
             if intersections != None:
-                [_, refPixelColors[i]] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaRef)
+                [_, refPixelColors[i]] = refSplineModel.raycast(viewRay, intersections, self.viewRayDeltaRef)
             else:
                 refPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
         
@@ -109,10 +110,10 @@ class Main:
             voxelPlotter.plotViewRay(viewRay, [0, 10])
         
         for i, viewRay in enumerate(viewRays):
-            intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
+            intersections = directSplineModel.phiPlane.findTwoIntersections(viewRay)
             
             if intersections != None:
-                [directSamplePoints, directPixelColors[i]] = splineModel.raycast(viewRay, intersections, self.viewRayDeltaDirect, directSplinePlotter)
+                [directSamplePoints, directPixelColors[i]] = directSplineModel.raycast(viewRay, intersections, self.viewRayDeltaDirect, directSplinePlotter)
                 maxDirectSamplePoints = max(directSamplePoints, maxDirectSamplePoints)
             else:
                 directPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
@@ -131,9 +132,8 @@ class Main:
         print "---------------------"
             
         texDimSize = 20
-        
-        splineModel.plotBoundingEllipses = True
-        samplingScalars = splineModel.generateScalarMatrix(bb, texDimSize, texDimSize, self.voxelizationTolerance, paramPlotter, refSplinePlotter)
+
+        samplingScalars = refSplineModel.generateScalarMatrix(bb, texDimSize, texDimSize, self.voxelizationTolerance, paramPlotter, refSplinePlotter)
         scalarTexture = Texture2D(samplingScalars)
         
         voxelWidth = bb.getHeight() / float(texDimSize)
@@ -146,17 +146,17 @@ class Main:
         if choice == 0:
             model = voxelModel
         elif choice == 1:
-            model = BoundaryHybridModel(self.transfer, splineModel, voxelModel)
+            model = BoundaryHybridModel(self.transfer, directSplineModel, voxelModel)
         elif choice == 2:
-            model = HybridModel(self.transfer, splineModel, voxelModel, criterion)
+            model = HybridModel(self.transfer, directSplineModel, voxelModel, criterion)
         elif choice == 3:
-            bhModel = BoundaryHybridModel(self.transfer, splineModel, voxelModel)
-            model = HybridModel(self.transfer, splineModel, bhModel, criterion)
+            bhModel = BoundaryHybridModel(self.transfer, directSplineModel, voxelModel)
+            model = HybridModel(self.transfer, directSplineModel, bhModel, criterion)
         
         maxVoxelSamplePoints = 0
 
         for i, viewRay in enumerate(viewRays):
-            intersections = splineModel.phiPlane.findTwoIntersections(viewRay)
+            intersections = directSplineModel.phiPlane.findTwoIntersections(viewRay)
             
             if intersections != None:
                 [voxelSamplePoints, voxelizedPixelColors[i]] = model.raycast(viewRay, intersections, self.viewRayDeltaVoxelized, plotter.voxelModelPlotter)
