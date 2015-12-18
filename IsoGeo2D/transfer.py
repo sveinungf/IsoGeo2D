@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 def createTransferArray(n):
@@ -24,7 +25,7 @@ def createTransferFunction(n):
     array = createTransferArray(n)
     
     def transfer(x):
-        index = int(x * n)
+        index = int(math.floor(x * n / 1.000001))
         return array[index]
     
     return transfer
