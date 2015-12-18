@@ -13,7 +13,7 @@ def frontToBack(rgbaValues, deltas):
     return dst
 
 def accumulate(dst, src, delta):
-    xi = 1.0
+    xi = 0.01
     
     t = (1 - src[3])**(delta/xi)
     factor = (1 - t)*(1 - dst[3])
