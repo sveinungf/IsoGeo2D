@@ -9,7 +9,7 @@ class PixelFigure:
         numTextures = len(texDimSizes)
         
         plt.figure(figsize=(15, 6))
-        mainGrid = gridspec.GridSpec(2 + numTextures * 3, 2, hspace=(0.6*numTextures))
+        mainGrid = gridspec.GridSpec(2 + numTextures * 4, 2, hspace=(0.6*numTextures))
         
         ax = plt.subplot(mainGrid[0, 0])
         self.refPixelsPlot = PixelPlotter(ax, "Reference")
@@ -22,6 +22,9 @@ class PixelFigure:
         
         self.voxelPixelsPlots = np.empty(numTextures, dtype=object)
         self.voxelDiffsPlots = np.empty(numTextures, dtype=object)
+        
+        self.bhPixelsPlots = np.empty(numTextures, dtype=object)
+        self.bhDiffsPlots = np.empty(numTextures, dtype=object)
         
         self.hybridPixelsPlots = np.empty(numTextures, dtype=object)
         self.hybridDiffsPlots = np.empty(numTextures, dtype=object)
@@ -43,6 +46,17 @@ class PixelFigure:
         for i in range(numTextures):
             texDimSize = texDimSizes[i]
             
+            ax = plt.subplot(mainGrid[i + offset, 0])
+            self.bhPixelsPlots[i] = PixelPlotter(ax, "Boundary hybrid ({}x{})".format(texDimSize, texDimSize))
+            
+            ax = plt.subplot(mainGrid[i + offset, 1])
+            self.bhDiffsPlots[i] = PixelPlotter(ax, "Boundary hybrid color diffs ({}x{})".format(texDimSize, texDimSize))
+            
+        offset += numTextures    
+        
+        for i in range(numTextures):
+            texDimSize = texDimSizes[i]
+            
             ax = plt.subplot(mainGrid[2*i + offset, 0])
             self.hybridPixelsPlots[i] = PixelPlotter(ax, "Hybrid ({}x{})".format(texDimSize, texDimSize))
             
@@ -54,8 +68,6 @@ class PixelFigure:
         
         plt.ion()
         plt.show()
-        
-        #mainGrid.tight_layout(fig)
         
     def draw(self):
         plt.draw()
