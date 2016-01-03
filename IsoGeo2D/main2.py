@@ -7,6 +7,7 @@ from model.boundaryhybridmodel import BoundaryHybridModel
 from model.hybridmodel import HybridModel
 from model.splinemodel import SplineModel
 from model.voxelmodel import VoxelModel
+from plotting.graphfigure import GraphFigure
 from plotting.pixelfigure import PixelFigure
 from voxelcriterion.geometriccriterion import GeometricCriterion
 from dataset import Dataset
@@ -167,10 +168,13 @@ class Main2:
             figure.hybridDiffsPlots[i].plotPixelColorDiffs(hybridDiffs[i])
             
             figure.hybridVoxelRatioPlots[i].plotRatios(hybridVoxelRatios[i])
+
+        voxelMeans = []
         
         for i in range(numTextures):
             texDimSize = texDimSizes[i]
             summary = Summary(voxelDiffs[i], maxVoxelSamplePoints[i])
+            voxelMeans.append(summary.mean)
             self.printSummary("Voxel ({}x{})".format(texDimSize, texDimSize), summary)
             
         for i in range(numTextures):
@@ -184,6 +188,11 @@ class Main2:
             self.printSummary("Hybrid ({}x{})".format(texDimSize, texDimSize), summary)
 
         figure.show()
+
+        graphFigure = GraphFigure()
+        graphFigure.meanGraph.plotGraph(texDimSizes, voxelMeans)
+
+        graphFigure.show()
         
     def printRefSummary(self, maxSamplePoints):
         print "Reference"
