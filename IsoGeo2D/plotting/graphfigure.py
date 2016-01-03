@@ -14,5 +14,13 @@ class GraphFigure:
         ax.set_ylabel('Mean')
         self.meanGraph = GraphPlotter(ax)
 
+    def graphVoxelSummaries(self, texDimSizes, summaries):
+        means = []
+
+        for summary in summaries:
+            means.append(summary.mean)
+
+        self.meanGraph.plotGraph(texDimSizes, means)
+
     def show(self):
         self.fig.show()

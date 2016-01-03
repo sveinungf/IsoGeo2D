@@ -169,12 +169,12 @@ class Main2:
             
             figure.hybridVoxelRatioPlots[i].plotRatios(hybridVoxelRatios[i])
 
-        voxelMeans = []
+        voxelSummaries = []
         
         for i in range(numTextures):
             texDimSize = texDimSizes[i]
             summary = Summary(voxelDiffs[i], maxVoxelSamplePoints[i])
-            voxelMeans.append(summary.mean)
+            voxelSummaries.append(summary)
             self.printSummary("Voxel ({}x{})".format(texDimSize, texDimSize), summary)
             
         for i in range(numTextures):
@@ -190,7 +190,7 @@ class Main2:
         figure.show()
 
         graphFigure = GraphFigure()
-        graphFigure.meanGraph.plotGraph(texDimSizes, voxelMeans)
+        graphFigure.graphVoxelSummaries(texDimSizes, voxelSummaries)
 
         graphFigure.show()
         
