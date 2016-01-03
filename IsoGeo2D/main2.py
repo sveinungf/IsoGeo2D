@@ -54,8 +54,6 @@ class Main2:
         texDimSizes = np.array([32, 64, 128, 256, 512])
         
         numTextures = len(texDimSizes)
-                
-        figure = PixelFigure(texDimSizes)
         
         rho = self.dataset.rho
         phi = self.dataset.phi
@@ -138,7 +136,9 @@ class Main2:
                     voxelPixelColors[j][i] = backgroundColor
                     bhPixelColors[j][i] = backgroundColor
                     hybridPixelColors[j][i] = backgroundColor
-        
+
+        figure = PixelFigure(texDimSizes)
+
         figure.refPixelsPlot.plotPixelColors(refPixelColors)
         figure.directPixelsPlot.plotPixelColors(directPixelColors)
         
@@ -182,8 +182,8 @@ class Main2:
             texDimSize = texDimSizes[i]
             summary = Summary(hybridDiffs[i], maxHybridSamplePoints[i])
             self.printSummary("Hybrid ({}x{})".format(texDimSize, texDimSize), summary)
-            
-        figure.draw()
+
+        figure.show()
         
     def printRefSummary(self, maxSamplePoints):
         print "Reference"
