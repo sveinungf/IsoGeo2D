@@ -189,9 +189,9 @@ class Main2:
 
         figure.show()
 
-        graphFigure = GraphFigure()
-        graphFigure.graphVoxelSummaries(texDimSizes, voxelSummaries)
-
+        graphFigure = GraphFigure(texDimSizes)
+        graphFigure.graphDirectSummary(directSummary)
+        graphFigure.graphVoxelSummaries(voxelSummaries)
         graphFigure.show()
         
     def printRefSummary(self, maxSamplePoints):
