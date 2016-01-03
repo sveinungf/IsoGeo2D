@@ -30,7 +30,7 @@ class GraphFigure:
         ax.set_xticks(texDimSizes)
         self.varGraph = GraphPlotter(ax)
 
-    def __graphSummaries(self, maxes, means, vars, label):
+    def __graphMaxMeanVars(self, maxes, means, vars, label):
         self.maxGraph.plotGraph(self.texDimSizes, maxes, label)
         self.meanGraph.plotGraph(self.texDimSizes, means, label)
         self.varGraph.plotGraph(self.texDimSizes, vars, label)
@@ -41,9 +41,9 @@ class GraphFigure:
         means = np.ones(numPoints) * summary.mean
         vars = np.ones(numPoints) * summary.var
 
-        self.__graphSummaries(maxes, means, vars, 'Direct')
+        self.__graphMaxMeanVars(maxes, means, vars, 'Direct')
 
-    def graphVoxelSummaries(self, summaries):
+    def graphSummaries(self, summaries, label):
         maxes = []
         means = []
         vars = []
@@ -53,7 +53,7 @@ class GraphFigure:
             means.append(summary.mean)
             vars.append(summary.var)
 
-        self.__graphSummaries(maxes, means, vars, 'Voxel')
+        self.__graphMaxMeanVars(maxes, means, vars, label)
 
     def show(self):
         handles, labels = self.meanGraph.plot.get_legend_handles_labels()

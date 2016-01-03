@@ -170,6 +170,7 @@ class Main2:
             figure.hybridVoxelRatioPlots[i].plotRatios(hybridVoxelRatios[i])
 
         voxelSummaries = []
+        hybridSummaries = []
         
         for i in range(numTextures):
             texDimSize = texDimSizes[i]
@@ -185,13 +186,15 @@ class Main2:
         for i in range(numTextures):
             texDimSize = texDimSizes[i]
             summary = Summary(hybridDiffs[i], maxHybridSamplePoints[i])
+            hybridSummaries.append(summary)
             self.printSummary("Hybrid ({}x{})".format(texDimSize, texDimSize), summary)
 
         figure.show()
 
         graphFigure = GraphFigure(texDimSizes)
         graphFigure.graphDirectSummary(directSummary)
-        graphFigure.graphVoxelSummaries(voxelSummaries)
+        graphFigure.graphSummaries(voxelSummaries, 'Voxel')
+        graphFigure.graphSummaries(hybridSummaries, 'Hybrid')
         graphFigure.show()
         
     def printRefSummary(self, maxSamplePoints):
