@@ -24,8 +24,8 @@ class PixelFigure:
         self.voxelPixelsPlots = np.empty(numTextures, dtype=object)
         self.voxelDiffsPlots = np.empty(numTextures, dtype=object)
         
-        self.bhPixelsPlots = np.empty(numTextures, dtype=object)
-        self.bhDiffsPlots = np.empty(numTextures, dtype=object)
+        self.baPixelsPlots = np.empty(numTextures, dtype=object)
+        self.baDiffsPlots = np.empty(numTextures, dtype=object)
         
         self.hybridPixelsPlots = np.empty(numTextures, dtype=object)
         self.hybridDiffsPlots = np.empty(numTextures, dtype=object)
@@ -48,10 +48,10 @@ class PixelFigure:
             texDimSize = texDimSizes[i]
             
             ax = fig.add_subplot(mainGrid[i + offset, 0])
-            self.bhPixelsPlots[i] = PixelPlotter(ax, "Boundary hybrid ({}x{})".format(texDimSize, texDimSize))
+            self.baPixelsPlots[i] = PixelPlotter(ax, "Boundary accurate ({}x{})".format(texDimSize, texDimSize))
             
             ax = fig.add_subplot(mainGrid[i + offset, 1])
-            self.bhDiffsPlots[i] = PixelPlotter(ax, "Boundary hybrid color diffs ({}x{})".format(texDimSize, texDimSize))
+            self.baDiffsPlots[i] = PixelPlotter(ax, "Boundary accurate color diffs ({}x{})".format(texDimSize, texDimSize))
             
         offset += numTextures    
         

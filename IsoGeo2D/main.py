@@ -2,7 +2,7 @@ import numpy as np
 
 import colordiff
 import transfer as trans
-from model.boundaryhybridmodel import BoundaryHybridModel
+from model.boundaryaccuratemodel import BoundaryAccurateModel
 from model.hybridmodel import HybridModel
 from model.splinemodel import SplineModel
 from model.voxelmodel import VoxelModel
@@ -146,11 +146,11 @@ class Main:
         if choice == 0:
             model = voxelModel
         elif choice == 1:
-            model = BoundaryHybridModel(self.transfer, directSplineModel, voxelModel)
+            model = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModel)
         elif choice == 2:
             model = HybridModel(self.transfer, directSplineModel, voxelModel, criterion)
         elif choice == 3:
-            bhModel = BoundaryHybridModel(self.transfer, directSplineModel, voxelModel)
+            bhModel = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModel)
             model = HybridModel(self.transfer, directSplineModel, bhModel, criterion)
         
         maxVoxelSamplePoints = 0

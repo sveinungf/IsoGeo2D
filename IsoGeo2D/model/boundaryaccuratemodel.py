@@ -1,8 +1,8 @@
 from model.basemodel import BaseModel
 
-class BoundaryHybridModel(BaseModel):
+class BoundaryAccurateModel(BaseModel):
     def __init__(self, transfer, splineModel, voxelModel):
-        super(BoundaryHybridModel, self).__init__(transfer)
+        super(BoundaryAccurateModel, self).__init__(transfer)
 
         self.splineModel = splineModel
         self.voxelModel = voxelModel

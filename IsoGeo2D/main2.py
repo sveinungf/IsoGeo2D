@@ -3,7 +3,7 @@ import numpy as np
 import fileio.voxelio as voxelio
 import colordiff
 import transfer as trans
-from model.boundaryhybridmodel import BoundaryHybridModel
+from model.boundaryaccuratemodel import BoundaryAccurateModel
 from model.hybridmodel import HybridModel
 from model.splinemodel import SplineModel
 from model.voxelmodel import VoxelModel
@@ -65,7 +65,7 @@ class Main2:
         refSplineModel = SplineModel(self.transfer, phiPlane, rho, self.refTolerance)
         directSplineModel = SplineModel(self.transfer, phiPlane, rho)
         voxelModels = np.empty(numTextures, dtype=object)
-        bhModels = np.empty(numTextures, dtype=object)
+        baModels = np.empty(numTextures, dtype=object)
         hybridModels = np.empty(numTextures, dtype=object)
         
         for i in range(numTextures):
@@ -85,7 +85,7 @@ class Main2:
             criterion = GeometricCriterion(pixelWidth, voxelWidth)
             
             voxelModels[i] = VoxelModel(self.transfer, scalarTexture, boundingBox)
-            bhModels[i] = BoundaryHybridModel(self.transfer, directSplineModel, voxelModels[i])
+            baModels[i] = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModels[i])
             hybridModels[i] = HybridModel(self.transfer, directSplineModel, voxelModels[i], criterion)
 
         pixels = self.createPixels(numPixels)
@@ -94,7 +94,7 @@ class Main2:
         refPixelColors = np.empty((numPixels, 4))
         directPixelColors = np.empty((numPixels, 4))
         voxelPixelColors = np.empty((numTextures, numPixels, 4))
-        bhPixelColors = np.empty((numTextures, numPixels, 4))
+        baPixelColors = np.empty((numTextures, numPixels, 4))
         hybridPixelColors = np.empty((numTextures, numPixels, 4))
         
         hybridVoxelRatios = np.empty((numTextures, numPixels))
@@ -102,7 +102,7 @@ class Main2:
         maxRefSamplePoints = 0
         maxDirectSamplePoints = 0
         maxVoxelSamplePoints = np.zeros(numTextures)
-        maxBhSamplePoints = np.zeros(numTextures)
+        maxBaSamplePoints = np.zeros(numTextures)
         maxHybridSamplePoints = np.zeros(numTextures)
         
         backgroundColor = np.array([0.0, 0.0, 0.0, 0.0])
@@ -121,13 +121,13 @@ class Main2:
                 
                 for j in range(numTextures):
                     [voxelSamplePoints, voxelPixelColors[j][i]] = voxelModels[j].raycast(viewRay, intersections, self.viewRayDelta)
-                    [bhSamplePoints, bhPixelColors[j][i]] = bhModels[j].raycast(viewRay, intersections, self.viewRayDelta)
+                    [baSamplePoints, baPixelColors[j][i]] = baModels[j].raycast(viewRay, intersections, self.viewRayDelta)
                     [hybridSamplePoints, hybridPixelColors[j][i]] = hybridModels[j].raycast(viewRay, intersections, self.viewRayDelta)
                     
                     hybridVoxelRatios[j][i] = hybridModels[j].voxelRatio()
                     
                     maxVoxelSamplePoints[j] = max(voxelSamplePoints, maxVoxelSamplePoints[j])
-                    maxBhSamplePoints[j] = max(bhSamplePoints, maxBhSamplePoints[j])
+                    maxBaSamplePoints[j] = max(baSamplePoints, maxBaSamplePoints[j])
                     maxHybridSamplePoints[j] = max(hybridSamplePoints, maxHybridSamplePoints[j])
             else:
                 refPixelColors[i] = backgroundColor
@@ -135,7 +135,7 @@ class Main2:
                 
                 for j in range(numTextures):
                     voxelPixelColors[j][i] = backgroundColor
-                    bhPixelColors[j][i] = backgroundColor
+                    baPixelColors[j][i] = backgroundColor
                     hybridPixelColors[j][i] = backgroundColor
 
         figure = PixelFigure(texDimSizes)
@@ -151,20 +151,20 @@ class Main2:
         self.printSummary("Direct", directSummary)
         
         voxelDiffs = np.empty((numTextures, numPixels))
-        bhDiffs = np.empty((numTextures, numPixels))
+        baDiffs = np.empty((numTextures, numPixels))
         hybridDiffs = np.empty((numTextures, numPixels))
         
         for i in range(numTextures):
             figure.voxelPixelsPlots[i].plotPixelColors(voxelPixelColors[i])
-            figure.bhPixelsPlots[i].plotPixelColors(bhPixelColors[i])
+            figure.baPixelsPlots[i].plotPixelColors(baPixelColors[i])
             figure.hybridPixelsPlots[i].plotPixelColors(hybridPixelColors[i])
             
             voxelDiffs[i] = colordiff.compare(refPixelColors, voxelPixelColors[i])
-            bhDiffs[i] = colordiff.compare(refPixelColors, bhPixelColors[i])
+            baDiffs[i] = colordiff.compare(refPixelColors, baPixelColors[i])
             hybridDiffs[i] = colordiff.compare(refPixelColors, hybridPixelColors[i])
             
             figure.voxelDiffsPlots[i].plotPixelColorDiffs(voxelDiffs[i])
-            figure.bhDiffsPlots[i].plotPixelColorDiffs(bhDiffs[i])
+            figure.baDiffsPlots[i].plotPixelColorDiffs(baDiffs[i])
             figure.hybridDiffsPlots[i].plotPixelColorDiffs(hybridDiffs[i])
             
             figure.hybridVoxelRatioPlots[i].plotRatios(hybridVoxelRatios[i])
@@ -180,8 +180,8 @@ class Main2:
             
         for i in range(numTextures):
             texDimSize = texDimSizes[i]
-            summary = Summary(bhDiffs[i], maxBhSamplePoints[i])
-            self.printSummary("Boundary hybrid ({}x{})".format(texDimSize, texDimSize), summary)
+            summary = Summary(baDiffs[i], maxBaSamplePoints[i])
+            self.printSummary("Boundary accurate ({}x{})".format(texDimSize, texDimSize), summary)
             
         for i in range(numTextures):
             texDimSize = texDimSizes[i]
