@@ -91,11 +91,11 @@ class Main2:
         pixels = self.createPixels(numPixels)
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
         
-        refPixelColors = np.empty((numPixels, 4))
-        directPixelColors = np.empty((numPixels, 4))
-        voxelPixelColors = np.empty((numTextures, numPixels, 4))
-        baPixelColors = np.empty((numTextures, numPixels, 4))
-        hybridPixelColors = np.empty((numTextures, numPixels, 4))
+        refPixelColors = np.zeros((numPixels, 4))
+        directPixelColors = np.zeros((numPixels, 4))
+        voxelPixelColors = np.zeros((numTextures, numPixels, 4))
+        baPixelColors = np.zeros((numTextures, numPixels, 4))
+        hybridPixelColors = np.zeros((numTextures, numPixels, 4))
         
         hybridVoxelRatios = np.empty((numTextures, numPixels))
         
@@ -105,45 +105,39 @@ class Main2:
         maxBaSamplePoints = np.zeros(numTextures)
         maxHybridSamplePoints = np.zeros(numTextures)
         
-        backgroundColor = np.array([0.0, 0.0, 0.0, 0.0])
-        
         for i, pixel in enumerate(pixels):
             viewRay = Ray2D(self.eye, pixel, 10, pixelWidth)
             
-            intersections = directSplineModel.phiPlane.findTwoIntersections(viewRay)
-            bbIntersections = boundingBox.findTwoIntersections(viewRay)
+            viewRay.splineIntersects = directSplineModel.phiPlane.findTwoIntersections(viewRay)
+            viewRay.boundingBoxIntersects = boundingBox.findTwoIntersections(viewRay)
 
-            if intersections is not None:
-                [refSamplePoints, refPixelColors[i]] = refSplineModel.raycast(viewRay, intersections, self.viewRayDeltaRef)
-                [directSamplePoints, directPixelColors[i]] = directSplineModel.raycast(viewRay, intersections, self.viewRayDelta)
-                
-                maxRefSamplePoints = max(refSamplePoints, maxRefSamplePoints)
-                maxDirectSamplePoints = max(directSamplePoints, maxDirectSamplePoints)
-                
-                for j in range(numTextures):
-                    [baSamplePoints, baPixelColors[j][i]] = baModels[j].raycast(viewRay, intersections, self.viewRayDelta)
-                    [hybridSamplePoints, hybridPixelColors[j][i]] = hybridModels[j].raycast(viewRay, intersections, self.viewRayDelta)
-                    
+            result = refSplineModel.raycast(viewRay, self.viewRayDeltaRef)
+            if result.color is not None:
+                refPixelColors[i] = result.color
+                maxRefSamplePoints = max(result.samples, maxRefSamplePoints)
+
+            result = directSplineModel.raycast(viewRay, self.viewRayDelta)
+            if result.color is not None:
+                directPixelColors[i] = result.color
+                maxDirectSamplePoints = max(result.samples, maxDirectSamplePoints)
+
+            for j in range(numTextures):
+                result = voxelModels[j].raycast(viewRay, self.viewRayDelta)
+                if result.color is not None:
+                    voxelPixelColors[j][i] = result.color
+                    maxVoxelSamplePoints[j] = max(result.samples, maxVoxelSamplePoints[j])
+
+                result = baModels[j].raycast(viewRay, self.viewRayDelta)
+                if result.color is not None:
+                    baPixelColors[j][i] = result.color
+                    maxBaSamplePoints[j] = max(result.samples, maxBaSamplePoints[j])
+
+                result = hybridModels[j].raycast(viewRay, self.viewRayDelta)
+                if result.color is not None:
+                    hybridPixelColors[j][i] = result.color
+                    maxHybridSamplePoints[j] = max(result.samples, maxHybridSamplePoints[j])
+
                     hybridVoxelRatios[j][i] = hybridModels[j].voxelRatio()
-
-                    maxBaSamplePoints[j] = max(baSamplePoints, maxBaSamplePoints[j])
-                    maxHybridSamplePoints[j] = max(hybridSamplePoints, maxHybridSamplePoints[j])
-            else:
-                refPixelColors[i] = backgroundColor
-                directPixelColors[i] = backgroundColor
-                
-                for j in range(numTextures):
-                    voxelPixelColors[j][i] = backgroundColor
-                    baPixelColors[j][i] = backgroundColor
-                    hybridPixelColors[j][i] = backgroundColor
-
-            if bbIntersections is not None:
-                for j in range(numTextures):
-                    [voxelSamplePoints, voxelPixelColors[j][i]] = voxelModels[j].raycast(viewRay, bbIntersections, self.viewRayDelta)
-                    maxVoxelSamplePoints[j] = max(voxelSamplePoints, maxVoxelSamplePoints[j])
-            else:
-                for j in range(numTextures):
-                    voxelPixelColors[j][i] = backgroundColor
 
         figure = PixelFigure(texDimSizes)
 

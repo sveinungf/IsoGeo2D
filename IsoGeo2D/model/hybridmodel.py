@@ -34,6 +34,26 @@ class HybridModel(BaseModel):
         model = self.__chooseModel(viewRay, intersection.geomPoint)
         return model.outSample(intersection, viewRay)
 
+    def getIntersections(self, viewRay):
+        splineIn = viewRay.splineIntersects[0]
+        splineOut = viewRay.splineIntersects[1]
+        bbIn = viewRay.boundingBoxIntersects[0]
+        bbOut = viewRay.boundingBoxIntersects[0]
+
+        result = []
+
+        if self.criterion.lodLevel(viewRay, splineIn.geomPoint) >= 0:
+            result.append(splineIn)
+        else:
+            result.append(splineIn)
+
+        if self.criterion.lodLevel(viewRay, splineOut.geomPoint) >= 0:
+            result.append(splineOut)
+        else:
+            result.append(splineOut)
+
+        return result
+
     def voxelRatio(self):
         x = self.voxelSamples
         s = self.splineSamples

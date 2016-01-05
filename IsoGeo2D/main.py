@@ -83,11 +83,12 @@ class Main:
         for i, refPixel in enumerate(refPixels):
             viewRay = Ray2D(self.eye, refPixel, 10, refPixelWidth)
             refSplinePlotter.plotViewRay(viewRay, [0, 10])
-            
-            intersections = refSplineModel.phiPlane.findTwoIntersections(viewRay)
-            
-            if intersections != None:
-                [_, refPixelColors[i]] = refSplineModel.raycast(viewRay, intersections, self.viewRayDeltaRef)
+
+            viewRay.splineIntersects = refSplineModel.phiPlane.findTwoIntersections(viewRay)
+            result = refSplineModel.raycast(viewRay, self.viewRayDeltaRef)
+
+            if result.color is not None:
+                refPixelColors[i] = result.color
             else:
                 refPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
         
@@ -110,11 +111,12 @@ class Main:
             voxelPlotter.plotViewRay(viewRay, [0, 10])
         
         for i, viewRay in enumerate(viewRays):
-            intersections = directSplineModel.phiPlane.findTwoIntersections(viewRay)
-            
-            if intersections != None:
-                [directSamplePoints, directPixelColors[i]] = directSplineModel.raycast(viewRay, intersections, self.viewRayDeltaDirect, directSplinePlotter)
-                maxDirectSamplePoints = max(directSamplePoints, maxDirectSamplePoints)
+            viewRay.splineIntersects = directSplineModel.phiPlane.findTwoIntersections(viewRay)
+            result = directSplineModel.raycast(viewRay, self.viewRayDeltaDirect, directSplinePlotter)
+
+            if result.color is not None:
+                directPixelColors[i] = result.color
+                maxDirectSamplePoints = max(result.samples, maxDirectSamplePoints)
             else:
                 directPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
             
@@ -156,16 +158,17 @@ class Main:
         maxSamplePoints = 0
 
         for i, viewRay in enumerate(viewRays):
-            if choice == 0:
-                intersections = bb.findTwoIntersections(viewRay)
-            else:
-                intersections = directSplineModel.phiPlane.findTwoIntersections(viewRay)
-            
-            if intersections is not None:
-                [samplePoints, pixelColors[i]] = model.raycast(viewRay, intersections, self.viewRayDeltaVoxelized, plotter.voxelModelPlotter)
-                maxSamplePoints = max(samplePoints, maxSamplePoints)
+            viewRay.boundingBoxIntersects = bb.findTwoIntersections(viewRay)
+            viewRay.splineIntersects = directSplineModel.phiPlane.findTwoIntersections(viewRay)
+
+            result = model.raycast(viewRay, self.viewRayDeltaVoxelized, plotter.voxelModelPlotter)
+
+            if result.color is not None:
+                pixelColors[i] = result.color
+                maxSamplePoints = max(result.samples, maxSamplePoints)
             else:
                 pixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
+
     
         voxelizedDiffs = colordiff.compare(refPixelColors, pixelColors)
         summary = Summary(voxelizedDiffs, maxSamplePoints)

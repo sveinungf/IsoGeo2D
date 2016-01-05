@@ -131,3 +131,6 @@ class SplineModel(BaseModel):
     
     def outSample(self, intersection, viewRay):
         return self.inSample(intersection, viewRay)
+
+    def getIntersections(self, viewRay):
+        return viewRay.splineIntersects

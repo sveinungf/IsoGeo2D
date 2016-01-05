@@ -15,3 +15,6 @@ class BoundaryAccurateModel(BaseModel):
     
     def outSample(self, intersection, viewRay):
         return self.splineModel.outSample(intersection, viewRay)
+
+    def getIntersections(self, viewRay):
+        return viewRay.splineIntersects
