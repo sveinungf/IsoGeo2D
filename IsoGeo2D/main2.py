@@ -113,8 +113,7 @@ class Main2:
             intersections = directSplineModel.phiPlane.findTwoIntersections(viewRay)
             bbIntersections = boundingBox.findTwoIntersections(viewRay)
 
-            # TODO
-            if intersections != None:
+            if intersections is not None:
                 [refSamplePoints, refPixelColors[i]] = refSplineModel.raycast(viewRay, intersections, self.viewRayDeltaRef)
                 [directSamplePoints, directPixelColors[i]] = directSplineModel.raycast(viewRay, intersections, self.viewRayDelta)
                 
@@ -122,13 +121,11 @@ class Main2:
                 maxDirectSamplePoints = max(directSamplePoints, maxDirectSamplePoints)
                 
                 for j in range(numTextures):
-                    [voxelSamplePoints, voxelPixelColors[j][i]] = voxelModels[j].raycast(viewRay, bbIntersections, self.viewRayDelta)
                     [baSamplePoints, baPixelColors[j][i]] = baModels[j].raycast(viewRay, intersections, self.viewRayDelta)
                     [hybridSamplePoints, hybridPixelColors[j][i]] = hybridModels[j].raycast(viewRay, intersections, self.viewRayDelta)
                     
                     hybridVoxelRatios[j][i] = hybridModels[j].voxelRatio()
-                    
-                    maxVoxelSamplePoints[j] = max(voxelSamplePoints, maxVoxelSamplePoints[j])
+
                     maxBaSamplePoints[j] = max(baSamplePoints, maxBaSamplePoints[j])
                     maxHybridSamplePoints[j] = max(hybridSamplePoints, maxHybridSamplePoints[j])
             else:
@@ -139,6 +136,14 @@ class Main2:
                     voxelPixelColors[j][i] = backgroundColor
                     baPixelColors[j][i] = backgroundColor
                     hybridPixelColors[j][i] = backgroundColor
+
+            if bbIntersections is not None:
+                for j in range(numTextures):
+                    [voxelSamplePoints, voxelPixelColors[j][i]] = voxelModels[j].raycast(viewRay, bbIntersections, self.viewRayDelta)
+                    maxVoxelSamplePoints[j] = max(voxelSamplePoints, maxVoxelSamplePoints[j])
+            else:
+                for j in range(numTextures):
+                    voxelPixelColors[j][i] = backgroundColor
 
         figure = PixelFigure(texDimSizes)
 
