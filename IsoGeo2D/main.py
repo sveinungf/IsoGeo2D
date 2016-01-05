@@ -97,7 +97,7 @@ class Main:
         
         viewRays = np.empty(numPixels, dtype=object)
         directPixelColors = np.empty((numPixels, 4))
-        voxelizedPixelColors = np.empty((numPixels, 4))
+        pixelColors = np.empty((numPixels, 4))
         
         maxDirectSamplePoints = 0
 
@@ -153,24 +153,27 @@ class Main:
             bhModel = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModel)
             model = HybridModel(self.transfer, directSplineModel, bhModel, criterion)
         
-        maxVoxelSamplePoints = 0
+        maxSamplePoints = 0
 
         for i, viewRay in enumerate(viewRays):
-            bbIntersections = bb.findTwoIntersections(viewRay)
-            
-            if bbIntersections is not None:
-                [voxelSamplePoints, voxelizedPixelColors[i]] = model.raycast(viewRay, bbIntersections, self.viewRayDeltaVoxelized, plotter.voxelModelPlotter)
-                maxVoxelSamplePoints = max(voxelSamplePoints, maxVoxelSamplePoints)
+            if choice == 0:
+                intersections = bb.findTwoIntersections(viewRay)
             else:
-                voxelizedPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
+                intersections = directSplineModel.phiPlane.findTwoIntersections(viewRay)
+            
+            if intersections is not None:
+                [samplePoints, pixelColors[i]] = model.raycast(viewRay, intersections, self.viewRayDeltaVoxelized, plotter.voxelModelPlotter)
+                maxSamplePoints = max(samplePoints, maxSamplePoints)
+            else:
+                pixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
     
-        voxelizedDiffs = colordiff.compare(refPixelColors, voxelizedPixelColors)
-        summary = Summary(voxelizedDiffs, maxVoxelSamplePoints)
+        voxelizedDiffs = colordiff.compare(refPixelColors, pixelColors)
+        summary = Summary(voxelizedDiffs, maxSamplePoints)
         self.printSummary("Voxel ({}x{})".format(texDimSize, texDimSize), summary)
 
         voxelPlotter.plotScalars(samplingScalars, bb)    
         plotter.plotScalarTexture(scalarTexture)
-        plotter.pixelVoxelizedPlot.plotPixelColors(voxelizedPixelColors)
+        plotter.pixelVoxelizedPlot.plotPixelColors(pixelColors)
         plotter.pixelVoxelizedDiffPlot.plotPixelColorDiffs(voxelizedDiffs)
         
         plotter.draw()
