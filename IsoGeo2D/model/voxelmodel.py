@@ -20,7 +20,7 @@ class VoxelModel(BaseModel):
         v = (samplePoint[1]-bb.bottom)/bb.getHeight()
         
         scalar = texture.fetch([u, v])
-        
+
         if scalar == -1:
             return None
             

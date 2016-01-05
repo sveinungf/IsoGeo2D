@@ -111,7 +111,9 @@ class Main2:
             viewRay = Ray2D(self.eye, pixel, 10, pixelWidth)
             
             intersections = directSplineModel.phiPlane.findTwoIntersections(viewRay)
-            
+            bbIntersections = boundingBox.findTwoIntersections(viewRay)
+
+            # TODO
             if intersections != None:
                 [refSamplePoints, refPixelColors[i]] = refSplineModel.raycast(viewRay, intersections, self.viewRayDeltaRef)
                 [directSamplePoints, directPixelColors[i]] = directSplineModel.raycast(viewRay, intersections, self.viewRayDelta)
@@ -120,7 +122,7 @@ class Main2:
                 maxDirectSamplePoints = max(directSamplePoints, maxDirectSamplePoints)
                 
                 for j in range(numTextures):
-                    [voxelSamplePoints, voxelPixelColors[j][i]] = voxelModels[j].raycast(viewRay, intersections, self.viewRayDelta)
+                    [voxelSamplePoints, voxelPixelColors[j][i]] = voxelModels[j].raycast(viewRay, bbIntersections, self.viewRayDelta)
                     [baSamplePoints, baPixelColors[j][i]] = baModels[j].raycast(viewRay, intersections, self.viewRayDelta)
                     [hybridSamplePoints, hybridPixelColors[j][i]] = hybridModels[j].raycast(viewRay, intersections, self.viewRayDelta)
                     
@@ -170,6 +172,7 @@ class Main2:
             figure.hybridVoxelRatioPlots[i].plotRatios(hybridVoxelRatios[i])
 
         voxelSummaries = []
+        baSummaries = []
         hybridSummaries = []
         
         for i in range(numTextures):
@@ -181,6 +184,7 @@ class Main2:
         for i in range(numTextures):
             texDimSize = texDimSizes[i]
             summary = Summary(baDiffs[i], maxBaSamplePoints[i])
+            baSummaries.append(summary)
             self.printSummary("Boundary accurate ({}x{})".format(texDimSize, texDimSize), summary)
             
         for i in range(numTextures):
@@ -194,6 +198,7 @@ class Main2:
         graphFigure = GraphFigure(texDimSizes)
         graphFigure.graphDirectSummary(directSummary)
         graphFigure.graphSummaries(voxelSummaries, 'Voxel')
+        graphFigure.graphSummaries(baSummaries, 'Boundary accurate')
         graphFigure.graphSummaries(hybridSummaries, 'Hybrid')
         graphFigure.show()
         

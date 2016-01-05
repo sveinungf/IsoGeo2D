@@ -141,7 +141,7 @@ class Main:
         
         voxelModel = VoxelModel(self.transfer, scalarTexture, bb)
         
-        choice = 3
+        choice = 0
         
         if choice == 0:
             model = voxelModel
@@ -149,17 +149,17 @@ class Main:
             model = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModel)
         elif choice == 2:
             model = HybridModel(self.transfer, directSplineModel, voxelModel, criterion)
-        elif choice == 3:
+        else:
             bhModel = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModel)
             model = HybridModel(self.transfer, directSplineModel, bhModel, criterion)
         
         maxVoxelSamplePoints = 0
 
         for i, viewRay in enumerate(viewRays):
-            intersections = directSplineModel.phiPlane.findTwoIntersections(viewRay)
+            bbIntersections = bb.findTwoIntersections(viewRay)
             
-            if intersections != None:
-                [voxelSamplePoints, voxelizedPixelColors[i]] = model.raycast(viewRay, intersections, self.viewRayDeltaVoxelized, plotter.voxelModelPlotter)
+            if bbIntersections is not None:
+                [voxelSamplePoints, voxelizedPixelColors[i]] = model.raycast(viewRay, bbIntersections, self.viewRayDeltaVoxelized, plotter.voxelModelPlotter)
                 maxVoxelSamplePoints = max(voxelSamplePoints, maxVoxelSamplePoints)
             else:
                 voxelizedPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
