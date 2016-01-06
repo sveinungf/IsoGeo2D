@@ -53,7 +53,7 @@ class Main2:
         numPixels = self.numPixels
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
 
-        texDimSizes = np.array([64, 128, 192, 256, 320, 384, 448, 512])
+        texDimSizes = np.array([64, 128, 192, 256, 320, 384, 448, 512, 768, 1024, 2048])
         
         numTextures = len(texDimSizes)
         
@@ -95,6 +95,7 @@ class Main2:
         refPixelColors = np.zeros((numPixels, 4))
         directPixelColors = np.zeros((numPixels, 4))
         voxelPixelColors = np.zeros((numTextures, numPixels, 4))
+        voxelDeltaPixelColors = np.zeros((numTextures, numPixels, 4))
         baPixelColors = np.zeros((numTextures, numPixels, 4))
         hybridPixelColors = np.zeros((numTextures, numPixels, 4))
         
@@ -103,6 +104,7 @@ class Main2:
         maxRefSamplePoints = 0
         maxDirectSamplePoints = 0
         maxVoxelSamplePoints = np.zeros(numTextures)
+        maxVoxelDeltaSamplePoints = np.zeros(numTextures)
         maxBaSamplePoints = np.zeros(numTextures)
         maxHybridSamplePoints = np.zeros(numTextures)
         
@@ -123,10 +125,18 @@ class Main2:
                 maxDirectSamplePoints = max(result.samples, maxDirectSamplePoints)
 
             for j in range(numTextures):
+                texDimSize = texDimSizes[j]
+                voxelWidth = boundingBox.getHeight() / float(texDimSize)
+
                 result = voxelModels[j].raycast(viewRay, self.viewRayDelta)
                 if result.color is not None:
                     voxelPixelColors[j][i] = result.color
                     maxVoxelSamplePoints[j] = max(result.samples, maxVoxelSamplePoints[j])
+
+                result = voxelModels[j].raycast(viewRay, voxelWidth/2.0)
+                if result.color is not None:
+                    voxelDeltaPixelColors[j][i] = result.color
+                    maxVoxelDeltaSamplePoints[j] = max(result.samples, maxVoxelDeltaSamplePoints[j])
 
                 result = baModels[j].raycast(viewRay, self.viewRayDelta)
                 if result.color is not None:
@@ -153,6 +163,7 @@ class Main2:
         self.printSummary("Direct", directSummary)
         
         voxelDiffs = np.empty((numTextures, numPixels))
+        voxelDeltaDiffs = np.empty((numTextures, numPixels))
         baDiffs = np.empty((numTextures, numPixels))
         hybridDiffs = np.empty((numTextures, numPixels))
         
@@ -162,6 +173,7 @@ class Main2:
             figure.hybridPixelsPlots[i].plotPixelColors(hybridPixelColors[i])
             
             voxelDiffs[i] = colordiff.compare(refPixelColors, voxelPixelColors[i])
+            voxelDeltaDiffs[i] = colordiff.compare(refPixelColors, voxelDeltaPixelColors[i])
             baDiffs[i] = colordiff.compare(refPixelColors, baPixelColors[i])
             hybridDiffs[i] = colordiff.compare(refPixelColors, hybridPixelColors[i])
             
@@ -172,6 +184,7 @@ class Main2:
             figure.hybridVoxelRatioPlots[i].plotRatios(hybridVoxelRatios[i])
 
         voxelSummaries = []
+        voxelDeltaSummaries = []
         baSummaries = []
         hybridSummaries = []
         
@@ -180,6 +193,12 @@ class Main2:
             summary = Summary(voxelDiffs[i], maxVoxelSamplePoints[i])
             voxelSummaries.append(summary)
             self.printSummary("Voxel ({}x{})".format(texDimSize, texDimSize), summary)
+
+        for i in range(numTextures):
+            texDimSize = texDimSizes[i]
+            summary = Summary(voxelDeltaDiffs[i], maxVoxelDeltaSamplePoints[i])
+            voxelDeltaSummaries.append(summary)
+            self.printSummary("Voxel auto delta ({}x{})".format(texDimSize, texDimSize), summary)
             
         for i in range(numTextures):
             texDimSize = texDimSizes[i]
@@ -198,6 +217,7 @@ class Main2:
         graphFigure = GraphFigure(texDimSizes)
         graphFigure.graphDirectSummary(directSummary)
         graphFigure.graphSummaries(voxelSummaries, 'Voxel')
+        graphFigure.graphSummaries(voxelDeltaSummaries, 'Voxel auto delta')
         graphFigure.graphSummaries(baSummaries, 'Boundary accurate')
         graphFigure.graphSummaries(hybridSummaries, 'Hybrid')
         graphFigure.show()
