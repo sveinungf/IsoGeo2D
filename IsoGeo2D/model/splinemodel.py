@@ -41,7 +41,7 @@ class SplineModel(BaseModel):
         boundingEllipses = []
         
         for i, y in enumerate(yValues):
-            samplingRay = Ray2D(np.array([bb.left-xDelta/2, y]), np.array([0, y]), 10, yDelta)
+            samplingRay = Ray2D(np.array([bb.left-xDelta/2, y]), np.array([bb.left, y]), 10, yDelta)
             
             intersections = phiPlane.findTwoIntersections(samplingRay)
             

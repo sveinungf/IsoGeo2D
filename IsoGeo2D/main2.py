@@ -16,6 +16,7 @@ from splineplane import SplinePlane
 from summary import Summary
 from texture import Texture2D
 
+
 class Main2:
     def __init__(self, eyeX=-2.0):
         self.dataset = Dataset(1, 1)
@@ -29,7 +30,7 @@ class Main2:
         self.screenBottom = 0.2
         
         self.eye = np.array([eyeX, 0.65])
-        self.viewRayDelta = 0.1
+        self.viewRayDelta = 0.005
         self.viewRayDeltaRef = 0.001
         self.refTolerance = 0.001
         
@@ -43,8 +44,8 @@ class Main2:
         firstPixelY = self.screenBottom + (deltaY/2.0)
         lastPixelY = self.screenTop - (deltaY/2.0)
         
-        pixels[:,0] = pixelXs
-        pixels[:,1] = np.linspace(firstPixelY, lastPixelY, numPixels)
+        pixels[:, 0] = pixelXs
+        pixels[:, 1] = np.linspace(firstPixelY, lastPixelY, numPixels)
         
         return pixels
         
@@ -52,7 +53,7 @@ class Main2:
         numPixels = self.numPixels
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
 
-        texDimSizes = np.array([32, 64, 128, 256, 512])
+        texDimSizes = np.array([64, 128, 192, 256, 320, 384, 448, 512])
         
         numTextures = len(texDimSizes)
         
