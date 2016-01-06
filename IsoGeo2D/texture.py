@@ -33,15 +33,8 @@ class Texture2D:
         data = np.column_stack((data, data[:,-1]))
         self.textureData = data
 
-        x = np.linspace(0, 1, cols)
-        step = x[1]
-        x = np.insert(x, 0, -step)
-        x = np.append(x, 1+step)
-
-        y = np.linspace(0, 1, rows)
-        step = y[1]
-        y = np.insert(y, 0, -step)
-        y = np.append(y, 1+step)
+        x = np.linspace(-marginX, 1.0+marginX, cols+2)
+        y = np.linspace(-marginY, 1.0+marginY, rows+2)
         
         self.f = interpolate.interp2d(x, y, data, kind='linear')
         
