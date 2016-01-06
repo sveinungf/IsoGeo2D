@@ -4,17 +4,20 @@ import numpy as np
 
 import compositing
 
+
 class Sample(object):
     def __init__(self, geomPoint, scalar, thetype):
         self.geomPoint = geomPoint
         self.scalar = scalar
         self.type = thetype
 
+
 class RaycastResult(object):
     def __init__(self, color, samples):
         self.color = color
         self.samples = samples
-    
+
+
 class BaseModel(object):
     __metaclass__ = abc.ABCMeta
     
@@ -54,7 +57,7 @@ class BaseModel(object):
         
         sample = self.inSample(intersections[0], viewRay)
         
-        if sample != None:
+        if sample is not None:
             geomPoints.append(sample.geomPoint)
             sampleTypes.append(sample.type)
             
@@ -68,11 +71,11 @@ class BaseModel(object):
         while samplePoint[0] < outGeomPoint[0]:
             sample = self.sample(samplePoint, prevSample, viewRay, delta)
             
-            if sample != None:
+            if sample is not None:
                 geomPoints.append(sample.geomPoint)
                 sampleTypes.append(sample.type)
                 
-                if prevSample != None:
+                if prevSample is not None:
                     dist = sample.geomPoint - prevSample.geomPoint
                     actualDelta = math.sqrt(dist[0]**2 + dist[1]**2)
                     resultColor = compositing.accumulate(resultColor, prevColor, actualDelta)
@@ -88,7 +91,7 @@ class BaseModel(object):
         if resultColor[3] < 1.0:
             sample = self.outSample(intersections[1], viewRay)
 
-            if sample != None:
+            if sample is not None:
                 geomPoints.append(outGeomPoint)
                 sampleTypes.append(sample.type)
                 
@@ -96,7 +99,7 @@ class BaseModel(object):
                 actualDelta = math.sqrt(dist[0]**2 + dist[1]**2)
                 resultColor = compositing.accumulate(resultColor, prevColor, actualDelta)
 
-        if plotter != None:
+        if plotter is not None:
             plotter.plotSamplePoints(geomPoints, sampleTypes)
 
         return RaycastResult(resultColor, len(geomPoints))
