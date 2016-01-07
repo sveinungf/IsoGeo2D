@@ -2,17 +2,18 @@ import numpy as np
 
 import colordiff
 import transfer as trans
+from dataset import Dataset
 from model.boundaryaccuratemodel import BoundaryAccurateModel
 from model.hybridmodel import HybridModel
 from model.splinemodel import SplineModel
 from model.voxelmodel import VoxelModel
 from plotting.plotter import Plotter
-from voxelcriterion.geometriccriterion import GeometricCriterion
-from dataset import Dataset
 from ray import Ray2D
+from renderers.comparerenderer import CompareSummary
 from splineplane import SplinePlane
-from summary import Summary
 from texture import Texture2D
+from voxelcriterion.geometriccriterion import GeometricCriterion
+
 
 class Main:
     def __init__(self):
@@ -125,7 +126,7 @@ class Main:
         
         directDiffs = colordiff.compare(refPixelColors, directPixelColors)
         plotter.pixelDirectDiffPlot.plotPixelColorDiffs(directDiffs)
-        directSummary = Summary(directDiffs, maxDirectSamplePoints)
+        directSummary = CompareSummary(directPixelColors, maxDirectSamplePoints, directDiffs)
         self.printSummary("Direct", directSummary)
         
         plotter.draw()
@@ -171,7 +172,7 @@ class Main:
 
     
         voxelizedDiffs = colordiff.compare(refPixelColors, pixelColors)
-        summary = Summary(voxelizedDiffs, maxSamplePoints)
+        summary = CompareSummary(pixelColors, maxSamplePoints, voxelizedDiffs)
         self.printSummary("Voxel ({}x{})".format(texDimSize, texDimSize), summary)
 
         voxelPlotter.plotScalars(samplingScalars, bb)    

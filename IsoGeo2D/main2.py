@@ -1,20 +1,21 @@
 import numpy as np
 
 import fileio.voxelio as voxelio
-import colordiff
 import transfer as trans
+from dataset import Dataset
 from model.boundaryaccuratemodel import BoundaryAccurateModel
 from model.hybridmodel import HybridModel
 from model.splinemodel import SplineModel
 from model.voxelmodel import VoxelModel
 from plotting.graphfigure import GraphFigure
 from plotting.pixelfigure import PixelFigure
-from voxelcriterion.geometriccriterion import GeometricCriterion
-from dataset import Dataset
+from renderers.comparerenderer import CompareRenderer
+from renderers.renderer import Renderer
 from ray import Ray2D
+from renderers.hybridrenderer import HybridRenderer
 from splineplane import SplinePlane
-from summary import Summary
 from texture import Texture2D
+from voxelcriterion.geometriccriterion import GeometricCriterion
 
 
 class Main2:
@@ -53,7 +54,7 @@ class Main2:
         numPixels = self.numPixels
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
 
-        texDimSizes = np.array([64, 128, 192, 256, 320, 384, 448, 512, 768, 1024, 2048])
+        texDimSizes = np.array([64, 128, 192, 256, 320, 384])
         
         numTextures = len(texDimSizes)
         
@@ -91,22 +92,8 @@ class Main2:
 
         pixels = self.createPixels(numPixels)
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
-        
-        refPixelColors = np.zeros((numPixels, 4))
-        directPixelColors = np.zeros((numPixels, 4))
-        voxelPixelColors = np.zeros((numTextures, numPixels, 4))
-        voxelDeltaPixelColors = np.zeros((numTextures, numPixels, 4))
-        baPixelColors = np.zeros((numTextures, numPixels, 4))
-        hybridPixelColors = np.zeros((numTextures, numPixels, 4))
-        
-        hybridVoxelRatios = np.empty((numTextures, numPixels))
-        
-        maxRefSamplePoints = 0
-        maxDirectSamplePoints = 0
-        maxVoxelSamplePoints = np.zeros(numTextures)
-        maxVoxelDeltaSamplePoints = np.zeros(numTextures)
-        maxBaSamplePoints = np.zeros(numTextures)
-        maxHybridSamplePoints = np.zeros(numTextures)
+
+        viewRays = []
         
         for i, pixel in enumerate(pixels):
             viewRay = Ray2D(self.eye, pixel, 10, pixelWidth)
@@ -114,103 +101,49 @@ class Main2:
             viewRay.splineIntersects = directSplineModel.phiPlane.findTwoIntersections(viewRay)
             viewRay.boundingBoxIntersects = boundingBox.findTwoIntersections(viewRay)
 
-            result = refSplineModel.raycast(viewRay, self.viewRayDeltaRef)
-            if result.color is not None:
-                refPixelColors[i] = result.color
-                maxRefSamplePoints = max(result.samples, maxRefSamplePoints)
-
-            result = directSplineModel.raycast(viewRay, self.viewRayDelta)
-            if result.color is not None:
-                directPixelColors[i] = result.color
-                maxDirectSamplePoints = max(result.samples, maxDirectSamplePoints)
-
-            for j in range(numTextures):
-                texDimSize = texDimSizes[j]
-                voxelWidth = boundingBox.getHeight() / float(texDimSize)
-
-                result = voxelModels[j].raycast(viewRay, self.viewRayDelta)
-                if result.color is not None:
-                    voxelPixelColors[j][i] = result.color
-                    maxVoxelSamplePoints[j] = max(result.samples, maxVoxelSamplePoints[j])
-
-                result = voxelModels[j].raycast(viewRay, voxelWidth/2.0)
-                if result.color is not None:
-                    voxelDeltaPixelColors[j][i] = result.color
-                    maxVoxelDeltaSamplePoints[j] = max(result.samples, maxVoxelDeltaSamplePoints[j])
-
-                result = baModels[j].raycast(viewRay, self.viewRayDelta)
-                if result.color is not None:
-                    baPixelColors[j][i] = result.color
-                    maxBaSamplePoints[j] = max(result.samples, maxBaSamplePoints[j])
-
-                result = hybridModels[j].raycast(viewRay, self.viewRayDelta)
-                if result.color is not None:
-                    hybridPixelColors[j][i] = result.color
-                    maxHybridSamplePoints[j] = max(result.samples, maxHybridSamplePoints[j])
-
-                    hybridVoxelRatios[j][i] = hybridModels[j].voxelRatio()
+            viewRays.append(viewRay)
 
         figure = PixelFigure(texDimSizes)
 
-        figure.refPixelsPlot.plotPixelColors(refPixelColors)
-        figure.directPixelsPlot.plotPixelColors(directPixelColors)
-        
-        self.printRefSummary(maxRefSamplePoints)
-        
-        directDiffs = colordiff.compare(refPixelColors, directPixelColors)
-        figure.directDiffsPlot.plotPixelColorDiffs(directDiffs)
-        directSummary = Summary(directDiffs, maxDirectSamplePoints)
+        refRenderer = Renderer(self.viewRayDeltaRef, figure.refPixelsPlot)
+        refSummary = refRenderer.render(refSplineModel, viewRays)
+        self.printSummary("Reference", refSummary)
+
+        refPixelColors = refSummary.colors
+
+        directRenderer = CompareRenderer(self.viewRayDelta, figure.directPixelsPlot, figure.directDiffsPlot, refPixelColors)
+        directSummary = directRenderer.render(directSplineModel, viewRays)
         self.printSummary("Direct", directSummary)
-        
-        voxelDiffs = np.empty((numTextures, numPixels))
-        voxelDeltaDiffs = np.empty((numTextures, numPixels))
-        baDiffs = np.empty((numTextures, numPixels))
-        hybridDiffs = np.empty((numTextures, numPixels))
-        
-        for i in range(numTextures):
-            figure.voxelPixelsPlots[i].plotPixelColors(voxelPixelColors[i])
-            figure.baPixelsPlots[i].plotPixelColors(baPixelColors[i])
-            figure.hybridPixelsPlots[i].plotPixelColors(hybridPixelColors[i])
-            
-            voxelDiffs[i] = colordiff.compare(refPixelColors, voxelPixelColors[i])
-            voxelDeltaDiffs[i] = colordiff.compare(refPixelColors, voxelDeltaPixelColors[i])
-            baDiffs[i] = colordiff.compare(refPixelColors, baPixelColors[i])
-            hybridDiffs[i] = colordiff.compare(refPixelColors, hybridPixelColors[i])
-            
-            figure.voxelDiffsPlots[i].plotPixelColorDiffs(voxelDiffs[i])
-            figure.baDiffsPlots[i].plotPixelColorDiffs(baDiffs[i])
-            figure.hybridDiffsPlots[i].plotPixelColorDiffs(hybridDiffs[i])
-            
-            figure.hybridVoxelRatioPlots[i].plotRatios(hybridVoxelRatios[i])
 
         voxelSummaries = []
         voxelDeltaSummaries = []
         baSummaries = []
         hybridSummaries = []
-        
-        for i in range(numTextures):
-            texDimSize = texDimSizes[i]
-            summary = Summary(voxelDiffs[i], maxVoxelSamplePoints[i])
-            voxelSummaries.append(summary)
-            self.printSummary("Voxel ({}x{})".format(texDimSize, texDimSize), summary)
 
-        for i in range(numTextures):
-            texDimSize = texDimSizes[i]
-            summary = Summary(voxelDeltaDiffs[i], maxVoxelDeltaSamplePoints[i])
+        for i, texSize in enumerate(texDimSizes):
+            renderer = CompareRenderer(self.viewRayDelta, figure.voxelPixelsPlots[i], figure.voxelDiffsPlots[i], refPixelColors)
+            summary = renderer.render(voxelModels[i], viewRays)
+            voxelSummaries.append(summary)
+            self.printSummary("Voxel ({}x{})".format(texSize, texSize), summary)
+
+        for i, texSize in enumerate(texDimSizes):
+            voxelWidth = boundingBox.getWidth() / float(texSize)
+            renderer = CompareRenderer(voxelWidth/2.0, None, None, refPixelColors)
+            summary = renderer.render(voxelModels[i], viewRays)
             voxelDeltaSummaries.append(summary)
-            self.printSummary("Voxel auto delta ({}x{})".format(texDimSize, texDimSize), summary)
+            self.printSummary("Voxel auto delta ({}x{})".format(texSize, texSize), summary)
             
-        for i in range(numTextures):
-            texDimSize = texDimSizes[i]
-            summary = Summary(baDiffs[i], maxBaSamplePoints[i])
+        for i, texSize in enumerate(texDimSizes):
+            renderer = CompareRenderer(self.viewRayDelta, figure.baPixelsPlots[i], figure.baDiffsPlots[i], refPixelColors)
+            summary = renderer.render(baModels[i], viewRays)
             baSummaries.append(summary)
-            self.printSummary("Boundary accurate ({}x{})".format(texDimSize, texDimSize), summary)
+            self.printSummary("Boundary accurate ({}x{})".format(texSize, texSize), summary)
             
-        for i in range(numTextures):
-            texDimSize = texDimSizes[i]
-            summary = Summary(hybridDiffs[i], maxHybridSamplePoints[i])
+        for i, texSize in enumerate(texDimSizes):
+            renderer = HybridRenderer(self.viewRayDelta, figure.hybridPixelsPlots[i], figure.hybridDiffsPlots[i], refPixelColors, figure.hybridVoxelRatioPlots[i])
+            summary = renderer.render(hybridModels[i], viewRays)
             hybridSummaries.append(summary)
-            self.printSummary("Hybrid ({}x{})".format(texDimSize, texDimSize), summary)
+            self.printSummary("Hybrid ({}x{})".format(texSize, texSize), summary)
 
         figure.show()
 
@@ -222,14 +155,8 @@ class Main2:
         graphFigure.graphSummaries(hybridSummaries, 'Hybrid')
         graphFigure.show()
         
-    def printRefSummary(self, maxSamplePoints):
-        print "Reference"
-        print "---------------------"
-        print "max #S = {}".format(maxSamplePoints)
-        print ""
-        
     def printSummary(self, name, summary):
-        print "{} color diffs".format(name)
+        print "{}".format(name)
         print "---------------------"
         summary.printData()
         print ""
