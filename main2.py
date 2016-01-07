@@ -31,11 +31,13 @@ class Main2:
         self.screenBottom = 0.2
         
         self.eye = np.array([eyeX, 0.65])
-        self.viewRayDelta = 0.005
+        self.viewRayDelta = 0.01
         self.viewRayDeltaRef = 0.001
         self.refTolerance = 0.001
         
         self.voxelizationTolerance = 1e-5
+
+        self.autoDelta = False
         
     def createPixels(self, numPixels):
         pixels = np.empty((numPixels, 2))
@@ -88,7 +90,7 @@ class Main2:
             
             voxelModels[i] = VoxelModel(self.transfer, scalarTexture, boundingBox)
             baModels[i] = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModels[i])
-            hybridModels[i] = HybridModel(self.transfer, directSplineModel, voxelModels[i], criterion)
+            hybridModels[i] = HybridModel(self.transfer, directSplineModel, baModels[i], criterion)
 
         pixels = self.createPixels(numPixels)
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
@@ -116,31 +118,27 @@ class Main2:
         self.printSummary("Direct", directSummary)
 
         voxelSummaries = []
-        voxelDeltaSummaries = []
         baSummaries = []
         hybridSummaries = []
 
         for i, texSize in enumerate(texDimSizes):
-            renderer = CompareRenderer(self.viewRayDelta, figure.voxelPixelsPlots[i], figure.voxelDiffsPlots[i], refPixelColors)
+            if self.autoDelta:
+                voxelWidth = boundingBox.getWidth() / float(texSize)
+                delta = voxelWidth/2.0
+            else:
+                delta = self.viewRayDelta
+
+            renderer = CompareRenderer(delta, figure.voxelPixelsPlots[i], figure.voxelDiffsPlots[i], refPixelColors)
             summary = renderer.render(voxelModels[i], viewRays)
             voxelSummaries.append(summary)
             self.printSummary("Voxel ({}x{})".format(texSize, texSize), summary)
 
-        for i, texSize in enumerate(texDimSizes):
-            voxelWidth = boundingBox.getWidth() / float(texSize)
-            renderer = CompareRenderer(voxelWidth/2.0, None, None, refPixelColors)
-            summary = renderer.render(voxelModels[i], viewRays)
-            voxelDeltaSummaries.append(summary)
-            self.printSummary("Voxel auto delta ({}x{})".format(texSize, texSize), summary)
-            
-        for i, texSize in enumerate(texDimSizes):
-            renderer = CompareRenderer(self.viewRayDelta, figure.baPixelsPlots[i], figure.baDiffsPlots[i], refPixelColors)
+            renderer = CompareRenderer(delta, figure.baPixelsPlots[i], figure.baDiffsPlots[i], refPixelColors)
             summary = renderer.render(baModels[i], viewRays)
             baSummaries.append(summary)
             self.printSummary("Boundary accurate ({}x{})".format(texSize, texSize), summary)
-            
-        for i, texSize in enumerate(texDimSizes):
-            renderer = HybridRenderer(self.viewRayDelta, figure.hybridPixelsPlots[i], figure.hybridDiffsPlots[i], refPixelColors, figure.hybridVoxelRatioPlots[i])
+
+            renderer = HybridRenderer(delta, figure.hybridPixelsPlots[i], figure.hybridDiffsPlots[i], refPixelColors, figure.hybridVoxelRatioPlots[i])
             summary = renderer.render(hybridModels[i], viewRays)
             hybridSummaries.append(summary)
             self.printSummary("Hybrid ({}x{})".format(texSize, texSize), summary)
@@ -150,7 +148,6 @@ class Main2:
         graphFigure = GraphFigure(texDimSizes)
         graphFigure.graphDirectSummary(directSummary)
         graphFigure.graphSummaries(voxelSummaries, 'Voxel')
-        graphFigure.graphSummaries(voxelDeltaSummaries, 'Voxel auto delta')
         graphFigure.graphSummaries(baSummaries, 'Boundary accurate')
         graphFigure.graphSummaries(hybridSummaries, 'Hybrid')
         graphFigure.show()
@@ -160,14 +157,3 @@ class Main2:
         print "---------------------"
         summary.printData()
         print ""
-    
-def run(eyeX=None):
-    if eyeX != None:
-        main = Main2(eyeX)
-    else:
-        main = Main2()
-        
-    main.run()
-
-if __name__ == "__main__":
-    run()
