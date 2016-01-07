@@ -6,6 +6,7 @@ from dataset import Dataset
 from model.boundaryaccuratemodel import BoundaryAccurateModel
 from model.hybridmodel import HybridModel
 from model.splinemodel import SplineModel
+from model.voxellodmodel import VoxelLodModel
 from model.voxelmodel import VoxelModel
 from plotting.plotter import Plotter
 from ray import Ray2D
@@ -134,17 +135,26 @@ class Main:
         print "Voxelized color diffs"
         print "---------------------"
             
-        texDimSize = 20
+        texDimSize = 32
+
+        lodTextures = []
 
         samplingScalars = refSplineModel.generateScalarMatrix(bb, texDimSize, texDimSize, self.voxelizationTolerance, paramPlotter, refSplinePlotter)
         scalarTexture = Texture2D(samplingScalars)
+        lodTextures.append(scalarTexture)
+
+        size = texDimSize / 2
+        while size >= 1:
+            samplingScalars = refSplineModel.generateScalarMatrix(bb, texDimSize, texDimSize, self.voxelizationTolerance)
+            lodTextures.append(Texture2D(samplingScalars))
+            size /= 2
         
         voxelWidth = bb.getHeight() / float(texDimSize)
         criterion = GeometricCriterion(pixelWidth, voxelWidth)
         
         voxelModel = VoxelModel(self.transfer, scalarTexture, bb)
         
-        choice = 0
+        choice = 3
         
         if choice == 0:
             model = voxelModel
@@ -153,8 +163,7 @@ class Main:
         elif choice == 2:
             model = HybridModel(self.transfer, directSplineModel, voxelModel, criterion)
         else:
-            bhModel = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModel)
-            model = HybridModel(self.transfer, directSplineModel, bhModel, criterion)
+            model = VoxelLodModel(self.transfer, lodTextures, bb, pixelWidth)
         
         maxSamplePoints = 0
 
