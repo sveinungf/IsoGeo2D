@@ -109,22 +109,32 @@ class Main2:
 
         refRenderer = Renderer(self.viewRayDeltaRef, figure.refPixelsPlot)
         refSummary = refRenderer.render(refSplineModel, viewRays)
-        self.printSummary("Reference", refSummary)
+        self.printSummary("Reference (delta={})".format(self.viewRayDeltaRef), refSummary)
 
         refPixelColors = refSummary.colors
 
-        directRenderer = CompareRenderer(self.viewRayDelta, figure.directPixelsPlot, figure.directDiffsPlot, refPixelColors)
-        directSummary = directRenderer.render(directSplineModel, viewRays)
-        self.printSummary("Direct", directSummary)
-
+        directSummaries = []
         voxelSummaries = []
         baSummaries = []
         hybridSummaries = []
+
+        if not self.autoDelta:
+            renderer = CompareRenderer(self.viewRayDelta, figure.directPixelsPlot, figure.directDiffsPlot, refPixelColors)
+            summary = renderer.render(directSplineModel, viewRays)
+            self.printSummary("Direct (delta={})".format(self.viewRayDelta), summary)
+
+            for i in range(numTextures):
+                directSummaries.append(summary)
 
         for i, texSize in enumerate(texDimSizes):
             if self.autoDelta:
                 voxelWidth = boundingBox.getWidth() / float(texSize)
                 delta = voxelWidth/2.0
+
+                renderer = CompareRenderer(delta, None, None, refPixelColors)
+                summary = renderer.render(directSplineModel, viewRays)
+                directSummaries.append(summary)
+                self.printSummary("Direct (delta={})".format(delta), summary)
             else:
                 delta = self.viewRayDelta
 
@@ -146,7 +156,7 @@ class Main2:
         figure.show()
 
         graphFigure = GraphFigure(texDimSizes)
-        graphFigure.graphDirectSummary(directSummary)
+        graphFigure.graphSummaries(directSummaries, 'Direct')
         graphFigure.graphSummaries(voxelSummaries, 'Voxel')
         graphFigure.graphSummaries(baSummaries, 'Boundary accurate')
         graphFigure.graphSummaries(hybridSummaries, 'Hybrid')
