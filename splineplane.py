@@ -1,8 +1,10 @@
-import newton
 import numpy as np
+
+import newton
+from boundingbox import BoundingBox
 from intersection import Intersection
 from side import Side
-from boundingbox import BoundingBox
+
 
 class SplinePlane:
     def __init__(self, phiPlane, interval, tolerance):

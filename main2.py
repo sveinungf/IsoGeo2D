@@ -9,10 +9,10 @@ from model.splinemodel import SplineModel
 from model.voxelmodel import VoxelModel
 from plotting.graphfigure import GraphFigure
 from plotting.pixelfigure import PixelFigure
-from renderers.comparerenderer import CompareRenderer
-from renderers.renderer import Renderer
 from ray import Ray2D
+from renderers.comparerenderer import CompareRenderer
 from renderers.hybridrenderer import HybridRenderer
+from renderers.renderer import Renderer
 from splineplane import SplinePlane
 from texture import Texture2D
 from voxelcriterion.geometriccriterion import GeometricCriterion
