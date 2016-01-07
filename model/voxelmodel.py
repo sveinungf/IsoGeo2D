@@ -26,7 +26,7 @@ class VoxelModel(BaseModel):
             
         geomPoint = np.array(samplePoint)
 
-        return Sample(geomPoint, scalar, SamplingType.VOXEL_MODEL)
+        return Sample(geomPoint, scalar, SamplingType.VOXEL_MODEL_LOD[0])
     
     def inSample(self, intersection, viewRay):
         return self.sample(intersection.geomPoint, None, viewRay, None)

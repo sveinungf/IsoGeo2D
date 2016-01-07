@@ -23,32 +23,22 @@ class ModelPlotter(object):
         
         r = Rectangle(lowerLeft, width, height, fill=False, linestyle='dashed')
         self.plot.add_patch(r)
+
+    def __getSampleTypeColor(self, type):
+        return {
+            SamplingType.OUTSIDE_OBJECT: 'r',
+            SamplingType.SPLINE_MODEL: 'b',
+            SamplingType.VOXEL_MODEL_LOD[0]: 'g',
+            SamplingType.VOXEL_MODEL_LOD[1]: 'c',
+            SamplingType.VOXEL_MODEL_LOD[2]: 'y',
+            SamplingType.VOXEL_MODEL_LOD[3]: 'm',
+            SamplingType.VOXEL_MODEL_LOD[4]: 'w',
+        }.get(type, 'k')
         
     def plotSamplePoints(self, points, types):
-        splinePoints = []
-        voxelPoints = []
-        outsidePoints = []
-        
         for point, sampleType in itertools.izip(points, types):
-            if sampleType == SamplingType.SPLINE_MODEL:
-                splinePoints.append(point)
-            elif sampleType == SamplingType.VOXEL_MODEL:
-                voxelPoints.append(point)
-            else:
-                outsidePoints.append(point)
-
-        splinePoints = np.array(splinePoints)
-        voxelPoints = np.array(voxelPoints)
-        outsidePoints = np.array(outsidePoints)
-        
-        if len(splinePoints) > 0:
-            self.plot.plot(splinePoints[:,0], splinePoints[:,1], marker='o', color='b')
-        
-        if len(voxelPoints) > 0:
-            self.plot.plot(voxelPoints[:,0], voxelPoints[:,1], marker='o', color='g')
-        
-        if len(outsidePoints) > 0:
-            self.plot.plot(outsidePoints[:,0], outsidePoints[:,1], marker='o', color='r')
+            color = self.__getSampleTypeColor(sampleType)
+            self.plot.plot(point[0], point[1], marker='o', color=color)
         
     def plotViewRay(self, ray, interval):
         params = np.linspace(interval[0], interval[1], 100)

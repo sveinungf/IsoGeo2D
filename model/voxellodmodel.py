@@ -2,12 +2,7 @@ import math
 
 from model.basemodel import BaseModel, Sample
 from model.voxelmodel import VoxelModel
-
-
-class LodSample(Sample):
-    def __init__(self, sample, lodLevel):
-        super(LodSample, self).__init__(sample.geomPoint, sample.scalar, sample.type)
-        self.lodLevel = lodLevel
+from samplingtype import SamplingType
 
 
 class VoxelLodModel(BaseModel):
@@ -35,7 +30,7 @@ class VoxelLodModel(BaseModel):
         index = 0
 
         for i, voxelDiagonal in reversed(list(enumerate(self.voxelDiagonals))):
-            if voxelDiagonal >= maxVoxelSize:
+            if maxVoxelSize >= voxelDiagonal:
                 index = i
                 break
 
@@ -49,7 +44,8 @@ class VoxelLodModel(BaseModel):
         if sample is None:
             return None
         else:
-            return LodSample(sample, lodLevel)
+            sample.type = SamplingType.VOXEL_MODEL_LOD[lodLevel]
+            return sample
 
     def inSample(self, intersection, viewRay):
         lodLevel = self.__chooseLodLevel(intersection.geomPoint, viewRay)
@@ -59,7 +55,8 @@ class VoxelLodModel(BaseModel):
         if sample is None:
             return None
         else:
-            return LodSample(sample, lodLevel)
+            sample.type = SamplingType.VOXEL_MODEL_LOD[lodLevel]
+            return sample
 
     def outSample(self, intersection, viewRay):
         lodLevel = self.__chooseLodLevel(intersection.geomPoint, viewRay)
@@ -69,7 +66,8 @@ class VoxelLodModel(BaseModel):
         if sample is None:
             return None
         else:
-            return LodSample(sample, lodLevel)
+            sample.type = SamplingType.VOXEL_MODEL_LOD[lodLevel]
+            return sample
 
     def getIntersections(self, viewRay):
         return viewRay.boundingBoxIntersects

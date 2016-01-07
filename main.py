@@ -31,7 +31,7 @@ class Main:
         
         self.plotter = Plotter(self.splineInterval)
         
-        self.eye = np.array([-2.0, 0.65])
+        self.eye = np.array([-0.9, 0.65])
         self.viewRayDeltaRef = 0.01
         self.viewRayDeltaDirect = 0.01
         self.viewRayDeltaVoxelized = 0.01
@@ -144,9 +144,9 @@ class Main:
         lodTextures.append(scalarTexture)
 
         size = texDimSize / 2
-        while size >= 1:
-            samplingScalars = refSplineModel.generateScalarMatrix(bb, texDimSize, texDimSize, self.voxelizationTolerance)
-            lodTextures.append(Texture2D(samplingScalars))
+        while size >= 2:
+            scalars = refSplineModel.generateScalarMatrix(bb, size, size, self.voxelizationTolerance)
+            lodTextures.append(Texture2D(scalars))
             size /= 2
         
         voxelWidth = bb.getHeight() / float(texDimSize)
@@ -155,7 +155,7 @@ class Main:
         voxelModel = VoxelModel(self.transfer, scalarTexture, bb)
         
         choice = 3
-        
+
         if choice == 0:
             model = voxelModel
         elif choice == 1:
