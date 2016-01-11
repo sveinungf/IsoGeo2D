@@ -25,7 +25,8 @@ def createTransferFunction(n):
     array = createTransferArray(n)
     
     def transfer(x):
-        index = int(math.floor(x * (n-1)))
+        index = int(math.floor(x * n))
+        index = index if index < (n-1) else (n-1)
         return array[index]
     
     return transfer

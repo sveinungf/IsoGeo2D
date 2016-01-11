@@ -137,32 +137,33 @@ class Main:
             
         texDimSize = 32
 
-        lodTextures = []
-
         samplingScalars = refSplineModel.generateScalarMatrix(bb, texDimSize, texDimSize, self.voxelizationTolerance, paramPlotter, refSplinePlotter)
-        scalarTexture = Texture2D(samplingScalars)
-        lodTextures.append(scalarTexture)
+        voxelPlotter.plotScalars(samplingScalars, bb)
 
-        size = texDimSize / 2
-        while size >= 2:
-            scalars = refSplineModel.generateScalarMatrix(bb, size, size, self.voxelizationTolerance)
-            lodTextures.append(Texture2D(scalars))
-            size /= 2
-        
-        voxelWidth = bb.getHeight() / float(texDimSize)
-        criterion = GeometricCriterion(pixelWidth, voxelWidth)
+        scalarTexture = Texture2D(samplingScalars)
         
         voxelModel = VoxelModel(self.transfer, scalarTexture, bb)
         
-        choice = 3
+        choice = 0
 
         if choice == 0:
             model = voxelModel
         elif choice == 1:
             model = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModel)
         elif choice == 2:
+            voxelWidth = bb.getHeight() / float(texDimSize)
+            criterion = GeometricCriterion(pixelWidth, voxelWidth)
             model = HybridModel(self.transfer, directSplineModel, voxelModel, criterion)
         else:
+            lodTextures = []
+            lodTextures.append(scalarTexture)
+
+            size = texDimSize / 2
+            while size >= 2:
+                scalars = refSplineModel.generateScalarMatrix(bb, size, size, self.voxelizationTolerance)
+                lodTextures.append(Texture2D(scalars))
+                size /= 2
+
             model = VoxelLodModel(self.transfer, lodTextures, bb, pixelWidth)
         
         maxSamplePoints = 0
@@ -184,7 +185,6 @@ class Main:
         summary = CompareSummary(pixelColors, maxSamplePoints, voxelizedDiffs)
         self.printSummary("Voxel ({}x{})".format(texDimSize, texDimSize), summary)
 
-        voxelPlotter.plotScalars(samplingScalars, bb)    
         plotter.plotScalarTexture(scalarTexture)
         plotter.pixelVoxelizedPlot.plotPixelColors(pixelColors)
         plotter.pixelVoxelizedDiffPlot.plotPixelColorDiffs(voxelizedDiffs)
