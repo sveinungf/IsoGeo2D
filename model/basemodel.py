@@ -67,6 +67,8 @@ class BaseModel(object):
         samplePoint = inGeomPoint + viewDirDelta
         
         prevSample = sample
+
+        saturated = False
         
         while samplePoint[0] < outGeomPoint[0]:
             sample = self.sample(samplePoint, prevSample, viewRay, delta)
@@ -79,23 +81,24 @@ class BaseModel(object):
                     dist = sample.geomPoint - prevSample.geomPoint
                     actualDelta = math.sqrt(dist[0]**2 + dist[1]**2)
                     resultColor = compositing.accumulate(resultColor, prevColor, actualDelta)
-                
+
                 prevColor = self.transfer(sample.scalar)
                 prevSample = sample
                 
                 if resultColor[3] >= 1.0:
+                    saturated = True
                     break
             
             samplePoint += viewDirDelta
-        
-        if resultColor[3] < 1.0:
+
+        if not saturated:
             sample = self.outSample(intersections[1], viewRay)
 
             if sample is not None:
-                geomPoints.append(outGeomPoint)
+                geomPoints.append(sample.geomPoint)
                 sampleTypes.append(sample.type)
                 
-                dist = outGeomPoint - prevSample.geomPoint
+                dist = sample.geomPoint - prevSample.geomPoint
                 actualDelta = math.sqrt(dist[0]**2 + dist[1]**2)
                 resultColor = compositing.accumulate(resultColor, prevColor, actualDelta)
 
