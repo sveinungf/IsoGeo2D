@@ -1,5 +1,6 @@
-import math
 import numpy as np
+from scipy import interpolate
+
 
 def createTransferArray(n):
     result = []
@@ -19,14 +20,11 @@ def createTransferArray(n):
     for val in decr:
         result.append(np.array([1.0, val, 0.0, 0.9]))
         
-    return result
+    return np.asarray(result)
+
 
 def createTransferFunction(n):
-    array = createTransferArray(n)
-    
-    def transfer(x):
-        index = int(math.floor(x * n))
-        index = index if index < (n-1) else (n-1)
-        return array[index]
-    
-    return transfer
+    x = np.linspace(0.0, 1.0, n)
+    y = createTransferArray(n)
+    f = interpolate.interp1d(x, y, axis=0)
+    return f
