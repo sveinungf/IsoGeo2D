@@ -20,7 +20,7 @@ class Main:
     def __init__(self):
         self.dataset = Dataset(1, 1)
         
-        self.splineInterval = [0, 0.99999]
+        self.splineInterval = [0.0, 1.0]
         self.transfer = trans.createTransferFunction(100)
         
         self.numPixels = 10
