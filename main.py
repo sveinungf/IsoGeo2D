@@ -46,8 +46,8 @@ class Main:
         firstPixelY = self.screenBottom + (deltaY/2.0)
         lastPixelY = self.screenTop - (deltaY/2.0)
         
-        pixels[:,0] = pixelXs
-        pixels[:,1] = np.linspace(firstPixelY, lastPixelY, numPixels)
+        pixels[:, 0] = pixelXs
+        pixels[:, 1] = np.linspace(firstPixelY, lastPixelY, numPixels)
         
         return pixels
         
@@ -108,12 +108,14 @@ class Main:
             pixel = pixels[i]
             viewRay = Ray2D(self.eye, pixel, 10, pixelWidth)
             viewRays[i] = viewRay
+
+            viewRay.boundingBoxIntersects = bb.findTwoIntersections(viewRay)
+            viewRay.splineIntersects = directSplineModel.phiPlane.findTwoIntersections(viewRay)
             
             directSplinePlotter.plotViewRay(viewRay, [0, 10])
             voxelPlotter.plotViewRay(viewRay, [0, 10])
         
         for i, viewRay in enumerate(viewRays):
-            viewRay.splineIntersects = directSplineModel.phiPlane.findTwoIntersections(viewRay)
             result = directSplineModel.raycast(viewRay, self.viewRayDeltaDirect, directSplinePlotter)
 
             if result.color is not None:
@@ -137,7 +139,8 @@ class Main:
             
         texDimSize = 32
 
-        samplingScalars = refSplineModel.generateScalarMatrix(bb, texDimSize, texDimSize, self.voxelizationTolerance, paramPlotter, refSplinePlotter)
+        samplingScalars = refSplineModel.generateScalarMatrix(bb, texDimSize, texDimSize, self.voxelizationTolerance,
+                                                              paramPlotter, refSplinePlotter)
         voxelPlotter.plotScalars(samplingScalars, bb)
 
         scalarTexture = Texture2D(samplingScalars)
@@ -155,8 +158,7 @@ class Main:
             criterion = GeometricCriterion(pixelWidth, voxelWidth)
             model = HybridModel(self.transfer, directSplineModel, voxelModel, criterion)
         else:
-            lodTextures = []
-            lodTextures.append(scalarTexture)
+            lodTextures = [scalarTexture]
 
             size = texDimSize / 2
             while size >= 2:
@@ -169,9 +171,6 @@ class Main:
         maxSamplePoints = 0
 
         for i, viewRay in enumerate(viewRays):
-            viewRay.boundingBoxIntersects = bb.findTwoIntersections(viewRay)
-            viewRay.splineIntersects = directSplineModel.phiPlane.findTwoIntersections(viewRay)
-
             result = model.raycast(viewRay, self.viewRayDeltaVoxelized, plotter.voxelModelPlotter)
 
             if result.color is not None:
@@ -180,7 +179,6 @@ class Main:
             else:
                 pixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
 
-    
         voxelizedDiffs = colordiff.compare(refPixelColors, pixelColors)
         summary = CompareSummary(pixelColors, maxSamplePoints, voxelizedDiffs)
         self.printSummary("Voxel ({}x{})".format(texDimSize, texDimSize), summary)
@@ -190,13 +188,15 @@ class Main:
         plotter.pixelVoxelizedDiffPlot.plotPixelColorDiffs(voxelizedDiffs)
         
         plotter.draw()
-        
-    def printSummary(self, name, summary):
+
+    @staticmethod
+    def printSummary(name, summary):
         print "{} color diffs".format(name)
         print "---------------------"
         summary.printData()
         print ""
-    
+
+
 def run():
     main = Main()
     main.run()
