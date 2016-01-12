@@ -22,7 +22,7 @@ class Main2:
     def __init__(self, eyeX=-2.0):
         self.dataset = Dataset(1, 1)
         
-        self.splineInterval = [0.0, 1,0]
+        self.splineInterval = [0.0, 1.0]
         self.transfer = trans.createTransferFunction(100)
 
         self.numPixels = 100
