@@ -15,19 +15,22 @@ class GraphFigure:
         ax = fig.add_subplot(mainGrid[0, 0])
         ax.set_xlabel('Texture size (n x n)')
         ax.set_ylabel('Max')
-        ax.set_xticks(texDimSizes)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
         self.maxGraph = GraphPlotter(ax)
 
         ax = fig.add_subplot(mainGrid[0, 1])
         ax.set_xlabel('Texture size (n x n)')
         ax.set_ylabel('Mean')
-        ax.set_xticks(texDimSizes)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
         self.meanGraph = GraphPlotter(ax)
 
         ax = fig.add_subplot(mainGrid[1, 0])
         ax.set_xlabel('Texture size (n x n)')
         ax.set_ylabel('Var')
-        ax.set_xticks(texDimSizes)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
         self.varGraph = GraphPlotter(ax)
 
     def __graphMaxMeanVars(self, maxes, means, vars, label):
