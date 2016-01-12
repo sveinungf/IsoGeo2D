@@ -17,13 +17,11 @@ def match(array, pattern):
     return True
 
 
-class Indicator:
-    RESIDENT = 0
-    NONRESIDENT = -1
-
-
 class Texture2D:
     def __init__(self, scalarMatrix):
+        RESIDENT = 0
+        NONRESIDENT = -1
+
         cols = len(scalarMatrix[0])
         rows = len(scalarMatrix)
         self.cols = cols
@@ -34,11 +32,11 @@ class Texture2D:
         for u in range(rows):
             for v in range(cols):
                 if scalarMatrix[u][v] == -1:
-                    indicators[u][v] = Indicator.NONRESIDENT
+                    indicators[u][v] = NONRESIDENT
                 elif not self.__hasNeighbour(scalarMatrix, u, v):
-                    indicators[u][v] = Indicator.NONRESIDENT
+                    indicators[u][v] = NONRESIDENT
                 else:
-                    indicators[u][v] = Indicator.RESIDENT
+                    indicators[u][v] = RESIDENT
 
         marginX = 1.0/(2.0 * cols)
         marginY = 1.0/(2.0 * rows)
@@ -47,23 +45,24 @@ class Texture2D:
 
         for u in range(rows):
             for v in range(cols):
-                if indicators[u][v] == Indicator.NONRESIDENT and self.__hasNeighbourInclDiag(indicators, u, v):
+                if indicators[u][v] == NONRESIDENT and self.__hasNeighbourInclDiag(indicators, u, v):
                     if scalarMatrix[u][v] == -1:
                         self.__extrapolate(scalarMatrix, indicators, u, v)
         
         data = scalarMatrix
         data = np.vstack((data[0], data))
         data = np.vstack((data, data[-1]))
-        data = np.column_stack((data[:,0],data))
-        data = np.column_stack((data, data[:,-1]))
+        data = np.column_stack((data[:, 0], data))
+        data = np.column_stack((data, data[:, -1]))
         self.textureData = data
 
         x = np.linspace(-marginX, 1.0+marginX, cols+2)
         y = np.linspace(-marginY, 1.0+marginY, rows+2)
         
-        self.f = interpolate.interp2d(x, y, data, kind='linear')
+        self.f = interpolate.interp2d(x, y, data, kind='linear', bounds_error=True)
 
-    def __hasNeighbour(self, matrix, u, v):
+    @staticmethod
+    def __hasNeighbour(matrix, u, v):
         (rows, cols) = matrix.shape
 
         if u > 0 and matrix[u-1][v] >= 0:
@@ -77,10 +76,11 @@ class Texture2D:
 
         return False
 
-    def __hasNeighbourInclDiag(self, matrix, u, v):
+    @classmethod
+    def __hasNeighbourInclDiag(cls, matrix, u, v):
         (rows, cols) = matrix.shape
 
-        if self.__hasNeighbour(matrix, u, v):
+        if cls.__hasNeighbour(matrix, u, v):
             return True
 
         if u > 0:
