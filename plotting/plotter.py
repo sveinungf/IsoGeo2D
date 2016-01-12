@@ -100,8 +100,12 @@ class Plotter:
 			row = []
 			
 			for u in uRange:
-				x = rho.evaluate(u,v)
-				row.append(transfer(x[0]))
+				x = rho.evaluate(u,v)[0]
+
+				if x > 1.0:
+					x = 1.0
+
+				row.append(transfer(x))
 		
 			img.append(row)
 		
