@@ -33,10 +33,14 @@ class GraphFigure:
         ax.set_yscale('log')
         self.varGraph = GraphPlotter(ax)
 
-    def __graphMaxMeanVars(self, maxes, means, vars, label):
-        self.maxGraph.plotGraph(self.texDimSizes, maxes, label)
-        self.meanGraph.plotGraph(self.texDimSizes, means, label)
-        self.varGraph.plotGraph(self.texDimSizes, vars, label)
+        self.colors = ['b', 'g', 'r', 'c', 'm']
+        self.markers = ['x', '+', 'o', 's', 'v']
+        self.currentIndex = 0
+
+    def __graphMaxMeanVars(self, maxes, means, vars, label, color, marker):
+        self.maxGraph.plotGraph(self.texDimSizes, maxes, label, color, marker)
+        self.meanGraph.plotGraph(self.texDimSizes, means, label, color, marker)
+        self.varGraph.plotGraph(self.texDimSizes, vars, label, color, marker)
 
     def graphDirectSummary(self, summary):
         numPoints = len(self.texDimSizes)
@@ -56,7 +60,13 @@ class GraphFigure:
             means.append(summary.mean)
             vars.append(summary.var)
 
-        self.__graphMaxMeanVars(maxes, means, vars, label)
+        color = self.colors[self.currentIndex]
+        marker = self.markers[self.currentIndex]
+        self.__graphMaxMeanVars(maxes, means, vars, label, color, marker)
+
+        self.currentIndex += 1
+        if self.currentIndex == len(self.colors):
+            self.currentIndex = 0
 
     def show(self):
         handles, labels = self.meanGraph.plot.get_legend_handles_labels()
