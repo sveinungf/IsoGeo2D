@@ -65,9 +65,9 @@ class Main:
         
         refSplinePlotter.plotGrid(phi.evaluate, 10, 10)
         directSplinePlotter.plotGrid(phi.evaluate, 10, 10)
-        
-        plotter.plotGrids(phi.evaluate, 10, 10)
-        plotter.plotScalarField(rho, self.transfer)
+
+        paramPlotter.plotGrid(10, 10)
+        paramPlotter.plotScalarField(rho, self.transfer)
         
         bb = phiPlane.createBoundingBox()
         refSplinePlotter.plotBoundingBox(bb)

@@ -35,7 +35,7 @@ class Plotter:
 		ax = plt.subplot(mainGrid[1, 0])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
 		self.pPlot = ax
-		self.paramPlotter = ParamPlotter(ax)
+		self.paramPlotter = ParamPlotter(ax, splineInterval)
 		
 		ax = plt.subplot(mainGrid[1, 1])
 		ax.axis((-0.1, 1.1, -0.1, 1.1))
@@ -68,49 +68,6 @@ class Plotter:
 			output[i] = f(param)
 		
 		return output
-		
-	def plotGrids(self, f, m, n):
-		interval = self.splineInterval
-		vLines = np.linspace(interval[0], interval[1], m)
-		hLines = np.linspace(interval[0], interval[1], n)
-		lineColor = '0.5'
-		
-		for vLine in vLines:
-			paramsX = [vLine] * self.precision
-			paramsY = np.linspace(interval[0], interval[1], self.precision)
-			
-			ax = self.pPlot
-			ax.plot(paramsX, paramsY, color=lineColor)
-			
-		for hLine in hLines:
-			paramsX = np.linspace(interval[0], interval[1], self.precision)
-			paramsY = [hLine] * self.precision
-			
-			ax = self.pPlot
-			ax.plot(paramsX, paramsY, color=lineColor)
-		
-	def plotScalarField(self, rho, transfer):
-		interval = self.splineInterval
-		uRange = np.linspace(interval[0], interval[1], self.precision)
-		vRange = np.linspace(interval[1], interval[0], self.precision)
-		
-		img = []
-		
-		for v in vRange:
-			row = []
-			
-			for u in uRange:
-				x = rho.evaluate(u,v)[0]
-
-				if x > 1.0:
-					x = 1.0
-
-				row.append(transfer(x))
-		
-			img.append(row)
-		
-		ax = self.pPlot
-		ax.imshow(img, aspect='auto', extent=(interval[0], interval[1], interval[0], interval[1]))
 	
 	def plotSamplingRay(self, ray, interval):
 		params = np.linspace(interval[0], interval[1], self.precision)

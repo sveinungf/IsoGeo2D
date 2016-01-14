@@ -5,7 +5,7 @@ from plotting.splineplotter import SplinePlotter
 from dataset import Dataset
 
 
-plt.figure(figsize=[6,6])
+plt.figure(figsize=[6, 6])
 dataset = Dataset(1, 1)
 splineInterval = np.array([0.0, 1.0])
 s = SplinePlotter(plt, splineInterval)
