@@ -1,8 +1,7 @@
 import abc
 import math
-import numpy as np
 
-import compositing
+from compositing import FrontToBack
 
 
 class Sample(object):
@@ -51,42 +50,33 @@ class BaseModel(object):
         
         inGeomPoint = intersections[0].geomPoint
         outGeomPoint = intersections[1].geomPoint
-        
-        resultColor = np.zeros(4)
-        prevColor = None
+
+        compositing = FrontToBack(self.transfer)
         
         sample = self.inSample(intersections[0], viewRay)
         
         if sample is not None:
             geomPoints.append(sample.geomPoint)
             sampleTypes.append(sample.type)
-            
-            prevColor = self.transfer(sample.scalar)
+
+            compositing.addSample(sample)
             
         viewDirDelta = viewRay.viewDir * delta
         samplePoint = inGeomPoint + viewDirDelta
-        
-        prevSample = sample
 
         saturated = False
         
         while samplePoint[0] < outGeomPoint[0]:
-            sample = self.sample(samplePoint, prevSample, viewRay, delta)
+            sample = self.sample(samplePoint, sample, viewRay, delta)
             
             if sample is not None:
                 geomPoints.append(sample.geomPoint)
                 sampleTypes.append(sample.type)
-                
-                if prevSample is not None:
-                    dist = sample.geomPoint - prevSample.geomPoint
-                    actualDelta = math.sqrt(dist[0]**2 + dist[1]**2)
-                    resultColor = compositing.accumulate(resultColor, prevColor, actualDelta)
 
-                prevColor = self.transfer(sample.scalar)
-                prevSample = sample
-                
-                if resultColor[3] >= 1.0:
-                    saturated = True
+                compositing.addSample(sample)
+                saturated = compositing.saturated()
+
+                if saturated:
                     break
             
             samplePoint += viewDirDelta
@@ -97,12 +87,10 @@ class BaseModel(object):
             if sample is not None:
                 geomPoints.append(sample.geomPoint)
                 sampleTypes.append(sample.type)
-                
-                dist = sample.geomPoint - prevSample.geomPoint
-                actualDelta = math.sqrt(dist[0]**2 + dist[1]**2)
-                resultColor = compositing.accumulate(resultColor, prevColor, actualDelta)
+
+                compositing.addSample(sample)
 
         if plotter is not None:
             plotter.plotSamplePoints(geomPoints, sampleTypes)
 
-        return RaycastResult(resultColor, len(geomPoints))
+        return RaycastResult(compositing.dst, len(geomPoints))

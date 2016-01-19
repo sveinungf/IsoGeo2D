@@ -32,8 +32,8 @@ class Main2:
         
         self.eye = np.array([eyeX, 0.65])
         self.viewRayDelta = 0.01
-        self.viewRayDeltaRef = 0.001
-        self.refTolerance = 0.001
+        self.viewRayDeltaRef = 1e-5
+        self.refTolerance = 1e-5
         
         self.voxelizationTolerance = 1e-5
 
@@ -56,7 +56,7 @@ class Main2:
         numPixels = self.numPixels
         pixelWidth = (self.screenTop-self.screenBottom) / numPixels
 
-        texDimSizes = np.array([64, 128, 192, 256, 320, 384])
+        texDimSizes = np.array([8,16,32,64,128,192,256])#,320,384,448,512])#,576,640,704,768,896,1024,1152,1280,1408,1536,1664,1792,1920,2048])
         
         numTextures = len(texDimSizes)
         
@@ -153,7 +153,7 @@ class Main2:
             hybridSummaries.append(summary)
             self.printSummary("Hybrid ({}x{})".format(texSize, texSize), summary)
 
-        figure.show()
+        #figure.show()
 
         graphFigure = GraphFigure(texDimSizes)
         graphFigure.graphSummaries(directSummaries, 'Direct')
