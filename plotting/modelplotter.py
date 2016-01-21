@@ -16,12 +16,12 @@ class ModelPlotter(object):
         
         return output
 
-    def plotBoundingBox(self, boundingBox):
+    def plotBoundingBox(self, boundingBox, edgecolor=None, linestyle='dashed'):
         lowerLeft = (boundingBox.left, boundingBox.bottom)
         width = boundingBox.getWidth()
         height = boundingBox.getHeight()
         
-        r = Rectangle(lowerLeft, width, height, fill=False, linestyle='dashed')
+        r = Rectangle(lowerLeft, width, height, fill=False, linestyle=linestyle, edgecolor=edgecolor)
         self.plot.add_patch(r)
 
     def __getSampleTypeColor(self, type):

@@ -21,13 +21,32 @@ class SplinePlotter(ModelPlotter):
         
         return [xOutput, yOutput]
 
-    def plotGrid(self, f, m, n):
+    def plotOutline(self, f, color='0.5'):
+        interval = self.interval
+        precision = 100
+
+        lows = np.ones(precision) * interval[0]
+        highs = np.ones(precision) * interval[1]
+        params = np.linspace(interval[0], interval[1], precision)
+
+        [geomX, geomY] = self.__generatePoints2var(f, lows, params)
+        self.plot.plot(geomX, geomY, color=color)
+
+        [geomX, geomY] = self.__generatePoints2var(f, highs, params)
+        self.plot.plot(geomX, geomY, color=color)
+
+        [geomX, geomY] = self.__generatePoints2var(f, params, lows)
+        self.plot.plot(geomX, geomY, color=color)
+
+        [geomX, geomY] = self.__generatePoints2var(f, params, highs)
+        self.plot.plot(geomX, geomY, color=color)
+
+    def plotGrid(self, f, m, n, color='0.5'):
         interval = self.interval
         precision = 100
         
         vLines = np.linspace(interval[0], interval[1], m)
         hLines = np.linspace(interval[0], interval[1], n)
-        lineColor = '0.5'
         
         for vLine in vLines:
             paramsX = [vLine] * precision
@@ -35,14 +54,14 @@ class SplinePlotter(ModelPlotter):
             
             [geomX, geomY] = self.__generatePoints2var(f, paramsX, paramsY)
             
-            self.plot.plot(geomX, geomY, color=lineColor)
+            self.plot.plot(geomX, geomY, color=color)
         for hLine in hLines:
             paramsX = np.linspace(interval[0], interval[1], precision)
             paramsY = [hLine] * precision
             
             [geomX, geomY] = self.__generatePoints2var(f, paramsX, paramsY)
             
-            self.plot.plot(geomX, geomY, color=lineColor)
+            self.plot.plot(geomX, geomY, color=color)
 
     def plotPoints(self, points):
         for point in points:

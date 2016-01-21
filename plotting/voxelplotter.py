@@ -20,12 +20,13 @@ class VoxelPlotter(ModelPlotter):
                     r = Rectangle(lowerLeft, deltaX, deltaY, facecolor=tuple(color))
                     self.plot.add_patch(r)
 
-    def plotScalars(self, scalars, boundingBox):
+    def plotScalars(self, scalars, boundingBox, facecolor=None, edgecolor=None):
         deltaX = boundingBox.getWidth() / float(len(scalars[0]))
         deltaY = boundingBox.getHeight() / float(len(scalars))
         
         for (i, j), scalar in np.ndenumerate(scalars):
             if scalar != -1:
                 lowerLeft = (boundingBox.left+j*deltaX, boundingBox.bottom+i*deltaY)
-                r = Rectangle(lowerLeft, deltaX, deltaY, facecolor=tuple([scalar]*3))
+                fColor = facecolor if facecolor is not None else tuple([scalar]*3)
+                r = Rectangle(lowerLeft, deltaX, deltaY, facecolor=fColor, edgecolor=edgecolor)
                 self.plot.add_patch(r)
