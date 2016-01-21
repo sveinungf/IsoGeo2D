@@ -5,6 +5,7 @@ import numpy as np
 from model.splinemodel import SplineModel
 from plotting.splineplotter import SplinePlotter
 from plotting.voxelplotter import VoxelPlotter
+from color import Color
 from dataset import Dataset
 from splineplane import SplinePlane
 
@@ -29,12 +30,13 @@ splineModel = SplineModel(None, phiPlane, rho)
 samplingScalars = splineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize, newtonTolerance)
 
 s = SplinePlotter(ax, splineInterval)
-s.plotOutline(phi.evaluate, color='b')
+s.plotOutline(phi.evaluate, color=Color.DIRECT)
 
 v = VoxelPlotter(ax)
-v.plotScalars(samplingScalars, boundingBox, facecolor=None, edgecolor='g')
+v.plotScalars(samplingScalars, boundingBox, facecolor=None, edgecolor=Color.VOXEL)
 
-ax.set_xlim([-0.12, 0.19])
-ax.set_ylim([-0.04, 0.27])
+ax.set_xlim([-0.56, 0.40])
+ax.set_ylim([0.01, 0.97])
 
-plt.savefig("output/vg/voxelboundary.pdf", format="pdf", transparent=True, bbox_inches='tight')
+fig.tight_layout()
+plt.savefig("output/vg/voxelboundary.pdf", format="pdf", transparent=True)
