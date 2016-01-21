@@ -2,13 +2,14 @@ import numpy as np
 
 
 class ParamPlotter():
-    def __init__(self, plot, interval):
+    def __init__(self, plot, interval, precision=100):
         self.interval = interval
         self.plot = plot
+        self.precision = precision
 
     def plotGrid(self, m, n):
         interval = self.interval
-        precision = 100
+        precision = self.precision
 
         vLines = np.linspace(interval[0], interval[1], m)
         hLines = np.linspace(interval[0], interval[1], n)
@@ -32,7 +33,7 @@ class ParamPlotter():
 
     def plotScalarField(self, rho, transfer):
         interval = self.interval
-        precision = 100
+        precision = self.precision
 
         uRange = np.linspace(interval[0], interval[1], precision)
         vRange = np.linspace(interval[1], interval[0], precision)
@@ -53,4 +54,4 @@ class ParamPlotter():
             img.append(row)
 
         ax = self.plot
-        ax.imshow(img, aspect='auto', extent=(interval[0], interval[1], interval[0], interval[1]))
+        return ax.imshow(img, aspect='auto', extent=(interval[0], interval[1], interval[0], interval[1]))
