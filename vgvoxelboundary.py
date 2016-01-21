@@ -37,4 +37,4 @@ v.plotScalars(samplingScalars, boundingBox, facecolor=None, edgecolor='g')
 ax.set_xlim([-0.12, 0.19])
 ax.set_ylim([-0.04, 0.27])
 
-plt.savefig("output/vg/voxelboundary.pdf", format="pdf")
+plt.savefig("output/vg/voxelboundary.pdf", format="pdf", transparent=True, bbox_inches='tight')
