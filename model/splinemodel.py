@@ -18,8 +18,6 @@ class SplineModel(BaseModel):
         self.phiPlane = phiPlane
         self.rho = rho
         self.samplingTolerance = samplingTolerance
-
-        self.plotBoundingEllipses = False
         
     def generateScalarMatrix(self, boundingBox, width, height, tolerance, paramPlotter=None, geomPlotter=None):
         phiPlane = self.phiPlane
@@ -38,10 +36,11 @@ class SplineModel(BaseModel):
         
         geomPoints = []
         paramPoints = []
-        boundingEllipses = []
+        samplingRays = []
         
         for i, y in enumerate(yValues):
             samplingRay = Ray2D(np.array([bb.left-xDelta/2, y]), np.array([bb.left, y]), 10, yDelta)
+            samplingRays.append(samplingRay)
             
             intersections = phiPlane.findTwoIntersections(samplingRay)
             
@@ -74,10 +73,9 @@ class SplineModel(BaseModel):
             paramPlotter.plotPoints(paramPoints)
             
         if geomPlotter != None:
-            if self.plotBoundingEllipses:
-                for ellipse in boundingEllipses:
-                    geomPlotter.plotEllipse(ellipse)
-            
+            for samplingRay in samplingRays:
+                geomPlotter.plotViewRay(samplingRay, [-10, 10])
+
             geomPlotter.plotPoints(geomPoints)
 
         return samplingScalars

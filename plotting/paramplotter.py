@@ -7,6 +7,9 @@ class ParamPlotter():
         self.plot = plot
         self.precision = precision
 
+        self.pointMarker = 'x'
+        self.pointColor = 'k'
+
     def plotGrid(self, m, n):
         interval = self.interval
         precision = self.precision
@@ -29,7 +32,7 @@ class ParamPlotter():
 
     def plotPoints(self, points):
         for point in points:
-            self.plot.plot(point[0], point[1], marker='x', color='k')
+            self.plot.plot(point[0], point[1], marker=self.pointMarker, color=self.pointColor)
 
     def plotScalarField(self, rho, transfer):
         interval = self.interval
