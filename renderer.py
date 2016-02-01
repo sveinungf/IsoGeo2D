@@ -3,6 +3,12 @@ import numpy as np
 from ray import Ray2D
 
 
+class RenderingResult:
+    def __init__(self, colors, maxSamplePoints):
+        self.colors = colors
+        self.maxSamplePoints = maxSamplePoints
+
+
 class Renderer:
     def __init__(self, eye, screen):
         self.eye = eye
@@ -32,6 +38,4 @@ class Renderer:
                 colors[i] = result.color
                 maxSamplePoints = max(result.samples, maxSamplePoints)
 
-        self.maxSamplePoints = maxSamplePoints
-
-        return colors
+        return RenderingResult(colors, maxSamplePoints)

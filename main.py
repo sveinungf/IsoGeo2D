@@ -67,10 +67,12 @@ class Main:
         refSplineModel = SplineModel(self.transfer, phiPlane, rho, 0.0001)
         directSplineModel = SplineModel(self.transfer, phiPlane, rho)
 
-        refPixelColors = renderer.render(refSplineModel, self.viewRayDeltaRef, refSplinePlotter)
+        refRenderResult = renderer.render(refSplineModel, self.viewRayDeltaRef, refSplinePlotter)
+        refPixelColors = refRenderResult.colors
 
-        directPixelColors = renderer.render(directSplineModel, self.viewRayDeltaDirect, directSplinePlotter)
-        maxDirectSamplePoints = renderer.maxSamplePoints
+        directRenderResult = renderer.render(directSplineModel, self.viewRayDeltaDirect, directSplinePlotter)
+        directPixelColors = directRenderResult.colors
+        maxDirectSamplePoints = directRenderResult.maxSamplePoints
             
         plotter.pixelReferencePlot.plotPixelColors(refPixelColors)
         plotter.pixelDirectPlot.plotPixelColors(directPixelColors)
@@ -116,8 +118,9 @@ class Main:
 
             model = VoxelLodModel(self.transfer, lodTextures, bb, self.screen.pixelWidth)
 
-        pixelColors = renderer.render(model, self.viewRayDeltaVoxelized, voxelPlotter)
-        maxSamplePoints = renderer.maxSamplePoints
+        renderResult = renderer.render(model, self.viewRayDeltaVoxelized, voxelPlotter)
+        pixelColors = renderResult.colors
+        maxSamplePoints = renderResult.maxSamplePoints
 
         voxelizedDiffs = colordiff.compare(refPixelColors, pixelColors)
         summary = CompareSummary(pixelColors, maxSamplePoints, voxelizedDiffs)
