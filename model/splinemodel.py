@@ -4,10 +4,12 @@ from model.basemodel import BaseModel, Sample
 from ray import Ray2D
 from samplingtype import SamplingType
 
+
 class SplineSample(Sample):
     def __init__(self, geomPoint, scalar, paramPoint):
         super(SplineSample, self).__init__(geomPoint, scalar, SamplingType.SPLINE_MODEL)
         self.paramPoint = paramPoint
+
 
 class SplineModel(BaseModel):
     samplingDefault = -1
@@ -44,7 +46,7 @@ class SplineModel(BaseModel):
             
             intersections = phiPlane.findTwoIntersections(samplingRay)
             
-            if intersections == None:
+            if intersections is None:
                 continue
 
             inGeomPoint = intersections[0].geomPoint
@@ -69,10 +71,10 @@ class SplineModel(BaseModel):
                 
                 prevUV = pApprox
         
-        if paramPlotter != None:
+        if paramPlotter is not None:
             paramPlotter.plotPoints(paramPoints)
             
-        if geomPlotter != None:
+        if geomPlotter is not None:
             for samplingRay in samplingRays:
                 geomPlotter.plotViewRay(samplingRay, [-10, 10])
 
@@ -110,7 +112,7 @@ class SplineModel(BaseModel):
         
         pGuess = prevSample.paramPoint
         
-        if self.samplingTolerance == None:
+        if self.samplingTolerance is None:
             frustum = viewRay.frustumBoundingEllipse(samplePoint, delta)
             pApprox = phiPlane.inverseInFrustum(samplePoint, pGuess, frustum)
         else:
@@ -130,5 +132,5 @@ class SplineModel(BaseModel):
     def outSample(self, intersection, viewRay):
         return self.inSample(intersection, viewRay)
 
-    def getIntersections(self, viewRay):
-        return viewRay.splineIntersects
+    def findIntersections(self, viewRay):
+        return self.phiPlane.findTwoIntersections(viewRay)

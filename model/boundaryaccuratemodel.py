@@ -1,5 +1,6 @@
 from model.basemodel import BaseModel
 
+
 class BoundaryAccurateModel(BaseModel):
     def __init__(self, transfer, splineModel, voxelModel):
         super(BoundaryAccurateModel, self).__init__(transfer)
@@ -16,5 +17,5 @@ class BoundaryAccurateModel(BaseModel):
     def outSample(self, intersection, viewRay):
         return self.splineModel.outSample(intersection, viewRay)
 
-    def getIntersections(self, viewRay):
-        return viewRay.splineIntersects
+    def findIntersections(self, viewRay):
+        return self.splineModel.findIntersections(viewRay)

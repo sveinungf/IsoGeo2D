@@ -1,5 +1,4 @@
 import abc
-import math
 
 from compositing import FrontToBack
 
@@ -36,14 +35,14 @@ class BaseModel(object):
         return
 
     @abc.abstractmethod
-    def getIntersections(self, viewRay):
+    def findIntersections(self, viewRay):
         return
     
     def raycast(self, viewRay, delta, plotter=None):
         geomPoints = []
         sampleTypes = []
 
-        intersections = self.getIntersections(viewRay)
+        intersections = self.findIntersections(viewRay)
 
         if intersections is None:
             return RaycastResult(None, 0)

@@ -3,6 +3,7 @@ import numpy as np
 from model.basemodel import BaseModel, Sample
 from samplingtype import SamplingType
 
+
 class VoxelModel(BaseModel):
     samplingDefault = -1
     
@@ -34,5 +35,5 @@ class VoxelModel(BaseModel):
     def outSample(self, intersection, viewRay):
         return self.inSample(intersection, viewRay)
 
-    def getIntersections(self, viewRay):
-        return viewRay.boundingBoxIntersects
+    def findIntersections(self, viewRay):
+        return self.boundingBox.findTwoIntersections(viewRay)

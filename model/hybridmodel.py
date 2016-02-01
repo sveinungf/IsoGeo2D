@@ -1,5 +1,6 @@
 from model.basemodel import BaseModel
 
+
 class HybridModel(BaseModel):
     def __init__(self, transfer, splineModel, voxelModel, criterion):
         super(HybridModel, self).__init__(transfer)
@@ -34,8 +35,8 @@ class HybridModel(BaseModel):
         model = self.__chooseModel(viewRay, intersection.geomPoint)
         return model.outSample(intersection, viewRay)
 
-    def getIntersections(self, viewRay):
-        return viewRay.splineIntersects
+    def findIntersections(self, viewRay):
+        return self.splineModel.findIntersections(viewRay)
 
     def voxelRatio(self):
         x = self.voxelSamples

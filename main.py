@@ -9,8 +9,9 @@ from model.splinemodel import SplineModel
 from model.voxellodmodel import VoxelLodModel
 from model.voxelmodel import VoxelModel
 from plotting.plotter import Plotter
-from ray import Ray2D
+from renderer import Renderer
 from renderers.comparerenderer import CompareSummary
+from screen import Screen
 from splineplane import SplinePlane
 from texture import Texture2D
 from voxelcriterion.geometriccriterion import GeometricCriterion
@@ -22,36 +23,25 @@ class Main:
         
         self.splineInterval = [0.0, 1.0]
         self.transfer = trans.createTransferFunction(100)
-        
-        self.numPixels = 10
-        self.numPixelsRef = self.numPixels * 1
-        self.pixelX = -0.5
-        self.screenTop = 0.90
-        self.screenBottom = 0.2
+
+        pixelX = -0.5
+        screenTop = 0.90
+        screenBottom = 0.2
+        numPixels = 10
+        self.screen = Screen(pixelX, screenTop, screenBottom, numPixels)
+        self.eye = np.array([-0.9, 0.65])
         
         self.plotter = Plotter(self.splineInterval)
-        
-        self.eye = np.array([-0.9, 0.65])
+
         self.viewRayDeltaRef = 0.01
         self.viewRayDeltaDirect = 0.01
         self.viewRayDeltaVoxelized = 0.01
         
         self.voxelizationTolerance = 1e-5
         
-    def createPixels(self, numPixels):
-        pixels = np.empty((numPixels, 2))
-        pixelXs = np.ones(numPixels) * self.pixelX
-        
-        deltaY = (self.screenTop - self.screenBottom) / numPixels
-        firstPixelY = self.screenBottom + (deltaY/2.0)
-        lastPixelY = self.screenTop - (deltaY/2.0)
-        
-        pixels[:, 0] = pixelXs
-        pixels[:, 1] = np.linspace(firstPixelY, lastPixelY, numPixels)
-        
-        return pixels
-        
     def run(self):
+        renderer = Renderer(self.eye, self.screen)
+
         plotter = self.plotter
         
         rho = self.dataset.rho
@@ -76,53 +66,11 @@ class Main:
         
         refSplineModel = SplineModel(self.transfer, phiPlane, rho, 0.0001)
         directSplineModel = SplineModel(self.transfer, phiPlane, rho)
-        
-        numPixelsRef = self.numPixelsRef
-        refPixels = self.createPixels(numPixelsRef)
-        refPixelWidth = (self.screenTop-self.screenBottom) / numPixelsRef
-        refPixelColors = np.empty((numPixelsRef, 4))
-        
-        for i, refPixel in enumerate(refPixels):
-            viewRay = Ray2D(self.eye, refPixel, 10, refPixelWidth)
-            refSplinePlotter.plotViewRay(viewRay, [0, 10])
 
-            viewRay.splineIntersects = refSplineModel.phiPlane.findTwoIntersections(viewRay)
-            result = refSplineModel.raycast(viewRay, self.viewRayDeltaRef)
+        refPixelColors = renderer.render(refSplineModel, self.viewRayDeltaRef, refSplinePlotter)
 
-            if result.color is not None:
-                refPixelColors[i] = result.color
-            else:
-                refPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
-        
-        numPixels = self.numPixels
-        pixels = self.createPixels(numPixels)
-        pixelWidth = (self.screenTop-self.screenBottom) / numPixels
-        
-        viewRays = np.empty(numPixels, dtype=object)
-        directPixelColors = np.empty((numPixels, 4))
-        pixelColors = np.empty((numPixels, 4))
-        
-        maxDirectSamplePoints = 0
-
-        for i in range(numPixels):
-            pixel = pixels[i]
-            viewRay = Ray2D(self.eye, pixel, 10, pixelWidth)
-            viewRays[i] = viewRay
-
-            viewRay.boundingBoxIntersects = bb.findTwoIntersections(viewRay)
-            viewRay.splineIntersects = directSplineModel.phiPlane.findTwoIntersections(viewRay)
-            
-            directSplinePlotter.plotViewRay(viewRay, [0, 10])
-            voxelPlotter.plotViewRay(viewRay, [0, 10])
-        
-        for i, viewRay in enumerate(viewRays):
-            result = directSplineModel.raycast(viewRay, self.viewRayDeltaDirect, directSplinePlotter)
-
-            if result.color is not None:
-                directPixelColors[i] = result.color
-                maxDirectSamplePoints = max(result.samples, maxDirectSamplePoints)
-            else:
-                directPixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
+        directPixelColors = renderer.render(directSplineModel, self.viewRayDeltaDirect, directSplinePlotter)
+        maxDirectSamplePoints = renderer.maxSamplePoints
             
         plotter.pixelReferencePlot.plotPixelColors(refPixelColors)
         plotter.pixelDirectPlot.plotPixelColors(directPixelColors)
@@ -155,7 +103,7 @@ class Main:
             model = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModel)
         elif choice == 2:
             voxelWidth = bb.getHeight() / float(texDimSize)
-            criterion = GeometricCriterion(pixelWidth, voxelWidth)
+            criterion = GeometricCriterion(self.screen.pixelWidth, voxelWidth)
             model = HybridModel(self.transfer, directSplineModel, voxelModel, criterion)
         else:
             lodTextures = [scalarTexture]
@@ -166,18 +114,10 @@ class Main:
                 lodTextures.append(Texture2D(scalars))
                 size /= 2
 
-            model = VoxelLodModel(self.transfer, lodTextures, bb, pixelWidth)
-        
-        maxSamplePoints = 0
+            model = VoxelLodModel(self.transfer, lodTextures, bb, self.screen.pixelWidth)
 
-        for i, viewRay in enumerate(viewRays):
-            result = model.raycast(viewRay, self.viewRayDeltaVoxelized, plotter.voxelModelPlotter)
-
-            if result.color is not None:
-                pixelColors[i] = result.color
-                maxSamplePoints = max(result.samples, maxSamplePoints)
-            else:
-                pixelColors[i] = np.array([0.0, 0.0, 0.0, 0.0])
+        pixelColors = renderer.render(model, self.viewRayDeltaVoxelized, voxelPlotter)
+        maxSamplePoints = renderer.maxSamplePoints
 
         voxelizedDiffs = colordiff.compare(refPixelColors, pixelColors)
         summary = CompareSummary(pixelColors, maxSamplePoints, voxelizedDiffs)

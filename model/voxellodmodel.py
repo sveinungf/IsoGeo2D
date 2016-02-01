@@ -1,6 +1,6 @@
 import math
 
-from model.basemodel import BaseModel, Sample
+from model.basemodel import BaseModel
 from model.voxelmodel import VoxelModel
 from samplingtype import SamplingType
 
@@ -13,6 +13,8 @@ class VoxelLodModel(BaseModel):
 
         self.lodModels = []
         self.voxelDiagonals = []
+
+        self.boundingBox = boundingBox
 
         bbWidth = boundingBox.getWidth()
         sqrt2 = math.sqrt(2)
@@ -69,5 +71,5 @@ class VoxelLodModel(BaseModel):
             sample.type = SamplingType.VOXEL_MODEL_LOD[lodLevel]
             return sample
 
-    def getIntersections(self, viewRay):
-        return viewRay.boundingBoxIntersects
+    def findIntersections(self, viewRay):
+        return self.boundingBox.findTwoIntersections(viewRay)
