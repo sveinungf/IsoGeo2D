@@ -41,7 +41,12 @@ class HybridModel(BaseModel):
     def voxelRatio(self):
         x = self.voxelSamples
         s = self.splineSamples
-        ratio = float(x) / (x + s)
+        sum = x + s
+
+        if sum == 0:
+            return 0.0
+
+        ratio = float(x) / sum
         
         self.splineSamples = 0
         self.voxelSamples = 0

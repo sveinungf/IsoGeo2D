@@ -1,22 +1,18 @@
 import numpy as np
 
 from ray import Ray2D
+from renderer import Renderer, RenderingResult
 
 
-class RenderingResult(object):
-    def __init__(self, colors, maxSamplePoints):
-        self.colors = colors
-        self.maxSamplePoints = maxSamplePoints
+class HybridRenderingResult(RenderingResult):
+    def __init__(self, colors, maxSamplePoints, ratios):
+        super(HybridRenderingResult, self).__init__(colors, maxSamplePoints)
+        self.ratios = ratios
 
 
-class Renderer(object):
+class HybridRenderer(Renderer):
     def __init__(self, eye, screen):
-        self.eye = eye
-        self.screen = screen
-
-        self.plotViewRays = True
-
-        self.maxSamplePoints = 0
+        super(HybridRenderer, self).__init__(eye, screen)
 
     def render(self, model, delta, plotter=None):
         numPixels = self.screen.numPixels
@@ -25,6 +21,8 @@ class Renderer(object):
 
         colors = np.zeros((numPixels, 4))
         maxSamplePoints = 0
+
+        ratios = np.zeros(numPixels)
 
         for i, pixel, in enumerate(pixels):
             viewRay = Ray2D(self.eye, pixel, 10, pixelWidth)
@@ -37,5 +35,6 @@ class Renderer(object):
             if result.color is not None:
                 colors[i] = result.color
                 maxSamplePoints = max(result.samples, maxSamplePoints)
+                ratios[i] = model.voxelRatio()
 
-        return RenderingResult(colors, maxSamplePoints)
+        return HybridRenderingResult(colors, maxSamplePoints, ratios)
