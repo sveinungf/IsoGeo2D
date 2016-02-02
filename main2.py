@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 
 import fileio.general as io
 import fileio.voxelio as voxelio
@@ -32,7 +33,7 @@ class Main2:
         pixelX = -0.5
         screenTop = 0.9
         screenBottom = 0.2
-        numPixels = 10
+        numPixels = 200
         self.screen = Screen(pixelX, screenTop, screenBottom, numPixels)
         self.eye = np.array([-2.0, 0.65])
 
@@ -42,9 +43,9 @@ class Main2:
         
         self.voxelizationTolerance = 1e-5
 
-        self.autoDelta = False
+        self.autoDelta = True
 
-        self.texDimSizes = np.array([8,16,32,64,128,192,256])#,320,384,448,512])#,576,640,704,768,896,1024,1152,1280,1408,1536,1664,1792,1920,2048])
+        self.texDimSizes = np.array([8,16,32,64,128,192,256,320,384,448,512])#,576,640,704,768,896,1024,1152,1280,1408,1536,1664,1792,1920,2048])
         self.numTextures = len(self.texDimSizes)
 
         self.numFiles = 0
@@ -62,7 +63,7 @@ class Main2:
         
         rho = self.dataset.rho
         phi = self.dataset.phi
-        phiPlane = SplinePlane(phi, self.splineInterval, 0.00001)
+        phiPlane = SplinePlane(phi, self.splineInterval, 1e-5)
         
         boundingBox = phiPlane.createBoundingBox()
         
@@ -92,37 +93,50 @@ class Main2:
             baModels[i] = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModels[i])
             hybridModels[i] = HybridModel(self.transfer, directSplineModel, baModels[i], criterion)
 
+        sys.stdout.write("Rendering reference... ")
+        sys.stdout.flush()
         renderData = RenderData(ModelType.REFERENCE, self.viewRayDeltaRef)
         renderData.renderResult = renderer.render(refSplineModel, self.viewRayDeltaRef)
         self.save(renderData)
+        print "Done!"
 
         if not self.autoDelta:
+            print "Rendering direct...",
             renderData = RenderData(ModelType.DIRECT, self.viewRayDelta)
             renderData.renderResult = renderer.render(directSplineModel, self.viewRayDelta)
             self.save(renderData)
+            print "Done!"
 
         for i, texSize in enumerate(self.texDimSizes):
             if self.autoDelta:
                 voxelWidth = boundingBox.getWidth() / float(texSize)
                 delta = voxelWidth/2.0
 
+                print "Rendering direct...",
                 renderData = RenderData(ModelType.DIRECT, delta)
                 renderData.renderResult = renderer.render(directSplineModel, delta)
                 self.save(renderData)
+                print "Done!"
             else:
                 delta = self.viewRayDelta
 
+            print "Rendering voxelized ({0}x{0})...".format(texSize),
             renderData = RenderData(ModelType.VOXEL, delta=delta, texSize=texSize)
             renderData.renderResult = renderer.render(voxelModels[i], delta)
             self.save(renderData)
+            print "Done!"
 
+            print "Rendering boundary accurate ({0}x{0})...".format(texSize),
             renderData = RenderData(ModelType.BOUNDARYACCURATE, delta=delta, texSize=texSize)
             renderData.renderResult = renderer.render(baModels[i], delta)
             self.save(renderData)
+            print "Done!"
 
+            print "Rendering hybrid ({0}x{0})...".format(texSize),
             renderData = RenderData(ModelType.HYBRID, delta=delta, texSize=texSize)
             renderData.renderResult = hybridRenderer.render(hybridModels[i], delta)
             self.save(renderData)
+            print "Done!"
 
     def createSummaries(self):
         result = []
