@@ -2,25 +2,25 @@ import numpy as np
 
 import colordiff
 import transfer as trans
-from dataset import Dataset
 from model.boundaryaccuratemodel import BoundaryAccurateModel
 from model.hybridmodel import HybridModel
 from model.splinemodel import SplineModel
 from model.voxellodmodel import VoxelLodModel
 from model.voxelmodel import VoxelModel
 from plotting.plotter import Plotter
+from dataset import Dataset
+from modeltype import ModelType
+from renderdata import RenderData
 from renderer import Renderer
-from renderers.comparerenderer import CompareSummary
 from screen import Screen
 from splineplane import SplinePlane
+from summary import Summary
 from texture import Texture2D
 from voxelcriterion.geometriccriterion import GeometricCriterion
 
 
 class Main:
     def __init__(self):
-        self.dataset = Dataset(1, 1)
-        
         self.splineInterval = [0.0, 1.0]
         self.transfer = trans.createTransferFunction(100)
 
@@ -30,24 +30,27 @@ class Main:
         numPixels = 10
         self.screen = Screen(pixelX, screenTop, screenBottom, numPixels)
         self.eye = np.array([-0.9, 0.65])
-        
-        self.plotter = Plotter(self.splineInterval)
 
+        self.viewRayDelta = 0.01
         self.viewRayDeltaRef = 0.01
-        self.viewRayDeltaDirect = 0.01
-        self.viewRayDeltaVoxelized = 0.01
+        self.refTolerance = 1e-3
+        self.intersectTolerance = 1e-5
         
-        self.voxelizationTolerance = 1e-5
+        self.voxelizationTolerance = 1e-3
         
-    def run(self):
-        renderer = Renderer(self.eye, self.screen)
+    def run(self, datasetRho=1, datasetPhi=1):
+        dataset = Dataset(datasetRho, datasetPhi)
+        texDimSize = 32
 
-        plotter = self.plotter
+        renderer = Renderer(self.eye, self.screen)
         
-        rho = self.dataset.rho
-        phi = self.dataset.phi
-        phiPlane = SplinePlane(phi, self.splineInterval, 0.00001)
-        
+        rho = dataset.rho
+        phi = dataset.phi
+        phiPlane = SplinePlane(phi, self.splineInterval, self.intersectTolerance)
+
+        boundingBox = phiPlane.createBoundingBox()
+
+        plotter = Plotter(self.splineInterval)
         refSplinePlotter = plotter.refSplineModelPlotter
         directSplinePlotter = plotter.directSplineModelPlotter
         voxelPlotter = plotter.voxelModelPlotter
@@ -58,87 +61,83 @@ class Main:
 
         paramPlotter.plotGrid(10, 10)
         paramPlotter.plotScalarField(rho, self.transfer)
-        
-        bb = phiPlane.createBoundingBox()
-        refSplinePlotter.plotBoundingBox(bb)
-        directSplinePlotter.plotBoundingBox(bb)
-        voxelPlotter.plotBoundingBox(bb)
-        
-        refSplineModel = SplineModel(self.transfer, phiPlane, rho, 0.0001)
+
+        refSplinePlotter.plotBoundingBox(boundingBox)
+        directSplinePlotter.plotBoundingBox(boundingBox)
+        voxelPlotter.plotBoundingBox(boundingBox)
+
+        # Creating models
+        refSplineModel = SplineModel(self.transfer, phiPlane, rho, self.refTolerance)
         directSplineModel = SplineModel(self.transfer, phiPlane, rho)
 
-        refRenderResult = renderer.render(refSplineModel, self.viewRayDeltaRef, refSplinePlotter)
-        refPixelColors = refRenderResult.colors
-
-        directRenderResult = renderer.render(directSplineModel, self.viewRayDeltaDirect, directSplinePlotter)
-        directPixelColors = directRenderResult.colors
-        maxDirectSamplePoints = directRenderResult.maxSamplePoints
-            
-        plotter.pixelReferencePlot.plotPixelColors(refPixelColors)
-        plotter.pixelDirectPlot.plotPixelColors(directPixelColors)
-        
-        directDiffs = colordiff.compare(refPixelColors, directPixelColors)
-        plotter.pixelDirectDiffPlot.plotPixelColorDiffs(directDiffs)
-        directSummary = CompareSummary(directPixelColors, maxDirectSamplePoints, directDiffs)
-        self.printSummary("Direct", directSummary)
-        
-        plotter.draw()
-        
-        print "Voxelized color diffs"
-        print "---------------------"
-            
-        texDimSize = 32
-
-        samplingScalars = refSplineModel.generateScalarMatrix(bb, texDimSize, texDimSize, self.voxelizationTolerance,
-                                                              paramPlotter, refSplinePlotter)
-        voxelPlotter.plotScalars(samplingScalars, bb)
+        samplingScalars = refSplineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize, self.voxelizationTolerance, paramPlotter, refSplinePlotter)
+        voxelPlotter.plotScalars(samplingScalars, boundingBox)
 
         scalarTexture = Texture2D(samplingScalars)
-        
-        voxelModel = VoxelModel(self.transfer, scalarTexture, bb)
-        
+        plotter.plotScalarTexture(scalarTexture)
+
+        voxelModel = VoxelModel(self.transfer, scalarTexture, boundingBox)
+
         choice = 0
 
         if choice == 0:
             model = voxelModel
+            modelType = ModelType.VOXEL
         elif choice == 1:
             model = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModel)
+            modelType = ModelType.BOUNDARYACCURATE
         elif choice == 2:
-            voxelWidth = bb.getHeight() / float(texDimSize)
+            voxelWidth = boundingBox.getHeight() / float(texDimSize)
             criterion = GeometricCriterion(self.screen.pixelWidth, voxelWidth)
             model = HybridModel(self.transfer, directSplineModel, voxelModel, criterion)
+            modelType = ModelType.HYBRID
         else:
             lodTextures = [scalarTexture]
 
             size = texDimSize / 2
             while size >= 2:
-                scalars = refSplineModel.generateScalarMatrix(bb, size, size, self.voxelizationTolerance)
+                scalars = refSplineModel.generateScalarMatrix(boundingBox, size, size, self.voxelizationTolerance)
                 lodTextures.append(Texture2D(scalars))
                 size /= 2
 
-            model = VoxelLodModel(self.transfer, lodTextures, bb, self.screen.pixelWidth)
+            model = VoxelLodModel(self.transfer, lodTextures, boundingBox, self.screen.pixelWidth)
+            modelType = ModelType.VOXEL
 
-        renderResult = renderer.render(model, self.viewRayDeltaVoxelized, voxelPlotter)
-        pixelColors = renderResult.colors
-        maxSamplePoints = renderResult.maxSamplePoints
+        # Rendering
+        refRenderData = RenderData(ModelType.REFERENCE, self.viewRayDeltaRef)
+        refRenderData.renderResult = renderer.render(refSplineModel, self.viewRayDeltaRef, refSplinePlotter)
 
-        voxelizedDiffs = colordiff.compare(refPixelColors, pixelColors)
-        summary = CompareSummary(pixelColors, maxSamplePoints, voxelizedDiffs)
-        self.printSummary("Voxel ({}x{})".format(texDimSize, texDimSize), summary)
+        directRenderData = RenderData(ModelType.DIRECT, self.viewRayDelta)
+        directRenderData.renderResult = renderer.render(directSplineModel, self.viewRayDelta, directSplinePlotter)
 
-        plotter.plotScalarTexture(scalarTexture)
+        renderData = RenderData(modelType, self.viewRayDelta, texSize=texDimSize)
+        renderData.renderResult = renderer.render(model, self.viewRayDelta, voxelPlotter)
+
+        # Plotting
+        refPixelColors = refRenderData.renderResult.colors
+        directPixelColors = directRenderData.renderResult.colors
+        pixelColors = renderData.renderResult.colors
+
+        plotter.pixelReferencePlot.plotPixelColors(refPixelColors)
+        plotter.pixelDirectPlot.plotPixelColors(directPixelColors)
         plotter.pixelVoxelizedPlot.plotPixelColors(pixelColors)
-        plotter.pixelVoxelizedDiffPlot.plotPixelColorDiffs(voxelizedDiffs)
-        
+
+        directDiffs = colordiff.compare(refPixelColors, directPixelColors)
+        diffs = colordiff.compare(refPixelColors, pixelColors)
+
+        plotter.pixelDirectDiffPlot.plotPixelColorDiffs(directDiffs)
+        plotter.pixelVoxelizedDiffPlot.plotPixelColorDiffs(diffs)
+
         plotter.draw()
 
-    @staticmethod
-    def printSummary(name, summary):
-        print "{} color diffs".format(name)
-        print "---------------------"
-        summary.printData()
+        # Printing
+        directSummary = Summary(directRenderData, directDiffs)
+        directSummary.printData()
+
         print ""
 
+        summary = Summary(renderData, diffs)
+        summary.printData()
 
 def run():
     main = Main()
