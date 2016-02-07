@@ -25,8 +25,6 @@ from voxelcriterion.geometriccriterion import GeometricCriterion
 
 class Main2:
     def __init__(self):
-        self.dataset = Dataset(1, 1)
-        
         self.splineInterval = [0.0, 1.0]
         self.transfer = trans.createTransferFunction(100)
 
@@ -50,19 +48,21 @@ class Main2:
 
         self.numFiles = 0
 
-    def save(self, obj):
+    def save(self, dataset, obj):
         filename = '{0:03d}'.format(self.numFiles)
-        io.save(obj, filename)
+        io.save(dataset, obj, filename)
         self.numFiles += 1
 
-    def run(self):
+    def run(self, datasetRho=1, datasetPhi=1):
+        dataset = Dataset(datasetRho, datasetPhi)
+
         renderer = Renderer(self.eye, self.screen)
         hybridRenderer = HybridRenderer(self.eye, self.screen)
 
         numTextures = self.numTextures
         
-        rho = self.dataset.rho
-        phi = self.dataset.phi
+        rho = dataset.rho
+        phi = dataset.phi
         phiPlane = SplinePlane(phi, self.splineInterval, 1e-5)
         
         boundingBox = phiPlane.createBoundingBox()
@@ -76,12 +76,12 @@ class Main2:
         for i in range(numTextures):
             texDimSize = self.texDimSizes[i]
             
-            if voxelio.exist(self.dataset, texDimSize, texDimSize):
-                samplingScalars = voxelio.read(self.dataset, texDimSize, texDimSize)
+            if voxelio.exist(dataset, texDimSize, texDimSize):
+                samplingScalars = voxelio.read(dataset, texDimSize, texDimSize)
                 print "Read {}x{} texture data from file".format(texDimSize, texDimSize)
             else:
                 samplingScalars = refSplineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize, self.voxelizationTolerance)
-                voxelio.write(self.dataset, samplingScalars)
+                voxelio.write(dataset, samplingScalars)
                 print "Wrote {}x{} texture data to file".format(texDimSize, texDimSize)
             
             scalarTexture = Texture2D(samplingScalars)
@@ -97,14 +97,14 @@ class Main2:
         sys.stdout.flush()
         renderData = RenderData(ModelType.REFERENCE, self.viewRayDeltaRef)
         renderData.renderResult = renderer.render(refSplineModel, self.viewRayDeltaRef)
-        self.save(renderData)
+        self.save(dataset, renderData)
         print "Done!"
 
         if not self.autoDelta:
             print "Rendering direct...",
             renderData = RenderData(ModelType.DIRECT, self.viewRayDelta)
             renderData.renderResult = renderer.render(directSplineModel, self.viewRayDelta)
-            self.save(renderData)
+            self.save(dataset, renderData)
             print "Done!"
 
         for i, texSize in enumerate(self.texDimSizes):
@@ -115,7 +115,7 @@ class Main2:
                 print "Rendering direct...",
                 renderData = RenderData(ModelType.DIRECT, delta)
                 renderData.renderResult = renderer.render(directSplineModel, delta)
-                self.save(renderData)
+                self.save(dataset, renderData)
                 print "Done!"
             else:
                 delta = self.viewRayDelta
@@ -123,32 +123,32 @@ class Main2:
             print "Rendering voxelized ({0}x{0})...".format(texSize),
             renderData = RenderData(ModelType.VOXEL, delta=delta, texSize=texSize)
             renderData.renderResult = renderer.render(voxelModels[i], delta)
-            self.save(renderData)
+            self.save(dataset, renderData)
             print "Done!"
 
             print "Rendering boundary accurate ({0}x{0})...".format(texSize),
             renderData = RenderData(ModelType.BOUNDARYACCURATE, delta=delta, texSize=texSize)
             renderData.renderResult = renderer.render(baModels[i], delta)
-            self.save(renderData)
+            self.save(dataset, renderData)
             print "Done!"
 
             print "Rendering hybrid ({0}x{0})...".format(texSize),
             renderData = RenderData(ModelType.HYBRID, delta=delta, texSize=texSize)
             renderData.renderResult = hybridRenderer.render(hybridModels[i], delta)
-            self.save(renderData)
+            self.save(dataset, renderData)
             print "Done!"
 
-    def createSummaries(self):
+    def createSummaries(self, dataset):
         result = []
 
         for i in range(ModelType._COUNT):
             result.append([])
 
-        files = io.findAll()
-        refObj = io.load(files[0])
+        files = io.findAll(dataset)
+        refObj = io.load(dataset, files[0])
 
         for i in range(1, len(files)):
-            obj = io.load(files[i])
+            obj = io.load(dataset, files[i])
 
             colorDiffs = colordiff.compare(refObj.renderResult.colors, obj.renderResult.colors)
             summary = Summary(obj, colorDiffs)
@@ -162,10 +162,11 @@ class Main2:
         for i in range(self.numTextures - 1):
             summaries[ModelType.DIRECT].append(summary)
 
-    def plotGraphs(self):
+    def plotGraphs(self, datasetRho=1, datasetPhi=1):
+        dataset = Dataset(datasetRho, datasetPhi)
         graphFigure = GraphFigure(self.texDimSizes)
 
-        summaries = self.createSummaries()
+        summaries = self.createSummaries(dataset)
 
         if len(summaries[ModelType.DIRECT]) == 1:
             self.duplicateDirectSummary(summaries)
@@ -176,7 +177,8 @@ class Main2:
         graphFigure.graphSummaries(summaries[ModelType.HYBRID], 'Hybrid')
         graphFigure.show()
 
-    def plotPixels(self):
+    def plotPixels(self, datasetRho=1, datasetPhi=1):
+        dataset = Dataset(datasetRho, datasetPhi)
         pixelFigure = PixelFigure(self.texDimSizes)
 
         directPixels = []
@@ -185,13 +187,13 @@ class Main2:
         hybridPixels = []
         hybridVoxelRatios = []
 
-        files = io.findAll()
-        refObj = io.load(files[0])
+        files = io.findAll(dataset)
+        refObj = io.load(dataset,files[0])
         refPixels = refObj.renderResult.colors
         pixelFigure.refPixelsPlot.plotPixelColors(refPixels)
 
         for i in range(1, len(files)):
-            obj = io.load(files[i])
+            obj = io.load(dataset,files[i])
             objPixels = obj.renderResult.colors
 
             if obj.modelType == ModelType.DIRECT:
@@ -230,8 +232,9 @@ class Main2:
 
         pixelFigure.show()
 
-    def printSummary(self):
-        summaries = self.createSummaries()
+    def printSummary(self, datasetRho=1, datasetPhi=1):
+        dataset = Dataset(datasetRho, datasetPhi)
+        summaries = self.createSummaries(dataset)
 
         for modelSummaries in summaries:
             for modelSummary in modelSummaries:
