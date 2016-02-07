@@ -31,19 +31,19 @@ class Main:
         self.screen = Screen(pixelX, screenTop, screenBottom, numPixels)
         self.eye = np.array([-0.9, 0.65])
 
-        self.viewRayDelta = 0.01
-        self.viewRayDeltaRef = 0.01
+        self.viewRayDelta = 0.3
+        self.viewRayDeltaRef = 0.1
         self.refTolerance = 1e-3
         self.intersectTolerance = 1e-5
-        
+
         self.voxelizationTolerance = 1e-3
-        
+
     def run(self, datasetRho=1, datasetPhi=1):
         dataset = Dataset(datasetRho, datasetPhi)
         texDimSize = 32
 
         renderer = Renderer(self.eye, self.screen)
-        
+
         rho = dataset.rho
         phi = dataset.phi
         phiPlane = SplinePlane(phi, self.splineInterval, self.intersectTolerance)
@@ -55,7 +55,7 @@ class Main:
         directSplinePlotter = plotter.directSplineModelPlotter
         voxelPlotter = plotter.voxelModelPlotter
         paramPlotter = plotter.paramPlotter
-        
+
         refSplinePlotter.plotGrid(phi.evaluate, 10, 10)
         directSplinePlotter.plotGrid(phi.evaluate, 10, 10)
 
@@ -70,7 +70,9 @@ class Main:
         refSplineModel = SplineModel(self.transfer, phiPlane, rho, self.refTolerance)
         directSplineModel = SplineModel(self.transfer, phiPlane, rho)
 
-        samplingScalars = refSplineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize, self.voxelizationTolerance, paramPlotter, refSplinePlotter)
+        samplingScalars = refSplineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize,
+                                                              self.voxelizationTolerance, paramPlotter,
+                                                              refSplinePlotter)
         voxelPlotter.plotScalars(samplingScalars, boundingBox)
 
         scalarTexture = Texture2D(samplingScalars)
@@ -139,9 +141,11 @@ class Main:
         summary = Summary(renderData, diffs)
         summary.printData()
 
+
 def run():
     main = Main()
     main.run()
+
 
 if __name__ == "__main__":
     run()

@@ -1,11 +1,14 @@
 import numpy as np
 from scipy import interpolate
 
-class Spline2D:
-    '''
-    coeffs - numpy array
-    '''
+from field import Field
+from geometry import Geometry
+
+
+class Spline2D(Geometry, Field):
     def __init__(self, degree, uKnots, vKnots, coeffs):
+        super(Spline2D, self).__init__()
+
         self.coeffs = coeffs
         self.coeffElems = len(coeffs)
         self.uCoeffsLength = len(uKnots) - degree - 1
@@ -15,8 +18,8 @@ class Spline2D:
         for i in range(self.coeffElems):
             self.tcks.append([uKnots, vKnots, coeffs[i], degree, degree])
     
-    def __coeffsExtremum(self, coeffElem, f):
-        coeffs = self.coeffs[coeffElem]
+    def __coeffsExtremum(self, axis, f):
+        coeffs = self.coeffs[axis]
         extremum = coeffs[0]
         
         for i in range(1, len(coeffs)):
@@ -24,11 +27,11 @@ class Spline2D:
             
         return extremum
         
-    def coeffMin(self, coeffElem):
-        return self.__coeffsExtremum(coeffElem, min)
+    def min(self, axis):
+        return self.__coeffsExtremum(axis, min)
     
-    def coeffMax(self, coeffElem):
-        return self.__coeffsExtremum(coeffElem, max)
+    def max(self, axis):
+        return self.__coeffsExtremum(axis, max)
         
     def evaluate(self, x, y):
         result = np.empty(self.coeffElems)
@@ -57,26 +60,3 @@ class Spline2D:
     def jacob(self, u, v):
         return np.matrix([self.evaluatePartialDerivativeU(u, v), 
                           self.evaluatePartialDerivativeV(u, v)]).transpose()
-
-class Spline2DTrivialR1:
-    def evaluate(self, x, y):
-        return np.array([y])    
-    
-class Spline2DTrivialR2:
-    def coeffMin(self, coeffElem):
-        return 0.0
-    
-    def coeffMax(self, coeffElem):
-        return 1.0
-        
-    def evaluate(self, x, y):
-        return np.array([x, y])
-    
-    def evaluatePartialDerivativeU(self, x, y):
-        return np.array([1.0, 0.0])
-    
-    def evaluatePartialDerivativeV(self, x, y):
-        return np.array([0.0, 1.0])
-    
-    def jacob(self, u, v):
-        return np.matrix([[1.0, 0.0], [0.0, 1.0]])

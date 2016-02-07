@@ -17,21 +17,25 @@ class SplinePlane:
         
     def bottom(self, u):
         return self.phi.evaluate(u, self.interval[0])
+
     def dbottom(self, u):
         return self.phi.evaluatePartialDerivativeU(u, self.interval[0])
         
     def top(self, u):
         return self.phi.evaluate(u, self.interval[1])
+
     def dtop(self, u):
         return self.phi.evaluatePartialDerivativeU(u, self.interval[1])
     
     def left(self, v):
         return self.phi.evaluate(self.interval[0], v)
+
     def dleft(self, v):
         return self.phi.evaluatePartialDerivativeV(self.interval[0], v)
     
     def right(self, v):
         return self.phi.evaluate(self.interval[1], v)
+
     def dright(self, v):
         return self.phi.evaluatePartialDerivativeV(self.interval[1], v)
 
@@ -51,7 +55,7 @@ class SplinePlane:
 
         uv = newton.newtonsMethod2DIntersect(f, df, ray, uGuess, self.interval, self.tolerance)
         
-        if uv != None:
+        if uv is not None:
             interval = self.interval
             
             if side == Side.BOTTOM:
@@ -73,14 +77,14 @@ class SplinePlane:
         for side in Side.sides:
             intersection = self.__findIntersection(side, ray, 0)
             
-            if intersection != None:
+            if intersection is not None:
                 result.append(intersection)
                 
         if len(result) < 2:
             for side in Side.sides:
                 intersection = self.__findIntersection(side, ray, 1)
                 
-                if intersection != None:
+                if intersection is not None:
                     if not intersection.alreadyIn(result, self.tolerance):
                         result.append(intersection)
         
@@ -95,10 +99,10 @@ class SplinePlane:
     def createBoundingBox(self):
         phi = self.phi
     
-        left = phi.coeffMin(0)
-        right = phi.coeffMax(0)
-        bottom = phi.coeffMin(1)
-        top = phi.coeffMax(1)
+        left = phi.min(0)
+        right = phi.max(0)
+        bottom = phi.min(1)
+        top = phi.max(1)
          
         return BoundingBox(left, right, bottom, top)
 
@@ -106,16 +110,13 @@ class SplinePlane:
         interval = self.interval
         phi = self.phi
         
-        def f(u,v):
-            return phi.evaluate(u,v) - geomPoint
+        def f(u, v):
+            return phi.evaluate(u, v) - geomPoint
                               
         return newton.newtonsMethod2DFrustum(f, phi.jacob, uvGuess, interval, phi, frustum)
 
     def inverseWithinTolerance(self, geomPoint, uvGuess, tolerance):
         phi = self.phi
-        
-        def f(u,v):
-            return phi.evaluate(u,v) - geomPoint
 
         uvIntervals = [self.interval, self.interval]
                    

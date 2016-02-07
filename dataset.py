@@ -1,5 +1,8 @@
 import fileio.splinereader as splineio
-from splines import Spline2DTrivialR1, Spline2DTrivialR2
+from datasets.sinegeometry import SineGeometry
+from datasets.trivialfield import TrivialField
+from datasets.trivialgeometry import TrivialGeometry
+
 
 class Dataset:    
     def __init__(self, rhoNumber, phiNumber):
@@ -7,13 +10,15 @@ class Dataset:
         self.phiNumber = phiNumber
         
         if rhoNumber == 0:
-            self.rho = Spline2DTrivialR1()
+            self.rho = TrivialField()
         else:
-            datasetDir = "datasets/" + `rhoNumber`
+            datasetDir = "datasets/" + repr(rhoNumber)
             self.rho = splineio.read(datasetDir + "/rho.json")
             
         if phiNumber == 0:
-            self.phi = Spline2DTrivialR2()
-        else:
-            datasetDir = "datasets/" + `phiNumber`
+            self.phi = TrivialGeometry()
+        elif phiNumber == 1:
+            datasetDir = "datasets/" + repr(phiNumber)
             self.phi = splineio.read(datasetDir + "/phi.json")
+        else:
+            self.phi = SineGeometry()
