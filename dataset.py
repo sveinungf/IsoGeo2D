@@ -1,4 +1,5 @@
 import fileio.splinereader as splineio
+from datasets.sinefield import SineField
 from datasets.sinegeometry import SineGeometry
 from datasets.trivialfield import TrivialField
 from datasets.trivialgeometry import TrivialGeometry
@@ -11,9 +12,11 @@ class Dataset:
         
         if rhoNumber == 0:
             self.rho = TrivialField()
-        else:
+        elif rhoNumber == 1:
             datasetDir = "datasets/" + repr(rhoNumber)
             self.rho = splineio.read(datasetDir + "/rho.json")
+        else:
+            self.rho = SineField()
             
         if phiNumber == 0:
             self.phi = TrivialGeometry()
