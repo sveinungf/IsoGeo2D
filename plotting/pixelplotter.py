@@ -3,9 +3,12 @@ import pylab as plt
 from matplotlib.patches import Rectangle
 
 class PixelPlotter():
-    def __init__(self, plot, title):
+    def __init__(self, plot, title=None):
         self.plot = plot
-        plot.set_title(title)
+
+        if title is not None:
+            plot.set_title(title)
+
         plot.xaxis.set_major_locator(plt.NullLocator()) # Removes ticks
         plot.yaxis.set_major_locator(plt.NullLocator())
         

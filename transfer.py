@@ -23,7 +23,7 @@ def createTransferArray(n):
     return np.asarray(result)
 
 
-def createTransferFunction(n):
+def createTransferFunction(n=100):
     x = np.linspace(0.0, 1.0, n)
     y = createTransferArray(n)
     f = interpolate.interp1d(x, y, axis=0)
