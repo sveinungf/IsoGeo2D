@@ -36,10 +36,10 @@ screenBottom = 0.2
 numPixels = 200
 screen = Screen(pixelX, screenTop, screenBottom, numPixels)
 
-intersectTolerance = 1e-5
-refTolerance = 1e-5
-viewRayDeltaRef = 1e-5
-viewRayDeltaDirect = 1e-3
+intersectTolerance = 1e-1
+refTolerance = 1e-1
+viewRayDeltaRef = 1e-1
+viewRayDeltaDirect = 1e-1
 
 phi = dataset.phi
 rho = dataset.rho
@@ -57,6 +57,7 @@ colorDiffs = colordiff.compare(refRenderResult.colors, directRenderResult.colors
 
 pref = PixelPlotter(axref)
 pref.plotPixelColors(refRenderResult.colors)
+axref.set_aspect('equal')
 
 pdir = PixelPlotter(axdir)
 pdir.plotPixelColors(directRenderResult.colors)

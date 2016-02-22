@@ -16,12 +16,18 @@ class PixelPlotter():
         return (-0.5, numPixels-0.5, 0, 1)
         
     def plotPixelColors(self, pixelColors):
+        #pixelColors = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+
         numPixels = len(pixelColors)
-        self.plot.axis(self.__getPixelPlotAxis(numPixels))
+        #self.plot.axis(self.__getPixelPlotAxis(numPixels))
+
+
         
-        for i, pixelColor in enumerate(pixelColors):
-            r = Rectangle((i-0.5, 0), 1, 1, facecolor=tuple(pixelColor), linewidth=0)
-            self.plot.add_patch(r)
+        #for i, pixelColor in enumerate(pixelColors):
+        #    r = Rectangle((i-0.5, 0), 1, 1, facecolor=tuple(pixelColor), linewidth=0)
+        #    self.plot.add_patch(r)
+        self.plot.imshow([pixelColors], interpolation='nearest', extent=(-0.5, numPixels+0.5, -0.5, 0.5), aspect=(2))
+        #print pixelColors
     
     def plotPixelColorDiffs(self, colorDiffs):
         colors = np.empty((len(colorDiffs), 3))
