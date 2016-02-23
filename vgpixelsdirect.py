@@ -12,7 +12,10 @@ from screen import Screen
 from splineplane import SplinePlane
 
 
+numPixels = 200
+
 figsize = [8, 0.5]
+aspectRatio = numPixels / 50.0
 
 figref = plt.figure(figsize=figsize)
 gsref = GridSpec(1, 1)
@@ -33,13 +36,12 @@ eye = np.array([-2.0, 0.65])
 pixelX = -0.5
 screenTop = 0.9
 screenBottom = 0.2
-numPixels = 200
 screen = Screen(pixelX, screenTop, screenBottom, numPixels)
 
-intersectTolerance = 1e-1
-refTolerance = 1e-1
-viewRayDeltaRef = 1e-1
-viewRayDeltaDirect = 1e-1
+intersectTolerance = 1e-5
+refTolerance = 1e-5
+viewRayDeltaRef = 1e-5
+viewRayDeltaDirect = 1e-2
 
 phi = dataset.phi
 rho = dataset.rho
@@ -51,19 +53,21 @@ directSplineModel = SplineModel(tf, phiPlane, rho)
 
 renderer = Renderer(eye, screen)
 
-refRenderResult = renderer.render(refSplineModel, viewRayDeltaRef)
-directRenderResult = renderer.render(directSplineModel, viewRayDeltaDirect)
-colorDiffs = colordiff.compare(refRenderResult.colors, directRenderResult.colors)
+refColors = renderer.render(refSplineModel, viewRayDeltaRef).colors
+directColors = renderer.render(directSplineModel, viewRayDeltaDirect).colors
+colorDiffs = colordiff.compare(refColors, directColors)
 
 pref = PixelPlotter(axref)
-pref.plotPixelColors(refRenderResult.colors)
-axref.set_aspect('equal')
+pref.plotPixelColors(refColors)
+axref.set_aspect(aspectRatio)
 
 pdir = PixelPlotter(axdir)
-pdir.plotPixelColors(directRenderResult.colors)
+pdir.plotPixelColors(directColors)
+axdir.set_aspect(aspectRatio)
 
 pdiff = PixelPlotter(axdiff)
 pdiff.plotPixelColorDiffs(colorDiffs)
+axdiff.set_aspect(aspectRatio)
 
 figref.tight_layout()
 figdir.tight_layout()
