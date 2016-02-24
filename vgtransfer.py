@@ -73,5 +73,4 @@ for i in range(4):
     axes[i].set_aspect('auto')
 
 fig.tight_layout()
-#plt.savefig("output/vg/transfer.pdf", format="pdf", transparent=True)
-plt.show()
+plt.savefig("output/vg/transfer.pdf", format="pdf", transparent=True)
