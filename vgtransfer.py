@@ -40,10 +40,11 @@ for i in range(4):
 
 plotlim = plt.xlim() + plt.ylim()
 
-rgb = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
-black = [0.0, 0.0, 0.0]
+top = [[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 1.0], [0.0, 0.0, 1.0, 1.0], [0.0, 0.0, 0.0, 1.0]]
+bottom = [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 0.0]]
+#black = [0.0, 0.0, 0.0, 1.0]
 
-m = 40
+m = 60
 n = 8
 light = [0.6] * 3
 dark = [0.25] * 3
@@ -65,12 +66,12 @@ for j in range(n/2):
 
 chessboard = np.asarray(qq)
 
-for i in range(3):
-    axes[i].imshow([[rgb[i]],[black]], interpolation='bicubic', extent=plotlim)
+axes[3].imshow(chessboard, interpolation='nearest', extent=plotlim)
+
+for i in range(4):
+    axes[i].imshow([[top[i]],[bottom[i]]], interpolation='bicubic', extent=plotlim)
     axes[i].set_aspect('auto')
 
-axes[3].imshow(chessboard, interpolation='nearest', extent=plotlim)
-axes[3].set_aspect('auto')
-
 fig.tight_layout()
-plt.savefig("output/vg/transfer.pdf", format="pdf", transparent=True)
+#plt.savefig("output/vg/transfer.pdf", format="pdf", transparent=True)
+plt.show()
