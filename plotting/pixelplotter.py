@@ -3,9 +3,18 @@ import pylab as plt
 from matplotlib.patches import Rectangle
 
 class PixelPlotter():
-    def __init__(self, plot, title):
+    def __init__(self, plot, title=None, aspectRatio=None):
         self.plot = plot
-        plot.set_title(title)
+        self.aspectRatio = aspectRatio
+
+        # Default
+        if aspectRatio is not None:
+            plot.imshow([[[1.0, 1.0, 1.0]]], interpolation='nearest', extent=(-0.5, 0.5, -0.5, 0.5))
+            plot.set_aspect(1.0 / aspectRatio)
+
+        if title is not None:
+            plot.set_title(title)
+
         plot.xaxis.set_major_locator(plt.NullLocator()) # Removes ticks
         plot.yaxis.set_major_locator(plt.NullLocator())
         
@@ -14,11 +23,10 @@ class PixelPlotter():
         
     def plotPixelColors(self, pixelColors):
         numPixels = len(pixelColors)
-        self.plot.axis(self.__getPixelPlotAxis(numPixels))
-        
-        for i, pixelColor in enumerate(pixelColors):
-            r = Rectangle((i-0.5, 0), 1, 1, facecolor=tuple(pixelColor), linewidth=0)
-            self.plot.add_patch(r)
+        self.plot.imshow([pixelColors], interpolation='nearest', extent=(-0.5, numPixels-0.5, -0.5, 0.5))
+
+        if self.aspectRatio is not None:
+            self.plot.set_aspect(numPixels / float(self.aspectRatio))
     
     def plotPixelColorDiffs(self, colorDiffs):
         colors = np.empty((len(colorDiffs), 3))
