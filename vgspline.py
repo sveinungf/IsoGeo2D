@@ -3,7 +3,7 @@ import numpy as np
 from scipy import interpolate
 
 
-fig = plt.figure(figsize=[10, 6])
+fig = plt.figure(figsize=[5, 3])
 
 p = 3
 t = [0, 0, 0, 0, 1, 1.5, 2, 2.5, 3.3, 4, 5, 5, 5, 5]
