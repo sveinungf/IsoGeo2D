@@ -38,18 +38,20 @@ screenTop = 0.9
 screenBottom = 0.2
 screen = Screen(pixelX, screenTop, screenBottom, numPixels)
 
-intersectTolerance = 1e-5
+refIntersectTolerance = 1e-5
 refTolerance = 1e-5
 viewRayDeltaRef = 1e-5
+directIntersectTolerance = 1e-3
 viewRayDeltaDirect = 1e-2
 
 phi = dataset.phi
 rho = dataset.rho
-phiPlane = SplinePlane(phi, splineInterval, intersectTolerance)
+refPhiPlane = SplinePlane(phi, splineInterval, refIntersectTolerance)
+directPhiPlane = SplinePlane(phi, splineInterval, directIntersectTolerance)
 tf = trans.createTransferFunction()
 
-refSplineModel = SplineModel(tf, phiPlane, rho, refTolerance)
-directSplineModel = SplineModel(tf, phiPlane, rho)
+refSplineModel = SplineModel(tf, refPhiPlane, rho, refTolerance)
+directSplineModel = SplineModel(tf, directPhiPlane, rho)
 
 renderer = Renderer(eye, screen)
 
