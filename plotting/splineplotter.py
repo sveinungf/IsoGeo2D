@@ -24,7 +24,7 @@ class SplinePlotter(ModelPlotter):
         
         return [xOutput, yOutput]
 
-    def plotOutline(self, f, color='0.5'):
+    def plotOutline(self, f, color='0.5', linewidth=1.0):
         interval = self.interval
         precision = 100
 
@@ -33,16 +33,16 @@ class SplinePlotter(ModelPlotter):
         params = np.linspace(interval[0], interval[1], precision)
 
         [geomX, geomY] = self.__generatePoints2var(f, lows, params)
-        self.plot.plot(geomX, geomY, color=color)
+        self.plot.plot(geomX, geomY, color=color, linewidth=linewidth)
 
         [geomX, geomY] = self.__generatePoints2var(f, highs, params)
-        self.plot.plot(geomX, geomY, color=color)
+        self.plot.plot(geomX, geomY, color=color, linewidth=linewidth)
 
         [geomX, geomY] = self.__generatePoints2var(f, params, lows)
-        self.plot.plot(geomX, geomY, color=color)
+        self.plot.plot(geomX, geomY, color=color, linewidth=linewidth)
 
         [geomX, geomY] = self.__generatePoints2var(f, params, highs)
-        self.plot.plot(geomX, geomY, color=color)
+        self.plot.plot(geomX, geomY, color=color, linewidth=linewidth)
 
     def plotGrid(self, f, m, n, color='0.5'):
         interval = self.interval

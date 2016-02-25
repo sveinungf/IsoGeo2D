@@ -30,13 +30,16 @@ splineModel = SplineModel(None, phiPlane, rho)
 samplingScalars = splineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize, newtonTolerance)
 
 s = SplinePlotter(ax, splineInterval)
-s.plotOutline(phi.evaluate, color=Color.DIRECT)
+s.plotOutline(phi.evaluate, color=Color.DIRECT, linewidth=2.0)
 
 v = VoxelPlotter(ax)
-v.plotScalars(samplingScalars, boundingBox, facecolor=None, edgecolor=Color.VOXEL)
+v.plotScalars(samplingScalars, boundingBox, facecolor=None, edgecolor='k')
 
-ax.set_xlim([-0.56, 0.40])
-ax.set_ylim([0.01, 0.97])
+size = 0.96
+left = -0.56
+bottom = 0.01
+ax.set_xlim([left, left + size])
+ax.set_ylim([bottom, bottom + size])
 
 fig.tight_layout()
 plt.savefig("output/vg/voxelboundary.pdf", format="pdf", transparent=True)
