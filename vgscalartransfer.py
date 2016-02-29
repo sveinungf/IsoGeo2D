@@ -4,7 +4,7 @@ import numpy as np
 
 from plotting.paramplotter import ParamPlotter
 from dataset import Dataset
-import transfer
+import datasets.peakstransfer as transfer
 
 
 fig = plt.figure(figsize=[8, 6])
@@ -13,7 +13,7 @@ ax = fig.add_subplot(gs[0, 0])
 
 dataset = Dataset(1, 1)
 splineInterval = np.array([0.0, 1.0])
-t = transfer.createTransferFunction(1000)
+t = transfer.createTransferFunction()
 
 p = ParamPlotter(ax, splineInterval, precision=1000)
 cax = p.plotScalarField(dataset.rho, t)
