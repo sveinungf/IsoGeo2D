@@ -13,6 +13,7 @@ from model.voxelmodel import VoxelModel
 from plotting.pixelplotter import PixelPlotter
 from voxelcriterion.geometriccriterion import GeometricCriterion
 from dataset import Dataset
+from hybridrenderer import HybridRenderer
 from renderer import Renderer
 from screen import Screen
 from splineplane import SplinePlane
@@ -34,6 +35,10 @@ ax = fig.add_subplot(gs[0, 0])
 figdiff = plt.figure(figsize=figsize)
 gsdiff = GridSpec(1, 1)
 axdiff = figdiff.add_subplot(gsdiff[0, 0])
+
+figratio = plt.figure(figsize=figsize)
+gsratio = GridSpec(1, 1)
+axratio = figratio.add_subplot(gsratio[0, 0])
 
 dataset = Dataset(1, 1)
 splineInterval = np.array([0.0, 1.0])
@@ -92,8 +97,17 @@ elif modelChoice == 4:
     model = HybridModel(tf, directSplineModel, baModel, criterion)
     name = 'BaHybrid{}'.format(texDimSize)
 
-renderer = Renderer(eye, screen)
-colors = renderer.render(model, viewRayDelta).colors
+ratios = None
+
+if modelChoice == 3 or modelChoice == 4:
+    renderer = HybridRenderer(eye, screen)
+    renderResult = renderer.render(model, viewRayDelta)
+    ratios = renderResult.ratios
+else:
+    renderer = Renderer(eye, screen)
+    renderResult = renderer.render(model, viewRayDelta)
+
+colors = renderResult.colors
 
 fileHandler = FileHandler()
 fileHandler.setFiledir('output/vgresults')
@@ -118,3 +132,13 @@ plt.savefig("output/vg/pixels{}.pdf".format(name), format="pdf", transparent=Tru
 
 plt.figure(figdiff.number)
 plt.savefig("output/vg/pixels{}Diff.pdf".format(name), format="pdf", transparent=True)
+
+if modelChoice == 3 or modelChoice == 4:
+    pratio = PixelPlotter(axratio)
+    pratio.plotRatios(ratios)
+    axratio.set_aspect(aspectRatio)
+
+    figratio.tight_layout()
+
+    plt.figure(figratio.number)
+    plt.savefig("output/vg/pixels{}Ratio.pdf".format(name), format="pdf", transparent=True)
