@@ -1,11 +1,11 @@
 import numpy as np
 import sys
 
-import fileio.general as io
 import fileio.voxelio as voxelio
 import transfer as trans
 import colordiff
 from dataset import Dataset
+from fileio.filehandler import FileHandler
 from model.boundaryaccuratemodel import BoundaryAccurateModel
 from model.hybridmodel import HybridModel
 from model.splinemodel import SplineModel
@@ -38,7 +38,7 @@ class Main2:
         self.viewRayDelta = 0.01
         self.viewRayDeltaRef = 1e-5
         self.refTolerance = 1e-5
-        
+
         self.voxelizationTolerance = 1e-5
 
         self.autoDelta = True
@@ -47,10 +47,19 @@ class Main2:
         self.numTextures = len(self.texDimSizes)
 
         self.numFiles = 0
+        self.fileHandler = FileHandler()
+
+    @staticmethod
+    def filedir(dataset):
+        return 'output/results/{},{}'.format(dataset.rhoNumber, dataset.phiNumber)
 
     def save(self, dataset, obj):
+        filedir = self.filedir(dataset)
         filename = '{0:03d}'.format(self.numFiles)
-        io.save(dataset, obj, filename)
+
+        self.fileHandler.setFiledir(filedir)
+        self.fileHandler.save(obj, filename)
+
         self.numFiles += 1
 
     def run(self, datasetRho=1, datasetPhi=1):
@@ -60,22 +69,22 @@ class Main2:
         hybridRenderer = HybridRenderer(self.eye, self.screen)
 
         numTextures = self.numTextures
-        
+
         rho = dataset.rho
         phi = dataset.phi
         phiPlane = SplinePlane(phi, self.splineInterval, 1e-5)
-        
+
         boundingBox = phiPlane.createBoundingBox()
-        
+
         refSplineModel = SplineModel(self.transfer, phiPlane, rho, self.refTolerance)
         directSplineModel = SplineModel(self.transfer, phiPlane, rho)
         voxelModels = np.empty(numTextures, dtype=object)
         baModels = np.empty(numTextures, dtype=object)
         hybridModels = np.empty(numTextures, dtype=object)
-        
+
         for i in range(numTextures):
             texDimSize = self.texDimSizes[i]
-            
+
             if voxelio.exist(dataset, texDimSize, texDimSize):
                 samplingScalars = voxelio.read(dataset, texDimSize, texDimSize)
                 print "Read {}x{} texture data from file".format(texDimSize, texDimSize)
@@ -83,12 +92,12 @@ class Main2:
                 samplingScalars = refSplineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize, self.voxelizationTolerance)
                 voxelio.write(dataset, samplingScalars)
                 print "Wrote {}x{} texture data to file".format(texDimSize, texDimSize)
-            
+
             scalarTexture = Texture2D(samplingScalars)
-            
+
             voxelWidth = boundingBox.getHeight() / float(texDimSize)
             criterion = GeometricCriterion(self.screen.pixelWidth, voxelWidth)
-            
+
             voxelModels[i] = VoxelModel(self.transfer, scalarTexture, boundingBox)
             baModels[i] = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModels[i])
             hybridModels[i] = HybridModel(self.transfer, directSplineModel, baModels[i], criterion)
@@ -144,11 +153,14 @@ class Main2:
         for i in range(ModelType._COUNT):
             result.append([])
 
-        files = io.findAll(dataset)
-        refObj = io.load(dataset, files[0])
+        filedir = self.filedir(dataset)
+        self.fileHandler.setFiledir(filedir)
+
+        files = self.fileHandler.findAll()
+        refObj = self.fileHandler.load(files[0])
 
         for i in range(1, len(files)):
-            obj = io.load(dataset, files[i])
+            obj = self.fileHandler.load(files[i])
 
             colorDiffs = colordiff.compare(refObj.renderResult.colors, obj.renderResult.colors)
             summary = Summary(obj, colorDiffs)
@@ -187,13 +199,16 @@ class Main2:
         hybridPixels = []
         hybridVoxelRatios = []
 
-        files = io.findAll(dataset)
-        refObj = io.load(dataset,files[0])
+        filedir = self.filedir(dataset)
+        self.fileHandler.setFiledir(filedir)
+
+        files = self.fileHandler.findAll()
+        refObj = self.fileHandler.load(files[0])
         refPixels = refObj.renderResult.colors
         pixelFigure.refPixelsPlot.plotPixelColors(refPixels)
 
         for i in range(1, len(files)):
-            obj = io.load(dataset,files[i])
+            obj = self.fileHandler.load(files[i])
             objPixels = obj.renderResult.colors
 
             if obj.modelType == ModelType.DIRECT:
