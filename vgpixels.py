@@ -4,7 +4,7 @@ import sys
 from matplotlib.gridspec import GridSpec
 
 import colordiff
-import transfer as trans
+import datasets.peakstransfer as trans
 from fileio.filehandler import FileHandler
 from model.boundaryaccuratemodel import BoundaryAccurateModel
 from model.hybridmodel import HybridModel
@@ -43,7 +43,7 @@ axratio = figratio.add_subplot(gsratio[0, 0])
 dataset = Dataset(1, 1)
 splineInterval = np.array([0.0, 1.0])
 
-eye = np.array([-2.0, 0.65])
+eye = np.array([-1.2, 0.65])
 pixelX = -0.5
 screenTop = 0.9
 screenBottom = 0.2
