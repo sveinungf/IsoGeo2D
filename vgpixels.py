@@ -23,7 +23,7 @@ from texture import Texture2D
 modelChoice = int(sys.argv[1])
 texDimSize = int(sys.argv[2])
 
-numPixels = 200
+numPixels = 100
 
 figsize = [8, 0.5]
 aspectRatio = numPixels / 50.0
@@ -40,7 +40,7 @@ figratio = plt.figure(figsize=figsize)
 gsratio = GridSpec(1, 1)
 axratio = figratio.add_subplot(gsratio[0, 0])
 
-dataset = Dataset(1, 1)
+dataset = Dataset(1, 2)
 splineInterval = np.array([0.0, 1.0])
 
 eye = np.array([-1.2, 0.65])
@@ -52,7 +52,7 @@ screen = Screen(pixelX, screenTop, screenBottom, numPixels)
 refIntersectTolerance = 1e-5
 refTolerance = 1e-5
 voxTolerance = 1e-5
-viewRayDelta = 1e-2
+viewRayDelta = 1e-3
 
 phi = dataset.phi
 rho = dataset.rho
