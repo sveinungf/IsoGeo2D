@@ -18,24 +18,39 @@ summaries = summary.createSummaries(fileHandler, dataset)
 
 texoutputdir = 'output/tex'
 
+typedict = {
+    ModelType.REFERENCE : 'reference',
+    ModelType.DIRECT : 'direct',
+    ModelType.VOXEL : 'voxel',
+    ModelType.BOUNDARYACCURATE : 'ba',
+    ModelType.HYBRID : 'hybrid'
+}
+
 voxelSummaries = summaries[ModelType.VOXEL]
 
-fo = open('{}/stats_{},{}_voxel.tex'.format(texoutputdir, datasetRho, datasetPhi), 'wb')
+for i in range(ModelType._COUNT):
+    if i == ModelType.REFERENCE:
+        continue
 
-for voxelSummary in voxelSummaries:
-    #texSize = voxelSummary.renderData.texSize
-    texSize = 128
+    filename = '{}/stats_{},{}_{}.tex'.format(texoutputdir, datasetRho, datasetPhi, typedict[i])
+    fo = open(filename, 'wb')
 
-    fo.write('${}^2$'.format(texSize))
-    fo.write(' & ')
-    fo.write(str(voxelSummary.renderData.renderResult.maxSamplePoints))
-    fo.write(' & ')
-    fo.write('{:.2f}'.format(voxelSummary.max))
-    fo.write(' & ')
-    fo.write('{:.2f}'.format(voxelSummary.mean))
-    fo.write(' & ')
-    fo.write('{:.2f}'.format(voxelSummary.var))
-    fo.write(' \\\\\n')
-    fo.write('\\hline\n')
+    for voxelSummary in voxelSummaries:
+        if i != ModelType.DIRECT:
+            #texSize = voxelSummary.renderData.texSize
+            texSize = 128
 
-fo.close()
+            fo.write('${}^2$'.format(texSize))
+            fo.write(' & ')
+
+        fo.write(str(voxelSummary.renderData.renderResult.maxSamplePoints))
+        fo.write(' & ')
+        fo.write('{:.2f}'.format(voxelSummary.max))
+        fo.write(' & ')
+        fo.write('{:.2f}'.format(voxelSummary.mean))
+        fo.write(' & ')
+        fo.write('{:.2f}'.format(voxelSummary.var))
+        fo.write(' \\\\\n')
+        fo.write('\\hline\n')
+
+    fo.close()
