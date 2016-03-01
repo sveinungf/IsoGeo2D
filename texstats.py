@@ -37,9 +37,7 @@ for i in range(ModelType._COUNT):
 
     for voxelSummary in voxelSummaries:
         if i != ModelType.DIRECT:
-            #texSize = voxelSummary.renderData.texSize
-            texSize = 128
-
+            texSize = voxelSummary.renderData.texSize
             fo.write('${}^2$'.format(texSize))
             fo.write(' & ')
 
