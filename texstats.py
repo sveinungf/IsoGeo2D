@@ -9,6 +9,8 @@ from modeltype import ModelType
 datasetRho = int(sys.argv[1])
 datasetPhi = int(sys.argv[2])
 
+interestingTexSizes = [64, 128, 256, 512]
+
 dataset = Dataset(datasetRho, datasetPhi)
 
 fileHandler = FileHandler()
@@ -27,6 +29,11 @@ typedict = {
 }
 
 voxelSummaries = summaries[ModelType.VOXEL]
+interestingIndexes = []
+
+for i, voxelSummary in enumerate(summaries[ModelType.VOXEL]):
+    if voxelSummary.renderData.texSize in interestingTexSizes:
+        interestingIndexes.append(i)
 
 for i in range(ModelType._COUNT):
     if i == ModelType.REFERENCE:
@@ -35,20 +42,21 @@ for i in range(ModelType._COUNT):
     filename = '{}/stats_{},{}_{}.tex'.format(texoutputdir, datasetRho, datasetPhi, typedict[i])
     fo = open(filename, 'wb')
 
-    for voxelSummary in voxelSummaries:
+    for j in interestingIndexes:
+        modelSummary = summaries[i][j]
+
         if i != ModelType.DIRECT:
-            texSize = voxelSummary.renderData.texSize
+            texSize = modelSummary.renderData.texSize
             fo.write('${}^2$'.format(texSize))
             fo.write(' & ')
 
-        fo.write(str(voxelSummary.renderData.renderResult.maxSamplePoints))
+        fo.write(str(modelSummary.renderData.renderResult.maxSamplePoints))
         fo.write(' & ')
-        fo.write('{:.2f}'.format(voxelSummary.max))
+        fo.write('{:.2f}'.format(modelSummary.max))
         fo.write(' & ')
-        fo.write('{:.2f}'.format(voxelSummary.mean))
+        fo.write('{:.2f}'.format(modelSummary.mean))
         fo.write(' & ')
-        fo.write('{:.2f}'.format(voxelSummary.var))
+        fo.write('{:.2f}'.format(modelSummary.var))
         fo.write(' \\\\\n')
-        fo.write('\\hline\n')
 
     fo.close()
