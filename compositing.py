@@ -52,6 +52,10 @@ class FrontToBack:
         prevSample = self.prevSample
 
         if prevSample is not None:
+            # TODO: Find cause for this
+            if prevSample.scalar > 1.0:
+                prevSample.scalar = 1.0
+
             prevColor = self.transfer(prevSample.scalar)
 
             dist = sample.geomPoint - prevSample.geomPoint
