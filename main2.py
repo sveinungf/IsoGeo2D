@@ -1,8 +1,8 @@
 import numpy as np
 import sys
 
+import datasets.peakstransfer as trans
 import fileio.voxelio as voxelio
-import transfer as trans
 import colordiff
 from dataset import Dataset
 from fileio.filehandler import FileHandler
@@ -26,14 +26,14 @@ from voxelcriterion.geometriccriterion import GeometricCriterion
 class Main2:
     def __init__(self):
         self.splineInterval = [0.0, 1.0]
-        self.transfer = trans.createTransferFunction(100)
+        self.transfer = trans.createTransferFunction()
 
         pixelX = -0.5
         screenTop = 0.9
         screenBottom = 0.2
-        numPixels = 200
+        numPixels = 100
         self.screen = Screen(pixelX, screenTop, screenBottom, numPixels)
-        self.eye = np.array([-2.0, 0.65])
+        self.eye = np.array([-1.2, 0.65])
 
         self.viewRayDelta = 0.01
         self.viewRayDeltaRef = 1e-5
@@ -43,7 +43,7 @@ class Main2:
 
         self.autoDelta = True
 
-        self.texDimSizes = np.array([8,16,32,64,128,192,256,320,384,448,512])#,576,640,704,768,896,1024,1152,1280,1408,1536,1664,1792,1920,2048])
+        self.texDimSizes = np.array([8,16,32,64,128,192,256,320,384,448,512,576,640,704,768,896,1024])#,1152,1280,1408,1536,1664,1792,1920,2048])
         self.numTextures = len(self.texDimSizes)
 
         self.numFiles = 0
