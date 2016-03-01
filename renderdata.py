@@ -6,6 +6,7 @@ class RenderData:
         self.delta = delta
         self.modelType = modelType
         self.renderResult = None
+        self.texSize = texSize
 
         name = None
 
