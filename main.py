@@ -1,7 +1,6 @@
 import numpy as np
 
 import colordiff
-import transfer as trans
 from model.boundaryaccuratemodel import BoundaryAccurateModel
 from model.hybridmodel import HybridModel
 from model.splinemodel import SplineModel
@@ -22,7 +21,6 @@ from voxelcriterion.geometriccriterion import GeometricCriterion
 class Main:
     def __init__(self):
         self.splineInterval = [0.0, 1.0]
-        self.transfer = trans.createTransferFunction(100)
 
         pixelX = -0.5
         screenTop = 0.90
@@ -38,14 +36,15 @@ class Main:
 
         self.voxelizationTolerance = 1e-3
 
-    def run(self, datasetRho=1, datasetPhi=1):
-        dataset = Dataset(datasetRho, datasetPhi)
+    def run(self, rhoNo=1, phiNo=1, tfNo=1):
+        dataset = Dataset(rhoNo, phiNo, tfNo)
         texDimSize = 32
 
         renderer = Renderer(self.eye, self.screen)
 
         rho = dataset.rho
         phi = dataset.phi
+        tf = dataset.tf
         phiPlane = SplinePlane(phi, self.splineInterval, self.intersectTolerance)
 
         boundingBox = phiPlane.createBoundingBox()
@@ -60,15 +59,15 @@ class Main:
         directSplinePlotter.plotGrid(phi.evaluate, 10, 10)
 
         paramPlotter.plotGrid(10, 10)
-        paramPlotter.plotScalarField(rho, self.transfer)
+        paramPlotter.plotScalarField(rho, tf)
 
         refSplinePlotter.plotBoundingBox(boundingBox)
         directSplinePlotter.plotBoundingBox(boundingBox)
         voxelPlotter.plotBoundingBox(boundingBox)
 
         # Creating models
-        refSplineModel = SplineModel(self.transfer, phiPlane, rho, self.refTolerance)
-        directSplineModel = SplineModel(self.transfer, phiPlane, rho)
+        refSplineModel = SplineModel(tf, phiPlane, rho, self.refTolerance)
+        directSplineModel = SplineModel(tf, phiPlane, rho)
 
         samplingScalars = refSplineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize,
                                                               self.voxelizationTolerance, paramPlotter,
@@ -78,7 +77,7 @@ class Main:
         scalarTexture = Texture2D(samplingScalars)
         plotter.plotScalarTexture(scalarTexture)
 
-        voxelModel = VoxelModel(self.transfer, scalarTexture, boundingBox)
+        voxelModel = VoxelModel(tf, scalarTexture, boundingBox)
 
         choice = 0
 
@@ -86,12 +85,12 @@ class Main:
             model = voxelModel
             modelType = ModelType.VOXEL
         elif choice == 1:
-            model = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModel)
+            model = BoundaryAccurateModel(tf, directSplineModel, voxelModel)
             modelType = ModelType.BOUNDARYACCURATE
         elif choice == 2:
             voxelWidth = boundingBox.getHeight() / float(texDimSize)
             criterion = GeometricCriterion(self.screen.pixelWidth, voxelWidth)
-            model = HybridModel(self.transfer, directSplineModel, voxelModel, criterion)
+            model = HybridModel(tf, directSplineModel, voxelModel, criterion)
             modelType = ModelType.HYBRID
         else:
             lodTextures = [scalarTexture]
@@ -102,7 +101,7 @@ class Main:
                 lodTextures.append(Texture2D(scalars))
                 size /= 2
 
-            model = VoxelLodModel(self.transfer, lodTextures, boundingBox, self.screen.pixelWidth)
+            model = VoxelLodModel(tf, lodTextures, boundingBox, self.screen.pixelWidth)
             modelType = ModelType.VOXEL
 
         # Rendering

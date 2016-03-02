@@ -1,7 +1,6 @@
 import numpy as np
 import sys
 
-import datasets.peakstransfer as trans
 import fileio.voxelio as voxelio
 import colordiff
 from dataset import Dataset
@@ -23,15 +22,14 @@ from texture import Texture2D
 from voxelcriterion.geometriccriterion import GeometricCriterion
 
 
-def printflush(str):
-    sys.stdout.write(str)
+def printflush(string):
+    sys.stdout.write(string)
     sys.stdout.flush()
 
 
 class Main2:
     def __init__(self):
         self.splineInterval = [0.0, 1.0]
-        self.transfer = trans.createTransferFunction()
 
         pixelX = -0.5
         screenTop = 0.9
@@ -56,7 +54,7 @@ class Main2:
 
     @staticmethod
     def filedir(dataset):
-        return 'output/results/{},{}'.format(dataset.rhoNumber, dataset.phiNumber)
+        return 'output/results/{},{},{}'.format(dataset.rhoNumber, dataset.phiNumber, dataset.tfNumber)
 
     def save(self, dataset, obj):
         filedir = self.filedir(dataset)
@@ -67,8 +65,8 @@ class Main2:
 
         self.numFiles += 1
 
-    def run(self, datasetRho=1, datasetPhi=1):
-        dataset = Dataset(datasetRho, datasetPhi)
+    def run(self, rhoNo=1, phiNo=1, tfNo=1):
+        dataset = Dataset(rhoNo, phiNo, tfNo)
         self.numFiles = 0
 
         renderer = Renderer(self.eye, self.screen)
@@ -78,12 +76,13 @@ class Main2:
 
         rho = dataset.rho
         phi = dataset.phi
+        tf = dataset.tf
         phiPlane = SplinePlane(phi, self.splineInterval, 1e-5)
 
         boundingBox = phiPlane.createBoundingBox()
 
-        refSplineModel = SplineModel(self.transfer, phiPlane, rho, self.refTolerance)
-        directSplineModel = SplineModel(self.transfer, phiPlane, rho)
+        refSplineModel = SplineModel(tf, phiPlane, rho, self.refTolerance)
+        directSplineModel = SplineModel(tf, phiPlane, rho)
         voxelModels = np.empty(numTextures, dtype=object)
         baModels = np.empty(numTextures, dtype=object)
         hybridModels = np.empty(numTextures, dtype=object)
@@ -96,7 +95,8 @@ class Main2:
                 samplingScalars = voxelio.read(dataset, texDimSize, texDimSize)
                 print "Read {}x{} texture data from file".format(texDimSize, texDimSize)
             else:
-                samplingScalars = refSplineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize, self.voxelizationTolerance)
+                samplingScalars = refSplineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize,
+                                                                      self.voxelizationTolerance)
                 voxelio.write(dataset, samplingScalars)
                 print "Wrote {}x{} texture data to file".format(texDimSize, texDimSize)
 
@@ -105,10 +105,10 @@ class Main2:
             voxelWidth = boundingBox.getHeight() / float(texDimSize)
             criterion = GeometricCriterion(self.screen.pixelWidth, voxelWidth)
 
-            voxelModels[i] = VoxelModel(self.transfer, scalarTexture, boundingBox)
-            baModels[i] = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModels[i])
-            hybridModels[i] = HybridModel(self.transfer, directSplineModel, voxelModels[i], criterion)
-            baHybridModels[i] = HybridModel(self.transfer, directSplineModel, baModels[i], criterion)
+            voxelModels[i] = VoxelModel(tf, scalarTexture, boundingBox)
+            baModels[i] = BoundaryAccurateModel(tf, directSplineModel, voxelModels[i])
+            hybridModels[i] = HybridModel(tf, directSplineModel, voxelModels[i], criterion)
+            baHybridModels[i] = HybridModel(tf, directSplineModel, baModels[i], criterion)
 
         printflush("Rendering reference... ")
         renderData = RenderData(ModelType.REFERENCE, self.viewRayDeltaRef)
@@ -187,8 +187,8 @@ class Main2:
         for i in range(self.numTextures - 1):
             summaries[ModelType.DIRECT].append(summary)
 
-    def plotGraphs(self, datasetRho=1, datasetPhi=1):
-        dataset = Dataset(datasetRho, datasetPhi)
+    def plotGraphs(self, rhoNo=1, phiNo=1, tfNo=1):
+        dataset = Dataset(rhoNo, phiNo, tfNo)
         graphFigure = GraphFigure(self.texDimSizes)
 
         summaries = self.createSummaries(dataset)
@@ -203,8 +203,8 @@ class Main2:
         graphFigure.graphSummaries(summaries[ModelType.BAHYBRID], 'Hybrid (BA)')
         graphFigure.show()
 
-    def plotPixels(self, datasetRho=1, datasetPhi=1):
-        dataset = Dataset(datasetRho, datasetPhi)
+    def plotPixels(self, rhoNo=1, phiNo=1, tfNo=1):
+        dataset = Dataset(rhoNo, phiNo, tfNo)
         pixelFigure = PixelFigure(self.texDimSizes)
 
         directPixels = []
@@ -266,8 +266,8 @@ class Main2:
 
         pixelFigure.show()
 
-    def printSummary(self, datasetRho=1, datasetPhi=1):
-        dataset = Dataset(datasetRho, datasetPhi)
+    def printSummary(self, rhoNo=1, phiNo=1, tfNo=1):
+        dataset = Dataset(rhoNo, phiNo, tfNo)
         summaries = self.createSummaries(dataset)
 
         for modelSummaries in summaries:

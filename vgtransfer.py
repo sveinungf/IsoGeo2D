@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.gridspec import GridSpec
 
-import datasets.peakstransfer as transfer
-#import transfer
+import datasets.trivialtransfer as transfer
 
 
 fig = plt.figure(figsize=(8, 6))
@@ -42,7 +41,6 @@ plotlim = plt.xlim() + plt.ylim()
 
 top = [[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 1.0], [0.0, 0.0, 1.0, 1.0], [0.0, 0.0, 0.0, 1.0]]
 bottom = [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 0.0]]
-#black = [0.0, 0.0, 0.0, 1.0]
 
 m = 60
 n = 8

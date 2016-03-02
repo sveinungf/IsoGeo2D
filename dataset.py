@@ -1,3 +1,6 @@
+import datasets.peakstransfer as peakstransfer
+import datasets.simpletransfer as simpletransfer
+import datasets.trivialtransfer as trivialtransfer
 import fileio.splinereader as splineio
 from datasets.sinefield import SineField
 from datasets.sinegeometry import SineGeometry
@@ -6,9 +9,10 @@ from datasets.trivialgeometry import TrivialGeometry
 
 
 class Dataset:    
-    def __init__(self, rhoNumber, phiNumber):
+    def __init__(self, rhoNumber, phiNumber, tfNumber):
         self.rhoNumber = rhoNumber
         self.phiNumber = phiNumber
+        self.tfNumber = tfNumber
         
         if rhoNumber == 0:
             self.rho = TrivialField()
@@ -25,3 +29,10 @@ class Dataset:
             self.phi = splineio.read(datasetDir + "/phi.json")
         else:
             self.phi = SineGeometry()
+
+        if tfNumber == 0:
+            self.tf = trivialtransfer.createTransferFunction()
+        elif tfNumber == 1:
+            self.tf = simpletransfer.createTransferFunction()
+        else:
+            self.tf = peakstransfer.createTransferFunction()
