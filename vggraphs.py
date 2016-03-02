@@ -12,11 +12,25 @@ from modeltype import ModelType
 datasetRho = int(sys.argv[1])
 datasetPhi = int(sys.argv[2])
 
+plotWindow = False
+
+figNames = ['max', 'mean', 'var']
+colors = ['b', 'g', 'r', 'c', 'm']
+markers = ['x', '+', 'o', 's', 'v']
+legendNames = {
+    ModelType.DIRECT : 'Direct',
+    ModelType.VOXEL : 'Voxelized',
+    ModelType.BOUNDARYACCURATE : 'Boundary accurate',
+    ModelType.HYBRID : 'Hybrid (direct/voxelized)',
+    ModelType.BAHYBRID : 'Hybrid (direct/boundary accurate'
+}
+
+
 figs = []
 gss = []
 axs = []
 plotters = []
-graphNames = ['max', 'mean', 'var']
+legendFig = plt.figure(figsize=[6, 6])
 
 for i in range(3):
     fig = plt.figure(figsize=[6, 6])
@@ -36,9 +50,6 @@ fileHandler = FileHandler()
 fileHandler.setFiledir('output/results/{},{}'.format(datasetRho, datasetPhi))
 
 summaries = summary.createSummaries(fileHandler, dataset)
-
-colors = ['b', 'g', 'r', 'c', 'm']
-markers = ['x', '+', 'o', 's', 'v']
 
 texDimSizes = []
 
@@ -64,12 +75,22 @@ for i in range(1, len(summaries)):
     stats.append(means)
     stats.append(vars)
 
+    for j in range(3):
+        plotters[j].plotGraph(texDimSizes, stats[j], legendNames[i], color, marker)
+
+handles, labels = plotters[0].plot.get_legend_handles_labels()
+legendFig.legend(handles, labels)
+
+if plotWindow:
+    plt.show()
+else:
     for i in range(3):
-        plotters[i].plotGraph(texDimSizes, stats[i], 'label', color, marker)
+        figs[i].tight_layout()
 
-for i in range(3):
-    figs[i].tight_layout()
+        plt.figure(figs[i].number)
+        filename = 'output/vg/graph_{},{}_{}.pdf'.format(datasetRho, datasetPhi, figNames[i])
+        plt.savefig(filename, format='pdf', transparent=True)
 
-    plt.figure(figs[i].number)
-    filename = 'output/vg/graph_{},{}_{}.pdf'.format(datasetRho, datasetPhi, graphNames[i])
+    plt.figure(legendFig.number)
+    filename = 'output/vg/graph_{},{}_legend.pdf'.format(datasetRho, datasetPhi)
     plt.savefig(filename, format='pdf', transparent=True)
