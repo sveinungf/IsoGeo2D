@@ -25,7 +25,8 @@ typedict = {
     ModelType.DIRECT : 'direct',
     ModelType.VOXEL : 'voxel',
     ModelType.BOUNDARYACCURATE : 'ba',
-    ModelType.HYBRID : 'hybrid'
+    ModelType.HYBRID : 'hybrid',
+    ModelType.BAHYBRID : 'bahybrid'
 }
 
 voxelSummaries = summaries[ModelType.VOXEL]
