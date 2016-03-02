@@ -4,4 +4,5 @@ class ModelType:
     VOXEL = 2
     BOUNDARYACCURATE = 3
     HYBRID = 4
-    _COUNT = 5
+    BAHYBRID = 5
+    _COUNT = 6

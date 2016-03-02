@@ -13,7 +13,24 @@ class Summary:
         self.var = np.var(colorDiffs)
 
     def printData(self):
-        print "{}".format(self.renderData.name)
+        name = None
+        modelType = self.renderData.modelType
+        texSize = self.renderData.texSize
+
+        if modelType == ModelType.REFERENCE:
+            name = 'Reference'
+        elif modelType == ModelType.DIRECT:
+            name = 'Direct'
+        elif modelType == ModelType.VOXEL:
+            name = 'Voxel ({}x{})'.format(texSize, texSize)
+        elif modelType == ModelType.BOUNDARYACCURATE:
+            name = 'Boundary accurate ({}x{})'.format(texSize, texSize)
+        elif modelType == ModelType.HYBRID:
+            name = 'Hybrid ({}x{})'.format(texSize, texSize)
+        elif modelType == ModelType.BAHYBRID:
+            name = 'Hybrid (BA) ({}x{})'.format(texSize, texSize)
+
+        print "{}".format(name)
         print "---------------------"
         print "max #S = {}".format(self.renderData.renderResult.maxSamplePoints)
         print "max    = {}".format(self.max)

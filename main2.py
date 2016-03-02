@@ -40,7 +40,7 @@ class Main2:
         self.screen = Screen(pixelX, screenTop, screenBottom, numPixels)
         self.eye = np.array([-1.2, 0.65])
 
-        self.viewRayDelta = 0.01
+        self.viewRayDelta = 1e-2
         self.viewRayDeltaRef = 1e-5
         self.refTolerance = 1e-5
 
@@ -87,6 +87,7 @@ class Main2:
         voxelModels = np.empty(numTextures, dtype=object)
         baModels = np.empty(numTextures, dtype=object)
         hybridModels = np.empty(numTextures, dtype=object)
+        baHybridModels = np.empty(numTextures, dtype=object)
 
         for i in range(numTextures):
             texDimSize = self.texDimSizes[i]
@@ -106,7 +107,8 @@ class Main2:
 
             voxelModels[i] = VoxelModel(self.transfer, scalarTexture, boundingBox)
             baModels[i] = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModels[i])
-            hybridModels[i] = HybridModel(self.transfer, directSplineModel, baModels[i], criterion)
+            hybridModels[i] = HybridModel(self.transfer, directSplineModel, voxelModels[i], criterion)
+            baHybridModels[i] = HybridModel(self.transfer, directSplineModel, baModels[i], criterion)
 
         printflush("Rendering reference... ")
         renderData = RenderData(ModelType.REFERENCE, self.viewRayDeltaRef)
@@ -152,6 +154,12 @@ class Main2:
             self.save(dataset, renderData)
             print "Done!"
 
+            printflush("Rendering hybrid (boundary accurate) ({0}x{0})...".format(texSize))
+            renderData = RenderData(ModelType.BAHYBRID, delta=delta, texSize=texSize)
+            renderData.renderResult = hybridRenderer.render(baHybridModels[i], delta)
+            self.save(dataset, renderData)
+            print "Done!"
+
     def createSummaries(self, dataset):
         result = []
 
@@ -192,6 +200,7 @@ class Main2:
         graphFigure.graphSummaries(summaries[ModelType.VOXEL], 'Voxel')
         graphFigure.graphSummaries(summaries[ModelType.BOUNDARYACCURATE], 'Boundary accurate')
         graphFigure.graphSummaries(summaries[ModelType.HYBRID], 'Hybrid')
+        graphFigure.graphSummaries(summaries[ModelType.BAHYBRID], 'Hybrid (BA)')
         graphFigure.show()
 
     def plotPixels(self, datasetRho=1, datasetPhi=1):
@@ -203,6 +212,8 @@ class Main2:
         baPixels = []
         hybridPixels = []
         hybridVoxelRatios = []
+        baHybridPixels = []
+        baHybridVoxelRatios = []
 
         filedir = self.filedir(dataset)
         self.fileHandler.setFiledir(filedir)
@@ -225,6 +236,9 @@ class Main2:
             elif obj.modelType == ModelType.HYBRID:
                 hybridPixels.append(objPixels)
                 hybridVoxelRatios.append(obj.renderResult.ratios)
+            elif obj.modelType == ModelType.BAHYBRID:
+                baHybridPixels.append(objPixels)
+                baHybridVoxelRatios.append(obj.renderResult.ratios)
 
         if len(directPixels) == 1:
             pixels = directPixels[0]
