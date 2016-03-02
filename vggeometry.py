@@ -11,7 +11,7 @@ fig = plt.figure(figsize=[6, 6])
 gs = GridSpec(1, 1)
 ax = fig.add_subplot(gs[0, 0])
 
-dataset = Dataset(1, 2)
+dataset = Dataset(1, 1)
 splineInterval = np.array([0.0, 1.0])
 s = SplinePlotter(ax, splineInterval)
 s.plotGrid(dataset.phi.evaluate, 10, 10, color=Color.DIRECT)

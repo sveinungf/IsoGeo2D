@@ -23,7 +23,7 @@ figref = plt.figure(figsize=figsize)
 gsref = GridSpec(1, 1)
 axref = figref.add_subplot(gsref[0, 0])
 
-dataset = Dataset(1, 2)
+dataset = Dataset(1, 1)
 splineInterval = np.array([0.0, 1.0])
 
 eye = np.array([-1.2, 0.65])
