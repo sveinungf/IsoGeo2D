@@ -23,6 +23,11 @@ from texture import Texture2D
 from voxelcriterion.geometriccriterion import GeometricCriterion
 
 
+def printflush(str):
+    sys.stdout.write(str)
+    sys.stdout.flush()
+
+
 class Main2:
     def __init__(self):
         self.splineInterval = [0.0, 1.0]
@@ -64,6 +69,7 @@ class Main2:
 
     def run(self, datasetRho=1, datasetPhi=1):
         dataset = Dataset(datasetRho, datasetPhi)
+        self.numFiles = 0
 
         renderer = Renderer(self.eye, self.screen)
         hybridRenderer = HybridRenderer(self.eye, self.screen)
@@ -102,15 +108,14 @@ class Main2:
             baModels[i] = BoundaryAccurateModel(self.transfer, directSplineModel, voxelModels[i])
             hybridModels[i] = HybridModel(self.transfer, directSplineModel, baModels[i], criterion)
 
-        sys.stdout.write("Rendering reference... ")
-        sys.stdout.flush()
+        printflush("Rendering reference... ")
         renderData = RenderData(ModelType.REFERENCE, self.viewRayDeltaRef)
         renderData.renderResult = renderer.render(refSplineModel, self.viewRayDeltaRef)
         self.save(dataset, renderData)
         print "Done!"
 
         if not self.autoDelta:
-            print "Rendering direct...",
+            printflush("Rendering direct... ")
             renderData = RenderData(ModelType.DIRECT, self.viewRayDelta)
             renderData.renderResult = renderer.render(directSplineModel, self.viewRayDelta)
             self.save(dataset, renderData)
@@ -121,7 +126,7 @@ class Main2:
                 voxelWidth = boundingBox.getWidth() / float(texSize)
                 delta = voxelWidth/2.0
 
-                print "Rendering direct...",
+                printflush("Rendering direct...")
                 renderData = RenderData(ModelType.DIRECT, delta)
                 renderData.renderResult = renderer.render(directSplineModel, delta)
                 self.save(dataset, renderData)
@@ -129,19 +134,19 @@ class Main2:
             else:
                 delta = self.viewRayDelta
 
-            print "Rendering voxelized ({0}x{0})...".format(texSize),
+            printflush("Rendering voxelized ({0}x{0})...".format(texSize))
             renderData = RenderData(ModelType.VOXEL, delta=delta, texSize=texSize)
             renderData.renderResult = renderer.render(voxelModels[i], delta)
             self.save(dataset, renderData)
             print "Done!"
 
-            print "Rendering boundary accurate ({0}x{0})...".format(texSize),
+            printflush("Rendering boundary accurate ({0}x{0})...".format(texSize))
             renderData = RenderData(ModelType.BOUNDARYACCURATE, delta=delta, texSize=texSize)
             renderData.renderResult = renderer.render(baModels[i], delta)
             self.save(dataset, renderData)
             print "Done!"
 
-            print "Rendering hybrid ({0}x{0})...".format(texSize),
+            printflush("Rendering hybrid ({0}x{0})...".format(texSize))
             renderData = RenderData(ModelType.HYBRID, delta=delta, texSize=texSize)
             renderData.renderResult = hybridRenderer.render(hybridModels[i], delta)
             self.save(dataset, renderData)
