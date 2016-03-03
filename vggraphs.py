@@ -23,7 +23,7 @@ legendNames = {
     ModelType.VOXEL : 'Voxelized',
     ModelType.BOUNDARYACCURATE : 'Boundary accurate',
     ModelType.HYBRID : 'Hybrid (direct/voxelized)',
-    ModelType.BAHYBRID : 'Hybrid (direct/boundary accurate'
+    ModelType.BAHYBRID : 'Hybrid (direct/boundary accurate)'
 }
 
 
