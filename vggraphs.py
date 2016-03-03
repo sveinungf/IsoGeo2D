@@ -85,13 +85,15 @@ legendFig.legend(handles, labels)
 if plotWindow:
     plt.show()
 else:
+    filenameA = 'output/vg/graph_{},{},{}'.format(rhoNo, phiNo, tfNo)
+
     for i in range(3):
         figs[i].tight_layout()
 
         plt.figure(figs[i].number)
-        filename = 'output/vg/graph_{},{}_{}.pdf'.format(rhoNo, phiNo, figNames[i])
+        filename = '{}_{}.pdf'.format(filenameA, figNames[i])
         plt.savefig(filename, format='pdf', transparent=True)
 
     plt.figure(legendFig.number)
-    filename = 'output/vg/graph_{},{}_legend.pdf'.format(rhoNo, phiNo)
+    filename = '{}_legend.pdf'.format(filenameA)
     plt.savefig(filename, format='pdf', transparent=True)
