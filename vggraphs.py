@@ -9,8 +9,9 @@ from dataset import Dataset
 from modeltype import ModelType
 
 
-datasetRho = int(sys.argv[1])
-datasetPhi = int(sys.argv[2])
+rhoNo = int(sys.argv[1])
+phiNo = int(sys.argv[2])
+tfNo = int(sys.argv[3])
 
 plotWindow = False
 
@@ -44,10 +45,10 @@ for i in range(3):
     axs.append(ax)
     plotters.append(GraphPlotter(ax))
 
-dataset = Dataset(datasetRho, datasetPhi)
+dataset = Dataset(rhoNo, phiNo, tfNo)
 
 fileHandler = FileHandler()
-fileHandler.setFiledir('output/results/{},{}'.format(datasetRho, datasetPhi))
+fileHandler.setFiledir('output/results/{},{},{}'.format(rhoNo, phiNo, tfNo))
 
 summaries = summary.createSummaries(fileHandler, dataset)
 
@@ -88,9 +89,9 @@ else:
         figs[i].tight_layout()
 
         plt.figure(figs[i].number)
-        filename = 'output/vg/graph_{},{}_{}.pdf'.format(datasetRho, datasetPhi, figNames[i])
+        filename = 'output/vg/graph_{},{}_{}.pdf'.format(rhoNo, phiNo, figNames[i])
         plt.savefig(filename, format='pdf', transparent=True)
 
     plt.figure(legendFig.number)
-    filename = 'output/vg/graph_{},{}_legend.pdf'.format(datasetRho, datasetPhi)
+    filename = 'output/vg/graph_{},{}_legend.pdf'.format(rhoNo, phiNo)
     plt.savefig(filename, format='pdf', transparent=True)

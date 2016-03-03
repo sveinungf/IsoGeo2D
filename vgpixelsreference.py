@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.gridspec import GridSpec
 
-import datasets.peakstransfer as trans
 from fileio.filehandler import FileHandler
 from model.splinemodel import SplineModel
 from plotting.pixelplotter import PixelPlotter
@@ -23,7 +22,7 @@ figref = plt.figure(figsize=figsize)
 gsref = GridSpec(1, 1)
 axref = figref.add_subplot(gsref[0, 0])
 
-dataset = Dataset(1, 1)
+dataset = Dataset(1, 1, 2)
 splineInterval = np.array([0.0, 1.0])
 
 eye = np.array([-1.2, 0.65])
@@ -38,8 +37,8 @@ viewRayDeltaRef = 1e-5
 
 phi = dataset.phi
 rho = dataset.rho
+tf = dataset.tf
 refPhiPlane = SplinePlane(phi, splineInterval, refIntersectTolerance)
-tf = trans.createTransferFunction()
 
 refSplineModel = SplineModel(tf, refPhiPlane, rho, refTolerance)
 

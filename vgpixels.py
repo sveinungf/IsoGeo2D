@@ -4,7 +4,6 @@ import sys
 from matplotlib.gridspec import GridSpec
 
 import colordiff
-import datasets.peakstransfer as trans
 from fileio.filehandler import FileHandler
 from model.boundaryaccuratemodel import BoundaryAccurateModel
 from model.hybridmodel import HybridModel
@@ -40,7 +39,7 @@ figratio = plt.figure(figsize=figsize)
 gsratio = GridSpec(1, 1)
 axratio = figratio.add_subplot(gsratio[0, 0])
 
-dataset = Dataset(1, 1)
+dataset = Dataset(1, 1, 2)
 splineInterval = np.array([0.0, 1.0])
 
 eye = np.array([-1.2, 0.65])
@@ -56,9 +55,9 @@ viewRayDelta = 0.005
 
 phi = dataset.phi
 rho = dataset.rho
+tf = dataset.tf
 refPhiPlane = SplinePlane(phi, splineInterval, refIntersectTolerance)
 boundingBox = refPhiPlane.createBoundingBox()
-tf = trans.createTransferFunction()
 
 refSplineModel = SplineModel(tf, refPhiPlane, rho, refTolerance)
 directSplineModel = SplineModel(tf, refPhiPlane, rho)
