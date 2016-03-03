@@ -1,5 +1,6 @@
 RHO ?= 0
 PHI ?= 0
+TF ?= 0
 TEXSIZE ?= 256
 
 VG_DIR = ./output/vg
@@ -14,10 +15,10 @@ pixels:
 	python vgpixels.py 4 $(TEXSIZE)
 
 crop-graphs:
-	pdfcrop $(VG_DIR)/graph_$(RHO),$(PHI)_legend.pdf
-	pdfcrop $(VG_DIR)/graph_$(RHO),$(PHI)_max.pdf
-	pdfcrop $(VG_DIR)/graph_$(RHO),$(PHI)_mean.pdf
-	pdfcrop $(VG_DIR)/graph_$(RHO),$(PHI)_var.pdf
+	pdfcrop $(VG_DIR)/graph_$(RHO),$(PHI),$(TF)_legend.pdf
+	pdfcrop $(VG_DIR)/graph_$(RHO),$(PHI),$(TF)_max.pdf
+	pdfcrop $(VG_DIR)/graph_$(RHO),$(PHI),$(TF)_mean.pdf
+	pdfcrop $(VG_DIR)/graph_$(RHO),$(PHI),$(TF)_var.pdf
 
 clean:
 	find ./output/results -name "*.pkl" -type f -delete

@@ -6,15 +6,16 @@ from dataset import Dataset
 from modeltype import ModelType
 
 
-datasetRho = int(sys.argv[1])
-datasetPhi = int(sys.argv[2])
+rhoNo = int(sys.argv[1])
+phiNo = int(sys.argv[2])
+tfNo = int(sys.argv[3])
 
-interestingTexSizes = [64, 128, 256, 512]
+interestingTexSizes = [64, 128, 192, 256, 320, 384, 448, 512]
 
-dataset = Dataset(datasetRho, datasetPhi)
+dataset = Dataset(rhoNo, phiNo, tfNo)
 
 fileHandler = FileHandler()
-fileHandler.setFiledir('output/results/{},{}'.format(datasetRho, datasetPhi))
+fileHandler.setFiledir('output/results/{},{},{}'.format(rhoNo, phiNo, tfNo))
 
 summaries = summary.createSummaries(fileHandler, dataset)
 
@@ -40,7 +41,7 @@ for i in range(ModelType._COUNT):
     if i == ModelType.REFERENCE:
         continue
 
-    filename = '{}/stats_{},{}_{}.tex'.format(texoutputdir, datasetRho, datasetPhi, typedict[i])
+    filename = '{}/stats_{},{},{}_{}.tex'.format(texoutputdir, rhoNo, phiNo, tfNo, typedict[i])
     fo = open(filename, 'wb')
 
     for j in interestingIndexes:
