@@ -36,7 +36,15 @@ class HybridModel(BaseModel):
         return model.outSample(intersection, viewRay)
 
     def findIntersections(self, viewRay):
-        return self.splineModel.findIntersections(viewRay)
+        simpleIntersects = self.voxelModel.findIntersections(viewRay)
+        simpleIn = simpleIntersects[0]
+
+        model = self.__chooseModel(viewRay, simpleIn.geomPoint)
+
+        if model == self.voxelModel:
+            return simpleIntersects
+        else:
+            return self.splineModel.findIntersections(viewRay)
 
     def voxelRatio(self):
         x = self.voxelSamples
