@@ -14,8 +14,7 @@ from renderer import Renderer
 from screen import Screen
 from splineplane import SplinePlane
 from summary import Summary
-from textureY import Texture2D
-import textureY
+from texture import Texture2D
 from voxelcriterion.geometriccriterion import GeometricCriterion
 
 
@@ -26,20 +25,20 @@ class Main:
         pixelX = -0.5
         screenTop = 0.90
         screenBottom = 0.2
-        numPixels = 10
+        numPixels = 1
         self.screen = Screen(pixelX, screenTop, screenBottom, numPixels)
         self.eye = np.array([-0.9, 0.65])
 
         self.viewRayDelta = 0.3
-        self.viewRayDeltaRef = 0.1
+        self.viewRayDeltaRef = 0.01
         self.refTolerance = 1e-3
         self.intersectTolerance = 1e-5
 
         self.voxelizationTolerance = 1e-3
 
-    def run(self, rhoNo=1, phiNo=1, tfNo=1):
+    def run(self, rhoNo=1, phiNo=0, tfNo=1):
         dataset = Dataset(rhoNo, phiNo, tfNo)
-        texDimSize = 8
+        texDimSize = 128
 
         renderer = Renderer(self.eye, self.screen)
 
@@ -70,15 +69,11 @@ class Main:
         refSplineModel = SplineModel(tf, phiPlane, rho, self.refTolerance)
         directSplineModel = SplineModel(tf, phiPlane, rho)
 
-        #samplingScalars = refSplineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize,
-        #                                                      self.voxelizationTolerance, paramPlotter,
-        #                                                      refSplinePlotter)
+        samplingScalars = refSplineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize,
+                                                              self.voxelizationTolerance)
+        #voxelPlotter.plotScalars(samplingScalars, boundingBox)
 
-        samplingScalars, indicators = textureY.create(refSplineModel, texDimSize, texDimSize, self.voxelizationTolerance, paramPlotter, refSplinePlotter)
-
-        voxelPlotter.plotScalars(samplingScalars, boundingBox)
-
-        scalarTexture = Texture2D(samplingScalars, indicators)
+        scalarTexture = Texture2D(samplingScalars)
         plotter.plotScalarTexture(scalarTexture)
 
         voxelModel = VoxelModel(tf, scalarTexture, boundingBox)

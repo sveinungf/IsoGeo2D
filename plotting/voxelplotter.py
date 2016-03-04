@@ -26,6 +26,10 @@ class VoxelPlotter(ModelPlotter):
         
         for (i, j), scalar in np.ndenumerate(scalars):
             if scalar != -1:
+                # TODO: Find cause for scalar < 0.0 and scalar > 1.0
+                scalar = 1.0 if scalar > 1.0 else scalar
+                scalar = 0.0 if scalar < 0.0 else scalar
+
                 lowerLeft = (boundingBox.left+j*deltaX, boundingBox.bottom+i*deltaY)
                 fColor = facecolor if facecolor is not None else tuple([scalar]*3)
                 r = Rectangle(lowerLeft, deltaX, deltaY, facecolor=fColor, edgecolor=edgecolor)
