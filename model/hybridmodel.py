@@ -37,6 +37,10 @@ class HybridModel(BaseModel):
 
     def findIntersections(self, viewRay):
         simpleIntersects = self.voxelModel.findIntersections(viewRay)
+
+        if simpleIntersects is None:
+            return None
+
         simpleIn = simpleIntersects[0]
 
         model = self.__chooseModel(viewRay, simpleIn.geomPoint)

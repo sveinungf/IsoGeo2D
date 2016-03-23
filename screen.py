@@ -1,22 +1,28 @@
+import math
 import numpy as np
 
 
+def magnitude(v):
+    return math.sqrt(sum(v[i]*v[i] for i in range(len(v))))
+
+def normalize(v):
+    vmag = magnitude(v)
+    return np.array([ v[i]/vmag  for i in range(len(v)) ])
+
+
 class Screen:
-    def __init__(self, x, yTop, yBottom, numPixels):
-        self.x = x
-        self.yTop = yTop
-        self.yBottom = yBottom
+    def __init__(self, bottom, top, numPixels):
+        self.bottom = bottom
+        self.top = top
         self.numPixels = numPixels
 
         pixels = np.empty((numPixels, 2))
-        pixelXs = np.ones(numPixels) * x
+        dir = normalize(top - bottom)
+        length = magnitude(top - bottom)
+        delta = length / numPixels
 
-        deltaY = (yTop - yBottom) / numPixels
-        firstPixelY = yBottom + (deltaY/2.0)
-        lastPixelY = yTop - (deltaY/2.0)
-
-        pixels[:, 0] = pixelXs
-        pixels[:, 1] = np.linspace(firstPixelY, lastPixelY, numPixels)
+        for i in range(numPixels):
+            pixels[i] = bottom + dir*(i*delta + delta/2)
 
         self.pixels = pixels
-        self.pixelWidth = float(yTop - yBottom) / numPixels
+        self.pixelWidth = delta

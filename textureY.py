@@ -39,6 +39,14 @@ class Texture2D:
 
 
 def create(splineModel, width, height, tolerance, paramPlotter=None, geomPlotter=None):
+    # bounding box
+    # get screen (pixels based on texture size, width based on bounding box)
+    # get view-rays from screen (orthogonal projection)
+    # per view-ray, get intersections
+    # for each point in the texture (resident and non-resident), get intersections in all 4 directions (intersections may be None)
+    # find neighbour pattern for current non-resident texture
+    # extrapolate based on neighbour pattern and intersections
+
     phiPlane = splineModel.phiPlane
     rho = splineModel.rho
 
@@ -165,7 +173,6 @@ def create(splineModel, width, height, tolerance, paramPlotter=None, geomPlotter
 
         # Ekstrapolert indikator
         indicators2[i+1][indexFirstResident - 1] = 1.0 - 1.0/ex
-
 
         outGeomPoint = intersections[1].geomPoint
         outParamPoint = intersections[1].paramPoint

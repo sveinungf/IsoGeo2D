@@ -31,11 +31,10 @@ class Main2:
     def __init__(self):
         self.splineInterval = [0.0, 1.0]
 
-        pixelX = -0.5
-        screenTop = 0.9
-        screenBottom = 0.2
+        screenBottom = np.array([-0.5, 0.2])
+        screenTop = np.array([-0.5, 0.9])
         numPixels = 100
-        self.screen = Screen(pixelX, screenTop, screenBottom, numPixels)
+        self.screen = Screen(screenBottom, screenTop, numPixels)
         self.eye = np.array([-1.2, 0.65])
 
         self.viewRayDelta = 1e-2
