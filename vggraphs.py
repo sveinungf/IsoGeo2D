@@ -39,6 +39,8 @@ for i in range(3):
     ax = fig.add_subplot(gs[0, 0])
     ax.set_xscale('log', basex=2)
     ax.set_yscale('log', basey=2)
+    ax.set_xlabel('Texture size')
+    ax.set_ylabel('Color difference ($\Delta E$)')
 
     figs.append(fig)
     gss.append(gs)
