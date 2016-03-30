@@ -7,6 +7,8 @@ from samplingtype import SamplingType
 class ModelPlotter(object):
     def __init__(self, plot):
         self.plot = plot
+
+        self.rayColor = 'r'
         
     def __generatePoints1var(self, f, params):
         output = np.empty((len(params), 2))
@@ -44,4 +46,4 @@ class ModelPlotter(object):
         params = np.linspace(interval[0], interval[1], 100)
         points = self.__generatePoints1var(ray.evalFromEye, params)
         
-        self.plot.plot(points[:,0], points[:,1], color='r')
+        self.plot.plot(points[:,0], points[:,1], color=self.rayColor)

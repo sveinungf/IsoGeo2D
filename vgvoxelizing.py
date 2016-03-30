@@ -20,7 +20,7 @@ ax2 = fig2.add_subplot(gs[0, 0])
 
 texDimSize = 8
 newtonTolerance = 1e-5
-dataset = Dataset(1, 1)
+dataset = Dataset(1, 1, 1)
 splineInterval = np.array([0.0, 1.0])
 
 phi = dataset.phi
@@ -32,14 +32,23 @@ splineModel = SplineModel(None, phiPlane, rho)
 s = SplinePlotter(ax, splineInterval)
 s.pointMarker = 'o'
 s.pointColor = Color.POINT
+s.rayColor = 'k'
 
 p = ParamPlotter(ax2, splineInterval)
-p.pointMarker = 'o'
-p.pointColor = Color.POINT
+p.gridColor = Color.DIRECT
 
 s.plotGrid(phi.evaluate, 10, 10, color=Color.DIRECT)
 p.plotGrid(10, 10)
 s.plotBoundingBox(boundingBox, edgecolor=Color.BOUNDINGBOX)
+
+p.pointMarker = None
+p.pointColor = 'k'
+p.connectPoints = True
+splineModel.generateScalarMatrix(boundingBox, 1000, texDimSize, newtonTolerance, paramPlotter=p)
+
+p.pointMarker = 'o'
+p.pointColor = Color.POINT
+p.connectPoints = False
 
 samplingScalars = splineModel.generateScalarMatrix(boundingBox, texDimSize, texDimSize, newtonTolerance, paramPlotter=p, geomPlotter=s)
 

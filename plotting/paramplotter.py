@@ -7,8 +7,10 @@ class ParamPlotter():
         self.plot = plot
         self.precision = precision
 
+        self.connectPoints = False
         self.pointMarker = 'x'
         self.pointColor = 'k'
+        self.gridColor = '0.5'
 
     def plotGrid(self, m, n):
         interval = self.interval
@@ -16,23 +18,34 @@ class ParamPlotter():
 
         vLines = np.linspace(interval[0], interval[1], m)
         hLines = np.linspace(interval[0], interval[1], n)
-        lineColor = '0.5'
         ax = self.plot
 
         for vLine in vLines:
             paramsX = [vLine] * precision
             paramsY = np.linspace(interval[0], interval[1], precision)
 
-            ax.plot(paramsX, paramsY, color=lineColor)
+            ax.plot(paramsX, paramsY, color=self.gridColor)
         for hLine in hLines:
             paramsX = np.linspace(interval[0], interval[1], precision)
             paramsY = [hLine] * precision
 
-            ax.plot(paramsX, paramsY, color=lineColor)
+            ax.plot(paramsX, paramsY, color=self.gridColor)
 
     def plotPoints(self, points):
-        for point in points:
-            self.plot.plot(point[0], point[1], marker=self.pointMarker, color=self.pointColor)
+        if self.connectPoints:
+            actualPoints = []
+
+            for point in points:
+                if point is not None:
+                    actualPoints.append(point)
+
+            actualPoints = np.asarray(actualPoints)
+
+            self.plot.plot(actualPoints[:, 0], actualPoints[:, 1], marker=self.pointMarker, color=self.pointColor)
+        else:
+            for point in points:
+                if point is not None:
+                    self.plot.plot(point[0], point[1], marker=self.pointMarker, color=self.pointColor)
 
     def plotScalarField(self, rho, transfer):
         interval = self.interval
