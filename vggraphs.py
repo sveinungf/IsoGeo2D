@@ -17,6 +17,7 @@ plotWindow = True
 
 figNames = ['max', 'mean', 'var']
 colordiffTresholds = [5.0, 1.0, 1.0]
+practicalBoundTexSize = 2**5
 colors = ['b', 'g', 'r', 'c', 'm']
 markers = ['x', '+', 'o', 's', 'v']
 legendNames = {
@@ -60,7 +61,8 @@ for i in range(3):
     axs.append(ax)
 
     g = GraphPlotter(ax)
-    g.plotThresholdY(texDimSizes[0], texDimSizes[-1], colordiffTresholds[i], 'k', 'dashed')
+    g.plotThresholdX(practicalBoundTexSize, 'k', ':')
+    g.plotThresholdY(colordiffTresholds[i], 'k', '--')
     plotters.append(g)
 
 for i in range(1, len(summaries)):

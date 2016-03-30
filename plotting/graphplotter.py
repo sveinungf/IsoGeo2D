@@ -5,5 +5,8 @@ class GraphPlotter:
     def plotGraph(self, x, y, label, color=None, marker=None):
         self.plot.plot(x, y, label=label, color=color, marker=marker, markeredgecolor=color, markerfacecolor='None')
 
-    def plotThresholdY(self, fromX, toX, y, color='k', linestyle='solid'):
-        self.plot.plot([fromX, toX], [y, y], color=color, linestyle=linestyle)
+    def plotThresholdX(self, x, color='k', linestyle='solid'):
+        self.plot.axvline(x, color=color, linestyle=linestyle)
+
+    def plotThresholdY(self, y, color='k', linestyle='solid'):
+        self.plot.axhline(y, color=color, linestyle=linestyle)
