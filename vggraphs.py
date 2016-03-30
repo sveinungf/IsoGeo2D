@@ -13,9 +13,10 @@ rhoNo = int(sys.argv[1])
 phiNo = int(sys.argv[2])
 tfNo = int(sys.argv[3])
 
-plotWindow = False
+plotWindow = True
 
 figNames = ['max', 'mean', 'var']
+colordiffTresholds = [5.0, 1.0, 1.0]
 colors = ['b', 'g', 'r', 'c', 'm']
 markers = ['x', '+', 'o', 's', 'v']
 legendNames = {
@@ -33,6 +34,18 @@ axs = []
 plotters = []
 legendFig = plt.figure(figsize=[6, 6])
 
+dataset = Dataset(rhoNo, phiNo, tfNo)
+
+fileHandler = FileHandler()
+fileHandler.setFiledir('output/results/{},{},{}'.format(rhoNo, phiNo, tfNo))
+
+summaries = summary.createSummaries(fileHandler, dataset)
+
+texDimSizes = []
+
+for voxelSummary in summaries[ModelType.VOXEL]:
+    texDimSizes.append(voxelSummary.renderData.texSize)
+
 for i in range(3):
     fig = plt.figure(figsize=[6, 6])
     gs = GridSpec(1, 1)
@@ -45,19 +58,10 @@ for i in range(3):
     figs.append(fig)
     gss.append(gs)
     axs.append(ax)
-    plotters.append(GraphPlotter(ax))
 
-dataset = Dataset(rhoNo, phiNo, tfNo)
-
-fileHandler = FileHandler()
-fileHandler.setFiledir('output/results/{},{},{}'.format(rhoNo, phiNo, tfNo))
-
-summaries = summary.createSummaries(fileHandler, dataset)
-
-texDimSizes = []
-
-for voxelSummary in summaries[ModelType.VOXEL]:
-    texDimSizes.append(voxelSummary.renderData.texSize)
+    g = GraphPlotter(ax)
+    g.plotThresholdY(texDimSizes[0], texDimSizes[-1], colordiffTresholds[i], 'k', 'dashed')
+    plotters.append(g)
 
 for i in range(1, len(summaries)):
     modelSummaries = summaries[i]
