@@ -26,3 +26,4 @@ class Screen:
 
         self.pixels = pixels
         self.pixelWidth = delta
+        self.viewDir = np.array([dir[1], -dir[0]])
