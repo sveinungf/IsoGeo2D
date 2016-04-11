@@ -218,6 +218,15 @@ class TextureGenerator:
 
                         self.extrapolate(ndIntersections[0], delta, vGeomPoint, rho, samplingScalars, indicators, [j,i], Location.TOPRIGHT)
 
+                    elif ndIntersections is not None and (match(neighbors, '-----NYN') or match(neighbors, '-----YYY')):
+                        print "i={}, j={}".format(i,j)
+                        vGeomPoint = np.array([xValues[i], yValues[j]])
+
+                        delta = magnitude(np.array([xDelta, yDelta]))
+
+                        self.extrapolate(ndIntersections[1], delta, vGeomPoint, rho, samplingScalars, indicators, [j,i], Location.BOTTOMLEFT)
+
+
                     elif i < len(xValues) and j < len(yValues) and match(neighbors, '---Y----'):
                         vGeomPoint = np.array([xValues[i], yValues[j]])
 

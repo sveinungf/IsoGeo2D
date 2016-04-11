@@ -43,7 +43,7 @@ def create(splineModel, width, height, tolerance, paramPlotter=None, geomPlotter
     # get screen (pixels based on texture size, width based on bounding box)
     # get view-rays from screen (orthogonal projection)
     # per view-ray, get intersections
-    # for each point in the texture (resident and non-resident), get intersections in all 4 directions (intersections may be None)
+    # for each point in the texture (resident and non-resident), get rays/intersections in all 4 directions (intersections may be None)
     # find neighbour pattern for current non-resident texture
     # extrapolate based on neighbour pattern and intersections
 
@@ -111,7 +111,8 @@ def create(splineModel, width, height, tolerance, paramPlotter=None, geomPlotter
 
     for inter in fwdDiagIntersections:
         if inter is not None:
-            print inter[0].geomPoint
+            #print inter[0].geomPoint
+            pass
 
 
     for i, y in enumerate(yValues):
@@ -215,8 +216,8 @@ def create(splineModel, width, height, tolerance, paramPlotter=None, geomPlotter
         while indicators[indexLastResident][i+1] == -1:
             indexLastResident -= 1
 
-        print "outGeomPoint[1]={}".format(outGeomPoint[1])
-        print "yValues = {}".format(yValues[indexLastResident-1])
+        #print "outGeomPoint[1]={}".format(outGeomPoint[1])
+        #print "yValues = {}".format(yValues[indexLastResident-1])
 
         ex = (outGeomPoint[1] - yValues[indexLastResident-1]) / yDelta
         ey = rho.evaluate(outParamPoint[0], outParamPoint[1])
