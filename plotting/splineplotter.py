@@ -66,10 +66,13 @@ class SplinePlotter(ModelPlotter):
             
             self.plot.plot(geomX, geomY, color=color)
 
-    def plotPoints(self, points):
+    def plotPoints(self, points, markersize=None):
         for point in points:
             if point is not None:
-                self.plot.plot(point[0], point[1], marker=self.pointMarker, color=self.pointColor)
+                if markersize is None:
+                    self.plot.plot(point[0], point[1], marker=self.pointMarker, color=self.pointColor)
+                else:
+                    self.plot.plot(point[0], point[1], marker=self.pointMarker, color=self.pointColor, markersize=markersize)
 
     def plotEllipse(self, ellipse):
         point = tuple(ellipse.point)

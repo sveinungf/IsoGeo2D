@@ -1,6 +1,11 @@
 import abc
+import math
 
 from compositing import FrontToBack
+
+
+def magnitude(v):
+    return math.sqrt(sum(v[i]*v[i] for i in range(len(v))))
 
 
 class Sample(object):
@@ -64,8 +69,8 @@ class BaseModel(object):
         samplePoint = inGeomPoint + viewDirDelta
 
         saturated = False
-        
-        while samplePoint[0] < outGeomPoint[0]:
+
+        while magnitude(samplePoint - inGeomPoint) < magnitude(outGeomPoint - inGeomPoint):
             sample = self.sample(samplePoint, sample, viewRay, delta)
             
             if sample is not None:
