@@ -19,7 +19,7 @@ ax.yaxis.set_major_locator(plt.NullLocator())
 
 texDimSize = 32
 newtonTolerance = 1e-5
-dataset = Dataset(1, 1)
+dataset = Dataset(1, 1, 1)
 splineInterval = np.array([0.0, 1.0])
 
 phi = dataset.phi
