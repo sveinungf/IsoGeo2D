@@ -4,6 +4,7 @@ import numpy as np
 
 from model.boundaryaccuratemodel import BoundaryAccurateModel
 from model.splinemodel import SplineModel
+from model.thickboundaryaccuratemodel import ThickBoundaryAccurateModel
 from model.voxelmodel import VoxelModel
 from plotting.splineplotter import SplinePlotter
 from plotting.voxelplotter import VoxelPlotter
@@ -57,6 +58,7 @@ v2.plotScalars(samplingScalars, boundingBox, facecolor=None, edgecolor='k')
 scalarTexture = Texture2D(samplingScalars)
 voxelModel = VoxelModel(dataset.tf, scalarTexture, boundingBox)
 baModel = BoundaryAccurateModel(dataset.tf, splineModel, voxelModel)
+tbaModel = ThickBoundaryAccurateModel(dataset.tf, splineModel, voxelModel)
 
 eye = np.array([0.95, -1.4])
 screenBottom = np.array([0.965, -1.0])
@@ -73,9 +75,7 @@ for pixel in screen.pixels:
     s2.plotViewRay(viewRay, [0, 10])
 
 renderer.render(baModel, 0.05, s)
-
-renderer.render(splineModel, 0.05, s2)
-renderer.render(baModel, 0.05, s2)
+renderer.render(tbaModel, 0.05, s2)
 
 size = 0.52
 left = 0.68
