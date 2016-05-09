@@ -63,7 +63,7 @@ class BaseModel(object):
             geomPoints.append(sample.geomPoint)
             sampleTypes.append(sample.type)
 
-            compositing.addSample(sample)
+            compositing.addSample(sample, delta)
             
         viewDirDelta = viewRay.viewDir * delta
         samplePoint = inGeomPoint + viewDirDelta
@@ -77,7 +77,7 @@ class BaseModel(object):
                 geomPoints.append(sample.geomPoint)
                 sampleTypes.append(sample.type)
 
-                compositing.addSample(sample)
+                compositing.addSample(sample, delta)
                 saturated = compositing.saturated()
 
                 if saturated:
@@ -92,7 +92,7 @@ class BaseModel(object):
                 geomPoints.append(sample.geomPoint)
                 sampleTypes.append(sample.type)
 
-                compositing.addSample(sample)
+                compositing.addSample(sample, magnitude(outGeomPoint - (samplePoint-viewDirDelta)))
 
         if plotter is not None:
             plotter.plotSamplePoints(geomPoints, sampleTypes)
