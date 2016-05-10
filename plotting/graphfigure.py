@@ -4,7 +4,7 @@ import numpy as np
 from graphplotter import GraphPlotter
 
 class GraphFigure:
-    def __init__(self, texDimSizes):
+    def __init__(self, texDimSizes, invertXAxis=False):
         self.texDimSizes = texDimSizes
 
         fig = plt.figure()
@@ -17,6 +17,8 @@ class GraphFigure:
         ax.set_ylabel('Max')
         ax.set_xscale('log', basex=2)
         ax.set_yscale('log', basey=2)
+        if invertXAxis:
+            ax.invert_xaxis()
         self.maxGraph = GraphPlotter(ax)
 
         ax = fig.add_subplot(mainGrid[0, 1])
@@ -24,6 +26,8 @@ class GraphFigure:
         ax.set_ylabel('Mean')
         ax.set_xscale('log', basex=2)
         ax.set_yscale('log', basey=2)
+        if invertXAxis:
+            ax.invert_xaxis()
         self.meanGraph = GraphPlotter(ax)
 
         ax = fig.add_subplot(mainGrid[1, 0])
@@ -31,6 +35,8 @@ class GraphFigure:
         ax.set_ylabel('Var')
         ax.set_xscale('log', basex=2)
         ax.set_yscale('log', basey=2)
+        if invertXAxis:
+            ax.invert_xaxis()
         self.varGraph = GraphPlotter(ax)
 
         self.colors = ['b', 'g', 'r', 'c', 'm']
