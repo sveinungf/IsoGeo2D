@@ -1,5 +1,6 @@
 import abc
 import math
+import numpy as np
 
 from compositing import FrontToBack
 
@@ -67,6 +68,7 @@ class BaseModel(object):
             
         viewDirDelta = viewRay.viewDir * delta
         samplePoint = inGeomPoint + viewDirDelta
+        prevSamplePoint = inGeomPoint
 
         saturated = False
 
@@ -77,7 +79,9 @@ class BaseModel(object):
                 geomPoints.append(sample.geomPoint)
                 sampleTypes.append(sample.type)
 
-                compositing.addSample(sample, delta)
+                compositing.addSample(sample, magnitude(samplePoint - prevSamplePoint))
+                prevSamplePoint = np.array(samplePoint)
+
                 saturated = compositing.saturated()
 
                 if saturated:
@@ -92,7 +96,7 @@ class BaseModel(object):
                 geomPoints.append(sample.geomPoint)
                 sampleTypes.append(sample.type)
 
-                compositing.addSample(sample, magnitude(outGeomPoint - (samplePoint-viewDirDelta)))
+                compositing.addSample(sample, magnitude(outGeomPoint - prevSamplePoint))
 
         if plotter is not None:
             plotter.plotSamplePoints(geomPoints, sampleTypes)
