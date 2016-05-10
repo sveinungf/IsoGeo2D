@@ -10,7 +10,7 @@ rhoNo = int(sys.argv[1])
 phiNo = int(sys.argv[2])
 tfNo = int(sys.argv[3])
 
-interestingTexSizes = [64, 128, 192, 256, 320, 384, 448, 512]
+interestingTexSizes = [8, 16, 32, 64, 128, 256, 512, 1024]
 
 dataset = Dataset(rhoNo, phiNo, tfNo)
 

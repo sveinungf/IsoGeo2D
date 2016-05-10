@@ -38,14 +38,13 @@ class Main2:
         self.eye = np.array([-1.2, 0.65])
 
         self.viewRayDelta = 1e-2
-        self.viewRayDeltaRef = 1e-5
         self.refTolerance = 1e-5
 
         self.voxelizationTolerance = 1e-5
 
         self.autoDelta = True
 
-        self.texDimSizes = np.array([8,16,32,64,128,192,256,320,384,448,512,576,640,704,768,896,1024])#,1152,1280,1408,1536,1664,1792,1920,2048])
+        self.texDimSizes = np.array([8, 16, 32, 64, 128, 256, 512, 1024])
         self.numTextures = len(self.texDimSizes)
 
         self.numFiles = 0
@@ -80,6 +79,8 @@ class Main2:
 
         boundingBox = phiPlane.createBoundingBox()
 
+        viewRayDeltaRef = boundingBox.getWidth() / (self.texDimSizes[-1]*2) / 2.0
+
         refSplineModel = SplineModel(tf, phiPlane, rho, self.refTolerance)
         directSplineModel = SplineModel(tf, phiPlane, rho)
         voxelModels = np.empty(numTextures, dtype=object)
@@ -110,8 +111,8 @@ class Main2:
             baHybridModels[i] = HybridModel(tf, directSplineModel, baModels[i], criterion)
 
         printflush("Rendering reference... ")
-        renderData = RenderData(ModelType.REFERENCE, self.viewRayDeltaRef)
-        renderData.renderResult = renderer.render(refSplineModel, self.viewRayDeltaRef)
+        renderData = RenderData(ModelType.REFERENCE, viewRayDeltaRef)
+        renderData.renderResult = renderer.render(refSplineModel, viewRayDeltaRef)
         self.save(dataset, renderData)
         print "Done!"
 

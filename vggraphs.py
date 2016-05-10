@@ -13,7 +13,7 @@ rhoNo = int(sys.argv[1])
 phiNo = int(sys.argv[2])
 tfNo = int(sys.argv[3])
 
-plotWindow = True
+plotWindow = False
 
 figNames = ['max', 'mean', 'var']
 colordiffTresholds = [5.0, 1.0, 1.0]
