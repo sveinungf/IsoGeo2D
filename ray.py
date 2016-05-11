@@ -17,10 +17,10 @@ class Ray2D:
         
         self.viewDir = normalize2D(pixel - eye)
         
-        pixelTop = np.array([pixel[0], pixel[1] + pixelWidth/2])
-        pixelBottom = np.array([pixel[0], pixel[1] - pixelWidth/2])
-        self.frustumUpperDir = normalize2D(pixelTop - eye)
-        self.frustumLowerDir = normalize2D(pixelBottom - eye)
+        self.pixelTop = np.array([pixel[0], pixel[1] + pixelWidth/2])
+        self.pixelBottom = np.array([pixel[0], pixel[1] - pixelWidth/2])
+        self.frustumUpperDir = normalize2D(self.pixelTop - eye)
+        self.frustumLowerDir = normalize2D(self.pixelBottom - eye)
 
     def eval(self, t):
         return self.evalFromPixel(t)

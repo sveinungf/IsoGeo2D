@@ -102,8 +102,9 @@ class Main2:
 
             scalarTexture = Texture2D(samplingScalars)
 
-            voxelWidth = boundingBox.getHeight() / float(texDimSize)
-            criterion = GeometricCriterion(self.screen.pixelWidth, voxelWidth)
+            voxelWidth = boundingBox.getWidth() / float(texDimSize)
+            voxelHeight = boundingBox.getHeight() / float(texDimSize)
+            criterion = GeometricCriterion(self.screen.pixelWidth, voxelWidth, voxelHeight)
 
             voxelModels[i] = VoxelModel(tf, scalarTexture, boundingBox)
             baModels[i] = BoundaryAccurateModel(tf, directSplineModel, voxelModels[i])
