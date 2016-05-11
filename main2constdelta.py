@@ -5,13 +5,10 @@ import fileio.voxelio as voxelio
 import colordiff
 from dataset import Dataset
 from fileio.filehandler import FileHandler
-from model.boundaryaccuratemodel import BoundaryAccurateModel
-from model.hybridmodel import HybridModel
 from model.splinemodel import SplineModel
 from model.voxelmodel import VoxelModel
 from plotting.graphfigure import GraphFigure
 from plotting.pixelfigure import PixelFigure
-from hybridrenderer import HybridRenderer
 from modeltype import ModelType
 from renderdata import RenderData
 from renderer import Renderer
@@ -19,7 +16,6 @@ from screen import Screen
 from splineplane import SplinePlane
 from summary import Summary
 from texture import Texture2D
-from voxelcriterion.geometriccriterion import GeometricCriterion
 
 
 def printflush(string):
@@ -37,7 +33,7 @@ class Main2:
         self.screen = Screen(screenBottom, screenTop, numPixels)
         self.eye = np.array([-1.2, 0.65])
 
-        self.viewRayDelta = 1e-5
+        self.viewRayDelta = 0.0005
         self.refTolerance = 1e-5
 
         self.voxelizationTolerance = 1e-5
