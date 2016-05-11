@@ -1,5 +1,6 @@
 from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
+import numpy as np
 import sys
 
 import summary
@@ -14,6 +15,7 @@ phiNo = int(sys.argv[2])
 tfNo = int(sys.argv[3])
 
 plotWindow = False
+constTex = True
 
 figNames = ['max', 'mean', 'var']
 colordiffTresholds = [5.0, 1.0, 1.0]
@@ -43,6 +45,7 @@ fileHandler.setFiledir('output/results/{},{},{}'.format(rhoNo, phiNo, tfNo))
 summaries = summary.createSummaries(fileHandler, dataset)
 
 texDimSizes = []
+viewRayDeltas = np.array([0.128, 0.064, 0.032, 0.016, 0.008, 0.004, 0.002, 0.001])
 
 for voxelSummary in summaries[ModelType.VOXEL]:
     texDimSizes.append(voxelSummary.renderData.texSize)
@@ -56,17 +59,26 @@ for i in range(3):
     ax.set_xlabel('Texture size')
     ax.set_ylabel('Color difference ($\Delta E$)')
 
+    if constTex:
+        ax.invert_xaxis()
+
     figs.append(fig)
     gss.append(gs)
     axs.append(ax)
 
     g = GraphPlotter(ax)
-    g.plotThresholdX(practicalBoundTexSize, 'k', ':')
-    g.plotThresholdY(colordiffTresholds[i], 'k', '--')
+    #g.plotThresholdX(practicalBoundTexSize, 'k', ':')
+
+    if not constTex:
+        g.plotThresholdY(colordiffTresholds[i], 'k', '--')
+
     plotters.append(g)
 
 for i in range(1, len(summaries)):
     modelSummaries = summaries[i]
+
+    if len(modelSummaries) == 0:
+        continue
 
     color = colors[i-1]
     marker = markers[i-1]
@@ -85,7 +97,10 @@ for i in range(1, len(summaries)):
     stats.append(vars)
 
     for j in range(3):
-        plotters[j].plotGraph(texDimSizes, stats[j], legendNames[i], color, marker)
+        if constTex:
+            plotters[j].plotGraph(viewRayDeltas, stats[j], legendNames[i], color, marker)
+        else:
+            plotters[j].plotGraph(texDimSizes, stats[j], legendNames[i], color, marker)
 
 handles, labels = plotters[0].plot.get_legend_handles_labels()
 legendFig.legend(handles, labels)
